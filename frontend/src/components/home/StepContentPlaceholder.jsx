@@ -10,6 +10,8 @@ import PaceSelector from './PaceSelector';
 import BudgetVibeSelector from './BudgetVibeSelector';
 import PreferencePills from './PreferencePills';
 import AccommodationSelector from './AccommodationSelector';
+import CountryAutocomplete from './CountryAutocomplete';
+import InstructionsInput from './InstructionsInput';
 
 const POPULAR_ORIGIN = getCitiesByNames(['Dubai', 'London', 'Singapore', 'Delhi']);
 const POPULAR_DESTINATION = getCitiesByNames(['Paris', 'Tokyo', 'Bali', 'New York']);
@@ -94,27 +96,18 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 8:
       return (
-        <div className="mt-6 max-w-md">
-          <input
-            type="text"
-            placeholder="e.g. United States"
-            value={formData.passportCountry ?? ''}
-            onChange={(e) => updateField('passportCountry', e.target.value || null)}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-brand-500 focus:outline-none"
-          />
-        </div>
+        <CountryAutocomplete
+          placeholder="e.g. India, United States"
+          value={formData.passportCountry}
+          onChange={(country) => updateField('passportCountry', country)}
+        />
       );
     case 9:
       return (
-        <div className="mt-6 max-w-md">
-          <textarea
-            placeholder="Any special requests..."
-            value={formData.instructions ?? ''}
-            onChange={(e) => updateField('instructions', e.target.value)}
-            rows={3}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-brand-500 focus:outline-none resize-none"
-          />
-        </div>
+        <InstructionsInput
+          value={formData.instructions}
+          onChange={(text) => updateField('instructions', text)}
+        />
       );
     default:
       return null;

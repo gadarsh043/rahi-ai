@@ -7,6 +7,6 @@ export const STEP_CONFIG = [
   { icon: '💰', question: "What's your budget vibe?", subtitle: 'No exact numbers needed — just a vibe' },
   { icon: '❤️', question: "What are you into?", subtitle: 'Pick everything that excites you' },
   { icon: '🛏', question: 'Where do you want to stay?', subtitle: 'Your preferred accommodation type' },
-  { icon: '🛂', question: 'Passport?', subtitle: 'Nationality for visa info' },
-  { icon: '✨', question: 'Anything else?', subtitle: 'Extra notes for your trip' },
+  { icon: '🛂', question: 'What passport do you hold?', subtitle: "We'll check visa requirements for you" },
+  { icon: '✨', question: 'Anything else we should know?', subtitle: 'Optional — helps us personalize your trip' },
 ];

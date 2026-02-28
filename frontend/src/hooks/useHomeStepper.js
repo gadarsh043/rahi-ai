@@ -60,7 +60,9 @@ function canProceedForStep(step, formData) {
     case 7:
       return formData.accommodationType != null;
     case 8:
-      return formData.passportCountry != null && String(formData.passportCountry).trim() !== '';
+      return formData.passportCountry != null && (typeof formData.passportCountry === 'object' ? formData.passportCountry?.name : String(formData.passportCountry).trim() !== '');
+    case 9:
+      return true;
     default:
       return false;
   }
@@ -93,7 +95,12 @@ function buildPromptText(formData) {
   if (formData.isFlexible && formData.numDays) parts.push(`${formData.numDays} days`);
   if (formData.preferences?.length) parts.push(formData.preferences.join(', '));
   if (formData.accommodationType) parts.push(formData.accommodationType);
-  if (formData.passportCountry) parts.push(`Passport: ${formData.passportCountry}`);
+  if (formData.passportCountry) {
+    const passportStr = typeof formData.passportCountry === 'object' && formData.passportCountry?.name
+      ? formData.passportCountry.name
+      : formData.passportCountry;
+    parts.push(`Passport: ${passportStr}`);
+  }
   if (formData.instructions?.trim()) parts.push(formData.instructions.trim());
   return parts.join(' ');
 }
