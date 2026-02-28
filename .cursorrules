@@ -1,0 +1,46 @@
+# Cursor Rules — Rahi AI
+
+## First: Read CLAUDE.md
+Always read `CLAUDE.md` in the project root before making any changes. It has the full design system, Tailwind theme config, glass utilities, and UI anti-slop rules.
+
+## Code Rules
+- React 18 functional components only.
+- **Tailwind CSS v4** for all styling. No SCSS. No CSS Modules. No inline style={}.
+- Theme variables defined in `src/index.css` using `@theme` and CSS custom properties.
+- Dark mode via `.dark` class on `<html>` + Tailwind `dark:` prefix + `var(--*)` theme vars.
+- State: Zustand stores.
+- Routing: React Router v6.
+- Dates: react-day-picker (dark mode styled, no past dates).
+- Animations: framer-motion (AnimatePresence for steps, whileTap/whileHover for interactions).
+- Font: DM Sans. Never Inter, Roboto, Arial.
+- Icons: Emoji for MVP.
+
+## Styling Rules
+- Use Tailwind utility classes in className.
+- Use custom `glass` / `glass-dark` / `glass-strong` / `glass-strong-dark` utilities for glassmorphism (defined in index.css).
+- Use `var(--text-primary)`, `var(--surface)`, etc. for theme-aware colors.
+- Use `brand-500`, `brand-400`, etc. for brand color (defined in @theme).
+- Glass is for ELEVATED elements only (dropdowns, prompt box, modals). Regular cards use solid `var(--surface)` backgrounds.
+
+## Component Structure
+- One `.jsx` file per component. No separate CSS files.
+- Components in `src/components/{feature}/ComponentName.jsx`
+- Pages in `src/pages/PageName.jsx`
+
+## UI Rules (CRITICAL)
+- Follow anti-slop rules in CLAUDE.md.
+- Brand orange as ACCENT only — 10-15% of UI.
+- Typography contrast: big/small pairings, not everything same size.
+- Visual hierarchy: one dominant element per section.
+- Glassmorphism on 30% of elements max. Rest = solid backgrounds.
+
+## Don't
+- Don't use SCSS, CSS Modules, or any .scss files.
+- Don't use style={{}} props (except rare dynamic values).
+- Don't install UI libraries (MUI, Chakra, shadcn).
+- Don't use placeholder images from external URLs.
+- Don't build backend until asked.
+- Don't modify PROJECT_SPEC.md or MWEB_UI_SPEC.md.
+
+## Build Prompts
+Reference HOME_PAGE_PROMPTS.md for step-by-step build instructions.

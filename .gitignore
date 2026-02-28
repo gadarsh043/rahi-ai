@@ -1,0 +1,50 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# Build
+frontend/dist/
+frontend/build/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.pytest_cache/
+htmlcov/
+
+# Supabase
+supabase/.temp/
+
+# Generated
+*.pdf
+frontend/public/icons/
+frontend/public/splash/
+
+# Project Documentation
+PROJECT_SPEC.md
+NEXT_STEPS.md
+MWEB_UI_SPEC.md
+HOME_PAGE_PROMPTS.md
