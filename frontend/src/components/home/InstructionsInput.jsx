@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { motion } from 'framer-motion';
 
 const MAX_CHARS = 500;
 const QUICK_CHIPS = [
@@ -50,14 +51,16 @@ export default function InstructionsInput({ value = '', onChange }) {
       </div>
       <div className="flex flex-wrap gap-2 mt-3">
         {QUICK_CHIPS.map((chip) => (
-          <button
+          <motion.button
             key={chip.label}
             type="button"
             onClick={() => appendChip(chip.label)}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             className="border border-[var(--border)] rounded-full px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-400 cursor-pointer transition-colors duration-150"
           >
             {chip.emoji} {chip.label}
-          </button>
+          </motion.button>
         ))}
       </div>
     </div>

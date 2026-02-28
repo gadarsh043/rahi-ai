@@ -127,9 +127,11 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
         </AnimatePresence>
 
         <div className="mt-4 flex w-full justify-center">
-          <button
+          <motion.button
             type="button"
             onClick={handleToggleFlexible}
+            whileTap={{ scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             className={`inline-flex items-center rounded-full px-4 py-2 text-sm font-medium border transition-colors ${
               isFlexible
                 ? 'bg-brand-500 text-white border-brand-500'
@@ -137,7 +139,7 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
             }`}
           >
             {isFlexible ? '✓ Flexible' : "I'm flexible"}
-          </button>
+          </motion.button>
         </div>
       </div>
     </div>

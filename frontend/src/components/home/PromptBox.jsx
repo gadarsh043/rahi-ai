@@ -1,20 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function PromptBox({ promptText = '', isComplete, formData, onGenerate }) {
+export default function PromptBox({ promptText = '', promptBase = '', instructions = '', isComplete, formData, onGenerate }) {
   const [expanded, setExpanded] = useState(false);
-  const [editText, setEditText] = useState(promptText);
+  const [editInstructions, setEditInstructions] = useState(instructions);
 
   const canGenerate = isComplete;
 
+  useEffect(() => {
+    if (!expanded) return;
+    setEditInstructions(instructions);
+  }, [expanded, instructions]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setExpanded(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expanded]);
+
   const handleExpand = () => {
-    setEditText(promptText);
+    setEditInstructions(instructions);
     setExpanded(true);
   };
 
   const handleGenerate = () => {
     if (canGenerate && typeof onGenerate === 'function') {
-      onGenerate(formData);
+      const instructionsTrimmed = (expanded ? editInstructions : instructions)?.trim() || '';
+      const promptToUse = promptBase.trim()
+        ? (promptBase.trim() + (instructionsTrimmed ? ' ' + instructionsTrimmed : '')).trim()
+        : instructionsTrimmed || promptText;
+      onGenerate(formData, promptToUse);
     }
   };
 
@@ -64,12 +84,20 @@ export default function PromptBox({ promptText = '', isComplete, formData, onGen
               transition={{ duration: 0.2, ease: 'easeOut' }}
               className="space-y-3"
             >
+              {promptBase.trim() ? (
+                <div
+                  className="w-full text-sm text-[var(--text-secondary)] select-none rounded-xl bg-[var(--surface)] dark:bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5"
+                  aria-readonly
+                >
+                  {promptBase.trim()}
+                </div>
+              ) : null}
               <textarea
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                placeholder="Your trip summary..."
-                rows={3}
-                className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none resize-none"
+                value={editInstructions}
+                onChange={(e) => setEditInstructions(e.target.value)}
+                placeholder="Add any extra instructions for your trip (e.g. vegetarian, honeymoon, avoid crowds)..."
+                rows={2}
+                className="w-full bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none resize-none border border-[var(--border)] rounded-xl px-3 py-2.5 focus:border-brand-500/50"
               />
               <button
                 type="button"

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 
 export default function JoinTrip() {
   const [showInput, setShowInput] = useState(false);
@@ -13,8 +14,16 @@ export default function JoinTrip() {
 
   return (
     <div className="text-center mt-3">
+      <AnimatePresence mode="wait">
       {!showInput ? (
-        <>
+        <motion.div
+          key="link"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          className="inline"
+        >
           <span className="text-xs text-[var(--text-muted)]">Have an invite code? </span>
           <button
             type="button"
@@ -23,9 +32,17 @@ export default function JoinTrip() {
           >
             Join a trip →
           </button>
-        </>
+        </motion.div>
       ) : (
-        <form onSubmit={handleJoin} className="inline-flex items-center gap-2 mt-1">
+        <motion.form
+          key="form"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+          onSubmit={handleJoin}
+          className="inline-flex items-center gap-2 mt-1"
+        >
           <input
             type="text"
             value={code}
@@ -40,8 +57,9 @@ export default function JoinTrip() {
           >
             Join
           </button>
-        </form>
+        </motion.form>
       )}
+      </AnimatePresence>
     </div>
   );
 }

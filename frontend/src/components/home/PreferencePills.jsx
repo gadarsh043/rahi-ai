@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 const PREFERENCE_OPTIONS = [
   { id: 'food_drinks', emoji: '🍽', label: 'Food & Drinks' },
   { id: 'nature', emoji: '🌿', label: 'Nature' },
@@ -34,10 +36,12 @@ export default function PreferencePills({ value = [], onChange }) {
         {PREFERENCE_OPTIONS.map((option) => {
           const isActive = selected.includes(option.id);
           return (
-            <button
+            <motion.button
               key={option.id}
               type="button"
               onClick={() => toggle(option.id)}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className={`
                 rounded-full px-4 py-2 text-sm font-medium border transition-all duration-150
                 ${isActive
@@ -48,7 +52,7 @@ export default function PreferencePills({ value = [], onChange }) {
             >
               <span className="mr-1.5">{option.emoji}</span>
               {option.label}
-            </button>
+            </motion.button>
           );
         })}
       </div>

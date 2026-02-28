@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 const TOTAL_STEPS = 10;
 
 export default function StepIndicator({ currentStep, onStepClick }) {
@@ -8,11 +10,13 @@ export default function StepIndicator({ currentStep, onStepClick }) {
         const isCompleted = i < currentStep;
         const isClickable = isCompleted && typeof onStepClick === 'function';
         return (
-          <button
+          <motion.button
             key={i}
             type="button"
             onClick={isClickable ? () => onStepClick(i) : undefined}
             disabled={!isClickable}
+            whileTap={isClickable ? { scale: 0.9 } : {}}
+            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             className={`
               h-2 rounded-full flex-shrink-0 transition-all duration-300 ease-out
               ${isActive ? 'w-6 bg-brand-500' : 'w-2'}

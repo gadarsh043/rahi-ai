@@ -1,3 +1,5 @@
+import { motion } from 'framer-motion';
+
 export default function DurationSlider({ value, onChange }) {
   const safeValue = Math.min(30, Math.max(1, value ?? 7));
   const percent = ((safeValue - 1) / 29) * 100;
@@ -40,10 +42,12 @@ export default function DurationSlider({ value, onChange }) {
         {quickPicks.map((d) => {
           const isActive = safeValue === d;
           return (
-            <button
+            <motion.button
               key={d}
               type="button"
               onClick={() => onChange(d)}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className={`rounded-full px-3 py-1.5 text-sm font-medium border transition-colors ${
                 isActive
                   ? 'bg-brand-500 text-white border-brand-500'
@@ -51,7 +55,7 @@ export default function DurationSlider({ value, onChange }) {
               }`}
             >
               {d}
-            </button>
+            </motion.button>
           );
         })}
       </div>

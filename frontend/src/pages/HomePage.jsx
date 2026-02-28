@@ -15,6 +15,7 @@ export default function HomePage() {
     direction,
     canProceed,
     promptText,
+    promptBase,
     isLastStep,
     goNext,
     goBack,
@@ -25,10 +26,35 @@ export default function HomePage() {
   const config = STEP_CONFIG[currentStep];
   const isForward = direction === 'forward';
 
+  const handleGenerate = (data, promptString) => {
+    const base = (promptBase || '').trim();
+    const edited = (promptString || '').trim();
+    const newInstructions = base && edited.startsWith(base)
+      ? edited.slice(base.length).trim()
+      : edited;
+    updateField('instructions', newInstructions);
+    const dataToSend = { ...data, instructions: newInstructions };
+    console.log('Generate trip — formData:', dataToSend);
+    console.log('Generate trip — prompt (for AI):', promptString);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!canProceed) return;
+    if (isLastStep) {
+      handleGenerate(formData, promptText);
+    } else {
+      goNext();
+    }
+  };
+
   return (
     <div className="flex flex-1 min-h-0 min-w-0">
       <div className="flex flex-1 flex-col items-center min-w-0">
-        <div className="flex flex-1 flex-col w-full max-w-lg px-4 py-8 min-h-0 pb-32">
+        <form
+          className="flex flex-1 flex-col w-full max-w-lg px-4 py-8 min-h-0 pb-32"
+          onSubmit={handleSubmit}
+        >
         <StepQuestion
           icon={config?.icon}
           question={config?.question}
@@ -74,12 +100,14 @@ export default function HomePage() {
 
         <PromptBox
           promptText={promptText}
+          promptBase={promptBase}
+          instructions={formData.instructions ?? ''}
           isComplete={isLastStep}
           formData={formData}
-          onGenerate={(data) => console.log('Generate trip — formData:', data)}
+          onGenerate={handleGenerate}
         />
         <JoinTrip />
-        </div>
+        </form>
       </div>
     </div>
   );

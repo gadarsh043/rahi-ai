@@ -107,7 +107,7 @@ export default function CountryAutocomplete({ placeholder, value, onChange }) {
             onFocus={() => setIsOpen(true)}
             onBlur={() => setTimeout(() => setIsOpen(false), 150)}
             onKeyDown={handleKeyDown}
-            className="bg-transparent text-[var(--text-primary)] text-base w-full outline-none placeholder:text-[var(--text-muted)]"
+            className="bg-transparent text-[var(--text-primary)] text-base w-full outline-none placeholder:text-[var(--text-muted)] focus-visible:ring-2 focus-visible:ring-brand-500/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg)] rounded-lg"
             autoComplete="off"
             aria-autocomplete="list"
             aria-expanded={showDropdown && hasResults}

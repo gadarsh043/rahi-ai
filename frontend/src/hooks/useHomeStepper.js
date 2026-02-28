@@ -138,6 +138,10 @@ export function useHomeStepper() {
 
   const canProceed = useMemo(() => canProceedForStep(currentStep, formData), [currentStep, formData]);
   const promptText = useMemo(() => buildPromptText(formData), [formData]);
+  const promptBase = useMemo(
+    () => buildPromptText({ ...formData, instructions: '' }),
+    [formData]
+  );
   const isLastStep = currentStep === STEP_COUNT - 1;
 
   return {
@@ -146,6 +150,7 @@ export function useHomeStepper() {
     direction,
     canProceed,
     promptText,
+    promptBase,
     isLastStep,
     goNext,
     goBack,
