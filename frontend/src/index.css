@@ -1,0 +1,108 @@
+/* src/index.css — import Tailwind + custom theme */
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-brand-50: #FFF7ED;
+  --color-brand-100: #FFEDD5;
+  --color-brand-200: #FED7AA;
+  --color-brand-300: #FDBA74;
+  --color-brand-400: #FB923C;
+  --color-brand-500: #F97316;
+  --color-brand-600: #EA580C;
+  --color-brand-700: #C2410C;
+  --color-brand-800: #9A3412;
+  --color-brand-900: #7C2D12;
+  --color-brand-950: #431407;
+
+  /* Semantic */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-error: #EF4444;
+  --color-info: #3B82F6;
+
+  /* Map markers */
+  --color-marker-eat: #EF4444;
+  --color-marker-stay: #3B82F6;
+  --color-marker-go: #10B981;
+  --color-marker-activity: #8B5CF6;
+  --color-marker-cafe: #F59E0B;
+  --color-marker-outdoor: #14B8A6;
+
+  /* Layout */
+  --sidebar-collapsed: 60px;
+  --sidebar-expanded: 280px;
+  --topbar-height: 56px;
+
+  /* Typography */
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Dark mode colors — using CSS custom properties for theme switching */
+:root {
+  --bg: #FFFFFF;
+  --surface: #F9FAFB;
+  --surface-hover: #F3F4F6;
+  --border: #E5E7EB;
+  --text-primary: #111827;
+  --text-secondary: #6B7280;
+  --text-muted: #9CA3AF;
+}
+
+.dark {
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --surface-hover: #334155;
+  --border: #334155;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text-primary);
+}
+
+/* Dark mode background with subtle radial gradient (anti-slop) */
+.dark body {
+  background: #0F172A;
+  background-image: radial-gradient(ellipse at 15% 0%, rgba(67, 20, 7, 0.4) 0%, transparent 50%);
+}
+
+/* Glassmorphism utility classes */
+@utility glass {
+  background: rgba(249, 250, 251, 0.7);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@utility glass-dark {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@utility glass-strong {
+  background: rgba(249, 250, 251, 0.85);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+@utility glass-strong-dark {
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Brand glow shadow */
+@utility shadow-brand {
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.25);
+}
