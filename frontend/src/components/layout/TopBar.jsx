@@ -6,11 +6,11 @@ export default function TopBar() {
 
   return (
     <header
-      className="h-[var(--topbar-height)] shrink-0 sticky top-0 z-10 flex items-center justify-between px-4 bg-[var(--bg)] border-b border-[var(--border)]"
+      className="h-[var(--topbar-height)] shrink-0 sticky top-0 z-40 flex items-center justify-between px-4 border-b border-[var(--border)] bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-md"
     >
       <Link
         to="/"
-        className="text-xl font-bold bg-gradient-to-r from-brand-400 to-brand-600 bg-clip-text text-transparent"
+        className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
       >
         Rahi AI
       </Link>

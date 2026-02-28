@@ -1,6 +1,41 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 
+function getHighlightSegments(text, formData) {
+  const highlights = [
+    formData?.origin?.city,
+    formData?.destination?.city,
+    formData?.pace,
+    formData?.budgetVibe,
+    formData?.numDays && `${formData.numDays} days`,
+    formData?.accommodationType && `${formData.accommodationType}s`,
+  ].filter(Boolean);
+
+  const segments = [];
+  let pos = 0;
+  const hay = String(text || '');
+
+  while (pos < hay.length) {
+    let best = -1;
+    let bestLen = 0;
+    for (const phrase of highlights) {
+      const idx = hay.indexOf(phrase, pos);
+      if (idx !== -1 && (best === -1 || idx < best)) {
+        best = idx;
+        bestLen = phrase.length;
+      }
+    }
+    if (best === -1) {
+      segments.push({ type: 'text', value: hay.slice(pos) });
+      break;
+    }
+    if (best > pos) segments.push({ type: 'text', value: hay.slice(pos, best) });
+    segments.push({ type: 'highlight', value: hay.slice(best, best + bestLen) });
+    pos = best + bestLen;
+  }
+  return segments;
+}
+
 export default function PromptBox({ promptText = '', promptBase = '', instructions = '', isComplete, formData, onGenerate }) {
   const [expanded, setExpanded] = useState(false);
   const [editInstructions, setEditInstructions] = useState(instructions);
@@ -40,7 +75,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
 
   return (
     <div className="sticky bottom-0 left-0 right-0 z-10 pt-4">
-      <div className="glass-strong dark:glass-strong-dark rounded-2xl p-3 shadow-lg">
+      <div className="bg-white dark:glass-strong-dark border border-[var(--border)] rounded-2xl p-3 shadow-lg dark:border-transparent dark:shadow-none">
         <AnimatePresence mode="wait">
           {!expanded ? (
             <motion.div
@@ -56,9 +91,21 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
                 className="flex flex-1 min-w-0 items-center gap-2 text-left"
                 title={promptText || 'Your trip summary will appear here...'}
               >
-                <span className="text-base shrink-0" aria-hidden>✨</span>
-                <span className="text-xs text-[var(--text-muted)] line-clamp-2 flex-1 text-left break-words">
-                  {promptText || 'Your trip summary will appear here...'}
+                <span className="text-[11px] font-bold uppercase tracking-wider text-brand-500 shrink-0">
+                  Request:
+                </span>
+                <span className="text-sm text-[var(--text-secondary)] line-clamp-2 flex-1 text-left break-words">
+                  {promptText
+                    ? getHighlightSegments(promptText, formData).map((seg, i) =>
+                        seg.type === 'highlight' ? (
+                          <span key={i} className="text-brand-600 dark:text-brand-400 font-semibold">
+                            {seg.value}
+                          </span>
+                        ) : (
+                          seg.value
+                        )
+                      )
+                    : 'Your trip summary will appear here...'}
                 </span>
               </button>
               <button
@@ -66,8 +113,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
                 onClick={handleGenerate}
                 disabled={!canGenerate}
                 className={`
-                  bg-gradient-to-r from-brand-400 to-brand-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                  hover:from-brand-500 hover:to-brand-700 transition-all
+                  bg-brand-500 hover:bg-brand-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors
                   ${!canGenerate ? 'opacity-40 cursor-not-allowed' : ''}
                 `}
                 aria-label="Generate trip"
@@ -85,12 +131,17 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
               className="space-y-3"
             >
               {promptBase.trim() ? (
-                <div
-                  className="w-full text-sm text-[var(--text-secondary)] select-none rounded-xl bg-[var(--surface)] dark:bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5"
-                  aria-readonly
-                >
-                  {promptBase.trim()}
-                </div>
+                <>
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-brand-500 block mb-1">
+                    Request:
+                  </span>
+                  <div
+                    className="w-full text-sm text-[var(--text-secondary)] select-none rounded-xl bg-[var(--surface)] border border-[var(--border)] px-3 py-2.5"
+                    aria-readonly
+                  >
+                    {promptBase.trim()}
+                  </div>
+                </>
               ) : null}
               <textarea
                 value={editInstructions}
@@ -104,9 +155,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
                 onClick={handleGenerate}
                 disabled={!canGenerate}
                 className={`
-                  w-full py-3 rounded-xl font-semibold
-                  bg-gradient-to-r from-brand-400 to-brand-600 text-white
-                  hover:from-brand-500 hover:to-brand-700 transition-all
+                  w-full py-3 rounded-xl font-semibold bg-brand-500 hover:bg-brand-600 text-white transition-colors
                   ${!canGenerate ? 'opacity-40 cursor-not-allowed' : ''}
                 `}
               >

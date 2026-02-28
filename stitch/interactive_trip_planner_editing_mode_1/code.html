@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rahi AI - Trip Planner</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f97415",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#23170f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d241e",
+                        "text-main": "#1c130d",
+                        "text-sub": "#9e6b47",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-background-light text-text-main font-display antialiased overflow-hidden h-screen flex">
+<!-- Sidebar -->
+<aside class="w-64 flex flex-col justify-between border-r border-stone-200 bg-background-light h-full flex-shrink-0">
+<div class="p-6 flex flex-col gap-8">
+<!-- Logo / User -->
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-cover bg-center shrink-0 border border-stone-200" data-alt="User profile avatar image" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCQp5qhlsTCmZi5MyO01sFS1CFh1Q12EKRhH_yH-_Vu-g6fCixq5AhtVHNUzcWqsuTtffj3eSjIj1L64FK3Wzxeafy9IolaYkLj0vr4X-S2WMzr18Y3Lj7jxaVpDKojU_Iggz5j2L9RkNQ3eTGvxcpoT2sxtrp_WZKNu2q06nkdqVzxfOREITiQhqFfYpbgXev5ijUSirHqjimi0vmmu2koFSb6TE6ZHM4cNcsNKJ9sP6UFRk_LFz6Xi-SUHIRCLrL9fc32b0rykCk');"></div>
+<div class="flex flex-col">
+<h1 class="text-base font-bold text-slate-900">Rahi AI</h1>
+<p class="text-xs text-text-sub font-medium">Plan your journey</p>
+</div>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-2">
+<button class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span>New Trip</span>
+</button>
+<div class="mt-4 flex flex-col gap-1">
+<div class="group flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-stone-100 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-sub group-hover:text-primary">chat_bubble</span>
+<span class="text-sm font-medium text-slate-700">Recent Chats</span>
+</div>
+<span class="bg-primary/10 text-primary text-xs font-bold px-1.5 py-0.5 rounded-full">3</span>
+</div>
+<div class="group flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-stone-100 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-sub group-hover:text-primary">bookmark</span>
+<span class="text-sm font-medium text-slate-700">Saved Trips</span>
+</div>
+<span class="bg-stone-200 text-stone-600 text-xs font-bold px-1.5 py-0.5 rounded-full">12</span>
+</div>
+<div class="group flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-stone-100 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-sub group-hover:text-primary">settings</span>
+<span class="text-sm font-medium text-slate-700">Settings</span>
+</div>
+</div>
+</div>
+</nav>
+</div>
+<div class="p-6 border-t border-stone-200">
+<div class="flex items-center gap-2 text-text-sub text-xs">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span>Rahi AI v2.4 (Beta)</span>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Top Bar -->
+<header class="flex-shrink-0 bg-background-light border-b border-stone-200 h-16 px-6 flex items-center justify-between z-20">
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<h2 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        HYD <span class="material-symbols-outlined text-sm text-text-sub">arrow_forward</span> Dallas
+                        <span class="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded font-medium ml-2">7 Days</span>
+</h2>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="h-9 px-3 rounded-lg border border-stone-200 bg-white text-slate-700 text-sm font-medium flex items-center gap-2 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined text-[18px]">currency_exchange</span>
+<span>USD</span>
+</button>
+<button class="h-9 px-4 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">share</span>
+                    Share
+                </button>
+<div class="h-9 w-9 rounded-full bg-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-300 cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-[20px]">notifications</span>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Panel (Content List) -->
+<div class="w-[55%] flex flex-col bg-stone-50/50 relative">
+<!-- Sub-header Tabs -->
+<div class="flex-shrink-0 px-6 py-4 border-b border-stone-200 bg-background-light overflow-x-auto scrollbar-hide">
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background-light transition-all">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+                            Where to Eat
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">hotel</span>
+                            Stay
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                            Go
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">flight</span>
+                            Flight
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">attach_money</span>
+                            Costs
+                        </button>
+</div>
+</div>
+<!-- Scrollable List -->
+<div class="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xl font-bold text-slate-900">Restaurant Recommendations</h3>
+<span class="text-sm text-text-sub">Showing 4 of 12 places</span>
+</div>
+<!-- Card 1 -->
+<div class="bg-white rounded-xl p-4 shadow-sm border border-stone-100 flex gap-4 hover:shadow-md transition-shadow group">
+<div class="w-32 h-32 rounded-lg bg-cover bg-center flex-shrink-0" data-alt="Modern restaurant interior with warm lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCB8arZcQqn2p97W9-qbWHe2qPRwOGNuOor-3Db2uYc5KeDLLXWzEOApGmXZHxpdy_eJvjf0tHphQgYV0q43nsZhSeY_LYgqEAzjoFwmeOuPazTtF4IVA-XVkcu6qWvRHlCgy_Ud44oxHhXnUi-yqYcLNZWlAjeGVDAkvFHBWwxrgeF_nb7ljrESzPzD2UmHZk_x-PobKm0iqz2isTFNIY9BPXsRUdtyDL9bYkcdP97a5jrUIybtj5Q7CHw5SDl39sTgTUqSn-T7DI');">
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h4 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">The Rustic Spoon</h4>
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                                        4.8 <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+</div>
+</div>
+<p class="text-sm text-text-sub mt-1 line-clamp-2">Farm-to-table dining experience featuring seasonal local ingredients and a cozy atmosphere.</p>
+<div class="mt-2 flex gap-2 text-xs text-slate-500">
+<span class="px-2 py-0.5 bg-stone-100 rounded">American</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">$$$</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">1.2 mi</span>
+</div>
+</div>
+<div class="flex justify-end mt-3">
+<button class="text-sm font-medium text-slate-600 hover:text-primary mr-4 flex items-center gap-1">
+                                    Details <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<button class="bg-primary/10 hover:bg-primary hover:text-white text-primary text-sm font-semibold px-4 py-1.5 rounded-lg transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Select
+                                </button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-xl p-4 shadow-sm border border-stone-100 flex gap-4 hover:shadow-md transition-shadow group">
+<div class="w-32 h-32 rounded-lg bg-cover bg-center flex-shrink-0" data-alt="Plated gourmet dish on a restaurant table" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAoLztLdBnFaJJj9OKkakHdNNPy-7oHMcYkPKzG9FotOM50YVGF34opgjLRifwwU6fM62kvMRuoBzZZZHSpgg9wZWJa7mpn6PBBeeG3j_7eiw5tKf0K-ud1zbiojSGA_i2aN1gngo3qHwEEGdFN2qhSAWtPjlFn3MRSpe4eITZHNEZ0Ef-j34HZTTYpm3id4cJO1cTo-USTICRGYOOBXuzopumGuaSgxowtz9tvKM5Jue_8IHBsmmtgIZrpxQQvxjixK0Np8KqdkoE');">
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h4 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Dallas Steakhouse Prime</h4>
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                                        4.6 <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+</div>
+</div>
+<p class="text-sm text-text-sub mt-1 line-clamp-2">Classic Texas steakhouse with an extensive wine list and premium cuts of beef.</p>
+<div class="mt-2 flex gap-2 text-xs text-slate-500">
+<span class="px-2 py-0.5 bg-stone-100 rounded">Steakhouse</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">$$$$</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">0.8 mi</span>
+</div>
+</div>
+<div class="flex justify-end mt-3">
+<button class="text-sm font-medium text-slate-600 hover:text-primary mr-4 flex items-center gap-1">
+                                    Details <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<button class="bg-primary text-white text-sm font-semibold px-4 py-1.5 rounded-lg transition-all flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span> Selected
+                                </button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white rounded-xl p-4 shadow-sm border border-stone-100 flex gap-4 hover:shadow-md transition-shadow group">
+<div class="w-32 h-32 rounded-lg bg-cover bg-center flex-shrink-0" data-alt="Sushi platter presentation" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAH--0quK6wzAnOaskHBD6hoPc0CQx2miN6AsYzrwjnYSuvIFsjoe8qdsGKo18_cWHgxvOZjPk0sQ6TWXj-uZFvIm60fz51NsIob9sSMxJYdksEq8asLhBMdE1GDRmU-m-t74INC-zgw9dmTgwZzf5OtZj3wPpCUbyZ46pI-Z2SZdsW3I2MODEHJAXK2ZWosLFoB9KMq0QE0uBWr0RLzRL3KZHpyX2ReREpiv46oDpZ3ckysO7TgX1qDBwOqO2yn7e4d3yMRBp46Dc');">
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h4 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Uchi Dallas</h4>
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                                        4.9 <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+</div>
+</div>
+<p class="text-sm text-text-sub mt-1 line-clamp-2">Contemporary Japanese dining and sushi in a stylish, energetic setting.</p>
+<div class="mt-2 flex gap-2 text-xs text-slate-500">
+<span class="px-2 py-0.5 bg-stone-100 rounded">Japanese</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">$$$$</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">2.4 mi</span>
+</div>
+</div>
+<div class="flex justify-end mt-3">
+<button class="text-sm font-medium text-slate-600 hover:text-primary mr-4 flex items-center gap-1">
+                                    Details <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<button class="bg-primary/10 hover:bg-primary hover:text-white text-primary text-sm font-semibold px-4 py-1.5 rounded-lg transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">add</span> Select
+                                </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Input Area (Fixed Bottom) -->
+<div class="absolute bottom-0 left-0 w-full bg-white border-t border-stone-200 p-4 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<div class="flex gap-3">
+<button class="flex-shrink-0 bg-stone-100 hover:bg-stone-200 text-slate-700 rounded-lg p-3 flex items-center justify-center transition-colors" title="AI Voice">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<div class="flex-1 relative">
+<input class="w-full bg-stone-50 border border-stone-200 text-slate-900 rounded-lg pl-4 pr-12 py-3 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-shadow" placeholder="Ask Rahi to find more vegan options..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:bg-primary/10 p-1.5 rounded-md transition-colors">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+<button class="flex-shrink-0 bg-primary hover:bg-primary/90 text-white font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap shadow-sm">
+                            Let's Pick
+                        </button>
+</div>
+</div>
+</div>
+<!-- Right Panel (Map) -->
+<div class="w-[45%] bg-stone-200 h-full relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Map view of city streets with parks and blocks" data-location="Dallas Map View" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCr-70y46ysr8zhVdD--TL-oiAUfFod5jmkdXDlwM-watFlpryeaa9kgc-fKV2bAKTPAQgLvyysvbJmW06xlrxUVzH39S17Zh_tgeoLE8rKyc-NPBGFweTj0sqf4LDMEv-OJLsPVZoWFTh0ql3gxert_lBM9-jaVOlhWRWEp-3IWpbkGBGDC3pK_oR0j89cC7UVUA8vxrO_IXYZCaxvwRIwumAxwOJL7v1fiThp0qFRu4YD2B562naJqs_FFAcnr2cvQMZj4tUm76I');">
+<!-- Overlay for Map Effect -->
+<div class="absolute inset-0 bg-slate-900/5 mix-blend-multiply"></div>
+</div>
+<!-- Floating Map Controls -->
+<div class="absolute top-4 right-4 flex flex-col gap-2">
+<button class="bg-white p-2 rounded-lg shadow-md text-slate-700 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined">layers</span>
+</button>
+<button class="bg-white p-2 rounded-lg shadow-md text-slate-700 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined">my_location</span>
+</button>
+<div class="flex flex-col bg-white rounded-lg shadow-md overflow-hidden">
+<button class="p-2 text-slate-700 hover:bg-stone-50 border-b border-stone-100 transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="p-2 text-slate-700 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+</div>
+<!-- Map Markers (Simulated) -->
+<!-- Marker 1 (Active) -->
+<div class="absolute top-[30%] left-[40%] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="relative">
+<div class="bg-primary text-white p-1.5 rounded-full shadow-lg transform group-hover:scale-110 transition-transform ring-4 ring-white/50">
+<span class="material-symbols-outlined text-[20px]">restaurant</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+<div class="bg-white text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-md border border-stone-100">
+                                The Rustic Spoon
+                            </div>
+<div class="w-2 h-2 bg-white transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2 border-r border-b border-stone-100"></div>
+</div>
+</div>
+</div>
+<!-- Marker 2 -->
+<div class="absolute top-[45%] left-[55%] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="bg-white text-slate-600 p-1.5 rounded-full shadow-md border border-slate-200 transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">restaurant</span>
+</div>
+</div>
+<!-- Marker 3 -->
+<div class="absolute top-[60%] left-[35%] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="bg-white text-slate-600 p-1.5 rounded-full shadow-md border border-slate-200 transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">restaurant</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

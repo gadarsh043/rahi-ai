@@ -72,7 +72,7 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
 
   return (
     <div className="mt-6 max-w-md">
-      <div className="glass dark:glass-dark rounded-2xl p-6">
+      <div className="bg-white dark:bg-[#1a2744] border border-[var(--border)] rounded-xl p-4">
         <AnimatePresence initial={false} mode="wait">
           {!isFlexible ? (
             <motion.div
@@ -91,7 +91,7 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
                 resetOnSelect
                 classNames={{
                   root: 'rdp-root text-[var(--text-primary)]',
-                  caption: 'mb-2 text-sm font-medium',
+                  caption: 'mb-2 text-sm font-medium text-[var(--text-primary)]',
                   head_row: 'text-[11px] text-[var(--text-muted)]',
                   head_cell: 'pb-1',
                   nav: 'space-x-1',
@@ -99,11 +99,11 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
                   table: 'w-full border-collapse',
                   row: '',
                   cell: 'p-0.5',
-                  day: 'w-9 h-9 rounded-lg text-sm hover:bg-[var(--surface-hover)] focus-visible:outline-none',
+                  day: 'w-9 h-9 rounded-lg text-sm text-[var(--text-primary)] hover:bg-[var(--surface-hover)] focus-visible:outline-none',
                   day_selected:
                     'bg-brand-500 text-white rounded-lg hover:bg-brand-500 focus-visible:outline-none',
                   day_today: 'font-bold text-brand-500',
-                  day_outside: 'text-[var(--text-muted)] opacity-60',
+                  day_outside: 'text-[var(--text-secondary)] opacity-60',
                   day_disabled: 'opacity-40 cursor-not-allowed pointer-events-none text-[var(--text-muted)] hover:bg-transparent',
                   range_middle: 'bg-brand-500/15',
                 }}

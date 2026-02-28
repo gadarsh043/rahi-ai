@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Right Now - Real-time Assistant</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f97415",
+                        "primary-light": "#fff1e6",
+                        "primary-dark": "#b04d05",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#23170f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d241e",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                    backdropBlur: {
+                        xs: '2px',
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for clean look */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(0,0,0,0.1);
+            border-radius: 20px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(255,255,255,0.1);
+        }
+        
+        /* Glassmorphism effect */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        .dark .glass-panel {
+            background: rgba(35, 23, 15, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen relative overflow-hidden">
+<!-- Background Map/Context Image (Simulated Home Screen) -->
+<div class="absolute inset-0 w-full h-full z-0 bg-cover bg-center opacity-30 pointer-events-none" data-alt="Blurred map background showing city streets" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAPNNuD7adKHMDZwFfDfvTBvflL8hovNMAYd-VVuHw0RnJeiPpAaPQ2eppol5zf0SCzKeYx8XhGsZuuZiOst7XuFjV8D8UHMuBvYpG14-fgEkDcFTBI7JAZefpvTPkUxBn5Ft2r5KGw2HYzIHCYAe9W5e2gxZw_HyvnjYrRMNKvu6Z8YgA1JIYsFMwqhv0AH_gg9_6nYIA9XnXp-d0CCgKP8AXYjZ7YcsuIzVU9v5C-bgsufgLDZCa3rS23Fq89rxO5wKQlVMEMK9g'); filter: blur(4px);">
+</div>
+<!-- Overlay Container -->
+<div class="relative z-10 flex h-screen w-full flex-col items-center justify-center p-4 sm:p-8">
+<!-- Modal Card -->
+<div class="glass-panel w-full max-w-[1000px] h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up">
+<!-- Header Section -->
+<div class="px-6 pt-6 pb-2 border-b border-primary/10 dark:border-primary/20 shrink-0">
+<div class="flex items-center justify-between mb-6">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl">location_on</span>
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Right Now</h1>
+</div>
+<button class="rounded-full p-2 hover:bg-slate-100 dark:hover:bg-surface-dark transition-colors text-slate-500">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Navigation Tabs -->
+<div class="flex gap-8 px-2">
+<button class="group flex flex-col items-center gap-2 pb-3 border-b-[3px] border-primary text-slate-900 dark:text-white transition-all">
+<span class="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">restaurant</span>
+<span class="text-sm font-bold tracking-wide">Eat</span>
+</button>
+<button class="group flex flex-col items-center gap-2 pb-3 border-b-[3px] border-transparent text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-all">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">explore</span>
+<span class="text-sm font-medium tracking-wide">Go</span>
+</button>
+<button class="group flex flex-col items-center gap-2 pb-3 border-b-[3px] border-transparent text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-all">
+<span class="material-symbols-outlined group-hover:scale-110 transition-transform">hotel</span>
+<span class="text-sm font-medium tracking-wide">Stay</span>
+</button>
+</div>
+</div>
+<!-- Content Area - Scrollable Grid -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 bg-white/50 dark:bg-black/20">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute top-3 right-3 z-10 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Open Now
+                            </div>
+<div class="w-full h-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Interior of a cozy Italian restaurant with warm lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBsBsGqwVGqQjtfAGimrIfdrm5Rr4FVPYUsvR3dFUcxtbI6CvmHIP-D1bvaZaWus8nPX6_FxdjSw8DuVUDOM7ylOfPe88zEd0sigSLS-OfTo-hzfNG7mS71jCFlunt6BP_AST5p_PuLByttSZB8IdUefLEO8T415mG1fSUB1TCdi0V_W0OuczXs1tbWGWJK0EqLdW7Pr1oXSn-3p4NfFkYUNPM5Sub1B6n0xG8OO-XARGRQijEjZoDE-WQfQ4asefJBztltcJPs2Cs');">
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-1 text-white">
+<span class="material-symbols-outlined text-[18px] text-primary">star</span>
+<span class="font-bold text-sm">4.8</span>
+<span class="text-xs opacity-80">(128 reviews)</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">La Bella Italia</h3>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Italian</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+                                0.4 miles away
+                            </div>
+<div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+<button class="flex-1 bg-primary text-white text-sm font-medium py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-sm shadow-primary/30">
+                                    Reserve
+                                </button>
+<button class="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute top-3 right-3 z-10 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Open Now
+                            </div>
+<div class="w-full h-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Modern coffee shop interior with wooden furniture" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBQKN-D29IL-04W53qWRKteVf1R0ie2X7io-j5UVfxXRKlKQOt-BhDJfKOmAtksgzhedMj1vZ9IJyIDlq_KLwbYY7vAE7BYd3LXecBiat5dBBaM8zkhtFyB6O-lN3p9b7sN-zG2XXcrA17vo8lAIiJZPVrevXiuMqIvwGOZMvXptbue8NyJHAUsHJIv6pkdWa7sodc15FmRksdG7RXlpzS99tOqSm-51FT2xxJvD3yx4DICSBM_ovQC0GZXpbbtG2brJU8ZvsJIjpQ');">
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-1 text-white">
+<span class="material-symbols-outlined text-[18px] text-primary">star</span>
+<span class="font-bold text-sm">4.5</span>
+<span class="text-xs opacity-80">(84 reviews)</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">Bean &amp; Leaf Cafe</h3>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Cafe</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+                                0.1 miles away
+                            </div>
+<div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+<button class="flex-1 bg-surface-light dark:bg-surface-dark border border-primary text-primary text-sm font-medium py-2 rounded-lg hover:bg-primary/5 transition-colors">
+                                    View Menu
+                                </button>
+<button class="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute top-3 right-3 z-10 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                Opens at 5PM
+                            </div>
+<div class="w-full h-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Fancy cocktail bar with dim mood lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAXafj0Z6l_QXjK7FjGihr-k4foOeChRQEWCsyZE8Al4Bn6jbv5KXm3rhGuH9xbpdzhI9DEjCuO2yJVch_9O6k2tXQQlh1DRmOokOVhKUAQYQIujuWXZCFL8NHvppy3QV4w2JZzKDkP_fxZotMreOigwQGSJG53scVkQXIpGvS7eHEIzwnAg3vzxCIHMQvrKotrgZt5rjn5KiKuhZpbjPHwB6vWlnr1_gvehGki9KWQ7gV7ek_U_7Y4tKFOzgu3X9ZiPVUr-X7Repc');">
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-1 text-white">
+<span class="material-symbols-outlined text-[18px] text-primary">star</span>
+<span class="font-bold text-sm">4.9</span>
+<span class="text-xs opacity-80">(210 reviews)</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">The Midnight Lounge</h3>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Bar</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+                                0.6 miles away
+                            </div>
+<div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+<button class="flex-1 bg-surface-light dark:bg-surface-dark border border-primary text-primary text-sm font-medium py-2 rounded-lg hover:bg-primary/5 transition-colors">
+                                    Details
+                                </button>
+<button class="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute top-3 right-3 z-10 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Open Now
+                            </div>
+<div class="w-full h-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Healthy salad bowl close up on a wooden table" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDef4DKNxd6e5O6IFhJ4c6AHdKeOnltILANLYGhQPTqLuGQLNW11uTfx6miqMfQErlOcKtICvry0lb9OexTqunaEGxdweoLu1XaOqUUiys0RHOiN000Yuhrj5LRQ-4zHBE5rSVmSPOvLi-BQMjNHbvclmNBGuG2d-6qN8s-NNgSs5cs_oxBTSU3z3cVQPoO6VsPg86soje0Ik83lBNKuKutwRh15EQgP3a3BuBIJLoXsZw_M-UsX2L4p0D_YD8zLPolHVRVVIGZcvM');">
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-1 text-white">
+<span class="material-symbols-outlined text-[18px] text-primary">star</span>
+<span class="font-bold text-sm">4.6</span>
+<span class="text-xs opacity-80">(95 reviews)</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">Fresh &amp; Green</h3>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Healthy</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+                                0.2 miles away
+                            </div>
+<div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+<button class="flex-1 bg-primary text-white text-sm font-medium py-2 rounded-lg hover:bg-primary-dark transition-colors shadow-sm shadow-primary/30">
+                                    Order
+                                </button>
+<button class="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute top-3 right-3 z-10 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Open Now
+                            </div>
+<div class="w-full h-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Modern fine dining table setup" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDrGD-Y2IajXNReirgcWYfx9sINa-axnOMheu47UhAdF2TH3ANScKAhGJ7Gwk7DgMC7yPCFPYFqAahLeAc3cdNxFrpWRFM1PKiaei9TIyOQpMntz_79GV6K_PUy8TdT2vRhO79-PwIzF-U99aEvKJxWhDtpKoiH5Bal8wVPjaXMwFph75wlByZFwo_Dqy215nZ89vRO0jcnsYVM_Z8HDj2v8y-FTofGG5vHwZMonzSagkxOQCtw59XEJiyOuYvVwQd9uD-m8PWywSE');">
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-1 text-white">
+<span class="material-symbols-outlined text-[18px] text-primary">star</span>
+<span class="font-bold text-sm">4.3</span>
+<span class="text-xs opacity-80">(62 reviews)</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">Ocean Blue</h3>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Seafood</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+                                0.9 miles away
+                            </div>
+<div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+<button class="flex-1 bg-surface-light dark:bg-surface-dark border border-primary text-primary text-sm font-medium py-2 rounded-lg hover:bg-primary/5 transition-colors">
+                                    Reserve
+                                </button>
+<button class="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="group bg-surface-light dark:bg-surface-dark rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-slate-100 dark:border-slate-800 flex flex-col h-full overflow-hidden">
+<div class="relative h-48 overflow-hidden">
+<div class="absolute top-3 right-3 z-10 bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+<div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                                Open Now
+                            </div>
+<div class="w-full h-full bg-cover bg-center transform group-hover:scale-105 transition-transform duration-500" data-alt="Close up of a delicious cheese pizza" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBP_NuDStsdwEMhRbRURL5_gf1Fa3zpTdv_Sr4A7LnnuVAPL3vQ84b_33M6moqydVMWmlpfNBrFZh3X2gd3TtfEi6rwyMwJACdDJkO3ip_4vqgbShtc3AYfTc00lz__1kqye7SNblGlngOcSz5pYntlh9TiISVTGOdJNA0r2IJ0DMOjhiDaaK6Wddx9mYhIS7e2rGfXDRYJt2WxDXkbtm7c0RPTUQSaRsIheHGUI5JsQ5Ygltznl9qcyEzPz2K66t9XLOwUfGAuFxA');">
+</div>
+<div class="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-black/60 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-1 text-white">
+<span class="material-symbols-outlined text-[18px] text-primary">star</span>
+<span class="font-bold text-sm">4.7</span>
+<span class="text-xs opacity-80">(199 reviews)</span>
+</div>
+</div>
+<div class="p-4 flex flex-col flex-1">
+<div class="flex justify-between items-start mb-2">
+<h3 class="text-lg font-bold text-slate-900 dark:text-slate-50 leading-tight">Slice of Heaven</h3>
+<span class="text-xs font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">Pizza</span>
+</div>
+<div class="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-sm mb-4">
+<span class="material-symbols-outlined text-[16px]">near_me</span>
+                                0.3 miles away
+                            </div>
+<div class="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+<button class="flex-1 bg-surface-light dark:bg-surface-dark border border-primary text-primary text-sm font-medium py-2 rounded-lg hover:bg-primary/5 transition-colors">
+                                    Order
+                                </button>
+<button class="px-3 py-2 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-[20px]">directions</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer / AI Chat Prompt -->
+<div class="flex justify-center mt-12 pb-4">
+<div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm font-medium shadow-inner">
+<span class="material-symbols-outlined text-[20px] text-primary animate-pulse">smart_toy</span>
+                        Ask Rahi AI for more suggestions
+                        <span class="text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-500 uppercase font-bold tracking-wider ml-1">Soon</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

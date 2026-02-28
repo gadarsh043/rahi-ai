@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rahi AI - Trip Builder - Passport Selection</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f97415",
+                        "primary-light": "#fff0e3",
+                        "primary-dark": "#c2540a",
+                        "background-light": "#fcfaf8",
+                        "background-dark": "#23170f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .sidebar-icon-active {
+            background-color: #fff0e3;
+            color: #f97415;
+        }
+        .sidebar-icon:hover {
+            background-color: #fff8f5;
+            color: #f97415;
+        }.custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #475569;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 py-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+<div class="flex items-center gap-4 text-slate-900 dark:text-white">
+<div class="size-8 text-primary">
+<svg class="w-full h-full" fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 4H42V17.3333V30.6667H24V44H6V30.6667V17.3333H24V4Z" fill-rule="evenodd"></path>
+</svg>
+</div>
+<h2 class="text-xl font-bold leading-tight tracking-[-0.015em]">Rahi AI</h2>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-6 bg-primary hover:bg-primary-dark transition-colors text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-lg shadow-primary/20">
+<span class="truncate">Right Now</span>
+</button>
+<div class="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-white dark:border-slate-700 shadow-sm cursor-pointer" data-alt="User profile avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBwa0IVwYZyRPlVd4uaAYoYLpw5yt7PQ92qFpbagyCfTXAHJwfodCWLFWjgmKmmxlKfWGUYlz9a98Px2QQtq_vNEcOjOwO1RMzLyoZsIOo5AtvenUhWpmVhZP32yEOUBI3vRSn7z0c7T4ZtV7wshzdKSjYsbDtuK4YRNju7GwRU3pzGe2RntdnYJC7KfZIAenpKSAL_tzCbfPS0syvwKj92z7LPYfdKwaacazi1CesdRRaIukUugV-1eiLWrp3YxkE2nt928IUReX0");'></div>
+</div>
+</header>
+<div class="flex flex-1 h-full overflow-hidden relative">
+<aside class="hidden md:flex flex-col w-[72px] items-center border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-6 gap-6 z-20">
+<button class="sidebar-icon-active p-3 rounded-xl transition-all duration-200 group relative">
+<span class="material-symbols-outlined text-[24px]">home</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Home</span>
+</button>
+<button class="sidebar-icon text-slate-500 dark:text-slate-400 p-3 rounded-xl transition-all duration-200 group relative">
+<span class="material-symbols-outlined text-[24px]">add_circle</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">New Chat</span>
+</button>
+<button class="sidebar-icon text-slate-500 dark:text-slate-400 p-3 rounded-xl transition-all duration-200 group relative">
+<span class="material-symbols-outlined text-[24px]">history</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Recent</span>
+</button>
+<button class="sidebar-icon text-slate-500 dark:text-slate-400 p-3 rounded-xl transition-all duration-200 group relative">
+<span class="material-symbols-outlined text-[24px]">map</span>
+<span class="absolute left-14 bg-slate-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Plans</span>
+</button>
+</aside>
+<main class="flex-1 relative flex flex-col items-center justify-center p-6 lg:p-10 overflow-y-auto w-full">
+<div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
+<div class="absolute top-[-10%] left-[20%] w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl"></div>
+<div class="absolute bottom-[10%] right-[10%] w-[400px] h-[400px] bg-orange-200/20 dark:bg-orange-900/10 rounded-full blur-3xl"></div>
+</div>
+<div class="w-full max-w-2xl flex flex-col gap-8 pb-32">
+<div class="flex items-center justify-center gap-2 mb-2">
+<span class="text-xs font-semibold text-primary uppercase tracking-wider">Step 9 of 10</span>
+<div class="h-1.5 w-24 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[90%] rounded-full"></div>
+</div>
+</div>
+<div class="glass-card rounded-2xl p-8 lg:p-12 shadow-xl shadow-slate-200/40 dark:shadow-black/20 flex flex-col items-center text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+<div class="size-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 text-primary">
+<span class="material-symbols-outlined text-4xl">public</span>
+</div>
+<h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">Which passport do you hold?</h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg mb-10 max-w-lg">We need this to check visa requirements and travel restrictions for your trip to <span class="font-semibold text-slate-800 dark:text-slate-200">Dallas</span>.</p>
+<div class="relative w-full max-w-md group z-30">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
+</div>
+<input class="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all shadow-sm text-slate-900 dark:text-white placeholder-slate-400 text-lg" placeholder="Search country (e.g., India, USA)..." type="text" value="India"/>
+<div class="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-xl shadow-xl overflow-hidden z-50">
+<ul class="max-h-60 overflow-y-auto custom-scrollbar">
+<li class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 bg-primary/5 text-left">
+<span class="text-2xl">🇮🇳</span>
+<span class="font-medium text-slate-900 dark:text-white flex-1 text-left">India</span>
+<span class="material-symbols-outlined text-primary text-xl">check</span>
+</li>
+<li class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 transition-colors text-left">
+<span class="text-2xl">🇮🇩</span>
+<span class="font-medium text-slate-700 dark:text-slate-200 text-left">Indonesia</span>
+</li>
+<li class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 transition-colors text-left">
+<span class="text-2xl">🇮🇪</span>
+<span class="font-medium text-slate-700 dark:text-slate-200 text-left">Ireland</span>
+</li>
+<li class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 transition-colors text-left">
+<span class="text-2xl">🇮🇷</span>
+<span class="font-medium text-slate-700 dark:text-slate-200 text-left">Iran</span>
+</li>
+<li class="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 cursor-pointer flex items-center gap-3 transition-colors text-left">
+<span class="text-2xl">🇮🇶</span>
+<span class="font-medium text-slate-700 dark:text-slate-200 text-left">Iraq</span>
+</li>
+</ul>
+</div>
+</div>
+<div class="mt-8 pt-6 w-full flex justify-center">
+<p class="text-sm text-slate-400 flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">info</span>
+                        Your data is encrypted and only used for planning.
+                   </p>
+</div>
+</div>
+</div>
+<div class="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4 z-40">
+<div class="glass-card p-2 rounded-2xl shadow-2xl shadow-primary/10 border border-white/60 dark:border-slate-700 backdrop-blur-xl flex items-center gap-3">
+<div class="flex-1 px-4 py-3 text-slate-600 dark:text-slate-300 text-sm md:text-base font-medium leading-relaxed bg-transparent outline-none truncate">
+<span class="text-slate-400 dark:text-slate-500 mr-1">Request:</span>
+<span class="text-slate-800 dark:text-slate-200">I hold an <span class="text-primary font-bold">Indian</span> passport...</span>
+</div>
+<button class="bg-primary hover:bg-primary-dark text-white rounded-xl h-12 w-12 flex items-center justify-center transition-transform active:scale-95 shadow-lg shadow-primary/30">
+<span class="material-symbols-outlined text-2xl">arrow_upward</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

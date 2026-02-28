@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Let's Pick - Selection Modal</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f97415",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#23170f",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for checklist */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(249, 116, 21, 0.3);
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(249, 116, 21, 0.6);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden h-screen w-screen relative">
+<!-- Blurred Background (Itinerary Simulation) -->
+<div class="absolute inset-0 z-0 bg-cover bg-center filter blur-md scale-105 opacity-60" data-alt="Blurred travel itinerary background with maps and lists" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAVsrEh8BP1gi2thrZqkdJABzxKFXQGw6Rn5tojGLeegdgDxLhEqrqFoFzif5pQjc1hTvKAGGHRsfmxspktg-2tC0_pq3_7e0X68iIzcVKFtGx4UZdANAxVHwrh6QqU3SOmxNWMLMwdFK4HVt_rRZbkJJWz_s9zAQVYjXYZ5s_6N4J8pL0FKka0LSdpyGiu-kNsfWXxjHTGEv1qOLHtD3XmaqXyFHFeCcZdE3M4I0r3Vb4l4oi_FrSGaAQZWn7_lxXVTATVHANiX7Y');">
+</div>
+<!-- Dark overlay for contrast -->
+<div class="absolute inset-0 z-0 bg-background-light/40 dark:bg-background-dark/60 backdrop-blur-sm"></div>
+<!-- Main Modal Container -->
+<div class="relative z-10 flex h-full w-full items-center justify-center p-4 md:p-8">
+<!-- Glassmorphism Card -->
+<div class="flex flex-col w-full max-w-5xl h-[90vh] md:h-[85vh] bg-white/80 dark:bg-[#2e231d]/85 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-2xl overflow-hidden">
+<!-- Header -->
+<div class="flex flex-row items-center justify-between px-6 py-5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/40 dark:bg-black/20">
+<div class="flex items-center gap-3">
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">checklist</span>
+</div>
+<h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Your Places</h1>
+</div>
+<button class="flex items-center gap-2 bg-primary hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-colors shadow-lg shadow-orange-500/20">
+<span>Done</span>
+<span class="material-symbols-outlined text-[20px]">check</span>
+</button>
+</div>
+<div class="flex flex-1 overflow-hidden">
+<!-- Sidebar / Navigation Tabs -->
+<div class="w-64 hidden md:flex flex-col border-r border-gray-200/50 dark:border-gray-700/50 bg-gray-50/50 dark:bg-white/5 p-4 gap-2">
+<button class="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl bg-primary text-white font-medium shadow-md shadow-orange-500/10 transition-all">
+<span class="material-symbols-outlined">restaurant</span>
+                        Restaurants
+                    </button>
+<button class="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 hover:text-primary transition-all font-medium">
+<span class="material-symbols-outlined">hotel</span>
+                        Hotels
+                    </button>
+<button class="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 hover:text-primary transition-all font-medium">
+<span class="material-symbols-outlined">attractions</span>
+                        Attractions
+                    </button>
+<button class="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 hover:text-primary transition-all font-medium">
+<span class="material-symbols-outlined">local_cafe</span>
+                        Cafes
+                    </button>
+</div>
+<!-- Main Content Area -->
+<div class="flex-1 flex flex-col h-full bg-white/30 dark:bg-transparent">
+<!-- Mobile Nav (Visible only on small screens) -->
+<div class="md:hidden flex overflow-x-auto gap-2 p-4 border-b border-gray-200/50 dark:border-gray-700/50 no-scrollbar">
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-primary text-white text-sm font-medium">Restaurants</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-slate-300 text-sm font-medium">Hotels</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-slate-300 text-sm font-medium">Attractions</button>
+<button class="whitespace-nowrap px-4 py-2 rounded-full bg-white dark:bg-white/10 border border-gray-200 dark:border-gray-700 text-slate-600 dark:text-slate-300 text-sm font-medium">Cafes</button>
+</div>
+<!-- Checklist Scroll Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+<div class="space-y-4">
+<!-- Item 1 -->
+<label class="group flex items-start gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="pt-1">
+<input checked="" class="w-6 h-6 rounded border-2 border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer bg-gray-50 dark:bg-gray-700 dark:border-gray-600" type="checkbox"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Terry Black's BBQ</h3>
+<div class="flex items-center gap-2 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="flex items-center text-amber-500 font-semibold"><span class="material-symbols-outlined text-[16px] mr-1">star</span>4.7</span>
+<span>•</span>
+<span>12k reviews</span>
+<span>•</span>
+<span>Austin, TX</span>
+</div>
+</div>
+<div class="h-16 w-24 rounded-lg overflow-hidden bg-gray-200">
+<img alt="Smoked barbecue brisket on a tray" class="h-full w-full object-cover" data-alt="Smoked barbecue brisket on a tray" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA28Yw6iV-nA9ELF8FQgwjWDryazpDOJYuOfHpLZiOqpboNNxYjjXjwmGqZFI7V5I0d1QIsNkhPb9EmCqSjvD4Gvbm_syErEYzRtH2YSjIJVRnbZYTthZti7dl6LBru6ihCmjKCgGk70Sq0hpkNqKmrNJi0dhxqs-GtAcmi4pWPNPJ-HvULO1mNXZil5P_WIB-Yg5LDQM1YvNOzGd7NAqTKpx9yJce3A_NqWAFfUraxtrOphXfKRJRxLi3lrKHCCXuwvdtq-0Nxy_Q"/>
+</div>
+</div>
+<p class="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-2">Legendary spot for pit-smoked meats &amp; housemade sides in a rustic setting with long communal tables.</p>
+</div>
+</label>
+<!-- Item 2 -->
+<label class="group flex items-start gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="pt-1">
+<input class="w-6 h-6 rounded border-2 border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer bg-gray-50 dark:bg-gray-700 dark:border-gray-600" type="checkbox"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Franklin Barbecue</h3>
+<div class="flex items-center gap-2 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="flex items-center text-amber-500 font-semibold"><span class="material-symbols-outlined text-[16px] mr-1">star</span>4.8</span>
+<span>•</span>
+<span>8k reviews</span>
+<span>•</span>
+<span>Austin, TX</span>
+</div>
+</div>
+<div class="h-16 w-24 rounded-lg overflow-hidden bg-gray-200">
+<img alt="Delicious barbecue plate with ribs" class="h-full w-full object-cover" data-alt="Delicious barbecue plate with ribs" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgm4TOLdwy5LDvLYkDAbFQr-4esmq8DSERZRVd3iheUY_3QZn2dxQqV9F3LyhH7noXZkApxlayl4VjnGaz9gdMvAtzBTCLd6jZ8sNxf9iyy9fd842cLV4mhYZNpoV1kIDLC785loHOcdmnZ24IEKBv9ruaDBllAUziNG2U4fNU4zRbacNUgRqwJ2w3K3Z6-_DuxHE3Cp8bAegTVplfH7Po09hHWc85mZDnaCS-EWIKKtTk_1lxKg8NGnMEJmUj8JXCgo-bYorHvmc"/>
+</div>
+</div>
+<p class="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-2">Long lines form early for brisket, pulled pork &amp; other smoked meats at this lunch-only spot.</p>
+</div>
+</label>
+<!-- Item 3 -->
+<label class="group flex items-start gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="pt-1">
+<input checked="" class="w-6 h-6 rounded border-2 border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer bg-gray-50 dark:bg-gray-700 dark:border-gray-600" type="checkbox"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">La Barbecue</h3>
+<div class="flex items-center gap-2 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="flex items-center text-amber-500 font-semibold"><span class="material-symbols-outlined text-[16px] mr-1">star</span>4.6</span>
+<span>•</span>
+<span>5k reviews</span>
+<span>•</span>
+<span>Austin, TX</span>
+</div>
+</div>
+<div class="h-16 w-24 rounded-lg overflow-hidden bg-gray-200">
+<img alt="Smoked sausage and ribs closeup" class="h-full w-full object-cover" data-alt="Smoked sausage and ribs closeup" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClIlil6fHCid8eX3MpGYcqpMIiGJXW81aQxHj18CQUYIU-dFpaZLjg6qoZqjcnMIhieMO1xOOuyz9Mk7VF3JvRlO7AI9ixLBuEjfEW1RG-AaV4arD5cCp_mTgEeET2ZkKL9fy2QjBVGcIvRC5yieU9H_KGGB7Zn-uA4XwOo440g9c5692b3xNEEG5HKj-9gfQHuolejnak3DCfQtSUoXRetsXg1dbsLKrDU0UI8qTJrot3eawoBfPJU9LF6u5nC8Oxon7U08SlCFQ"/>
+</div>
+</div>
+<p class="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-2">Women-owned joint offering brisket, ribs &amp; sausage, plus sandwiches &amp; sides.</p>
+</div>
+</label>
+<!-- Item 4 -->
+<label class="group flex items-start gap-4 p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-primary/50 dark:hover:border-primary/50 hover:shadow-md transition-all cursor-pointer">
+<div class="pt-1">
+<input class="w-6 h-6 rounded border-2 border-gray-300 text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer bg-gray-50 dark:bg-gray-700 dark:border-gray-600" type="checkbox"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<h3 class="text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">Interstellar BBQ</h3>
+<div class="flex items-center gap-2 mt-1 text-sm text-slate-500 dark:text-slate-400">
+<span class="flex items-center text-amber-500 font-semibold"><span class="material-symbols-outlined text-[16px] mr-1">star</span>4.9</span>
+<span>•</span>
+<span>2k reviews</span>
+<span>•</span>
+<span>Austin, TX</span>
+</div>
+</div>
+<div class="h-16 w-24 rounded-lg overflow-hidden bg-gray-200">
+<img alt="Platter of mixed grilled meats" class="h-full w-full object-cover" data-alt="Platter of mixed grilled meats" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnqnNjmFzGDBeg-Gw7dvig974drgl-KO4deR9XYq-ZnWQBWJ4f8FXK9NYilRBKNT6lcFK1q7s0bgMmnbDWb4eviaAP7IOh3XHCHfhbRzlbxH0dA4wLpMENT3Y7uoNPt-IlJNGDrvB1fj_mtCqIkh2Vq7eLqDDKHNKJ1QRyNOagArV9woAExiJ6aCLnWgyGokpdkZkVzZPLv-p5IX0-YxOq8D0xj5AYqLPlTy4UFEmHCxfW8C634-7Gd_gGKt4hlmDuzAsTm67G7Nc"/>
+</div>
+</div>
+<p class="mt-2 text-sm text-slate-600 dark:text-slate-300 line-clamp-2">Smoked meats &amp; unique sides served in a relaxed setting with outdoor seating.</p>
+</div>
+</label>
+</div>
+</div>
+<!-- Add Custom Place Footer -->
+<div class="border-t border-gray-200/50 dark:border-gray-700/50 bg-gray-50/80 dark:bg-[#1f1612]/90 p-6 backdrop-blur-md">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary">add_location_alt</span>
+<h3 class="text-base font-bold text-slate-900 dark:text-white">Add Custom Place</h3>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+<!-- URL Field -->
+<div class="md:col-span-4">
+<label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Place URL</label>
+<div class="relative">
+<input class="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-primary focus:border-primary" placeholder="https://maps.google.com/..." type="text"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2.5 text-slate-400 text-[18px]">link</span>
+</div>
+</div>
+<!-- Name Field -->
+<div class="md:col-span-4">
+<label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Name</label>
+<div class="relative">
+<input class="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. The Salt Lick" type="text"/>
+<span class="material-symbols-outlined absolute left-2.5 top-2.5 text-slate-400 text-[18px]">storefront</span>
+</div>
+</div>
+<!-- Label Field -->
+<div class="md:col-span-2">
+<label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wider">Label</label>
+<div class="relative">
+<select class="w-full pl-9 pr-8 py-2.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-slate-900 dark:text-white focus:ring-1 focus:ring-primary focus:border-primary appearance-none">
+<option>Food</option>
+<option>Visit</option>
+<option>Stay</option>
+</select>
+<span class="material-symbols-outlined absolute left-2.5 top-2.5 text-slate-400 text-[18px]">label</span>
+<span class="material-symbols-outlined absolute right-2 top-2.5 text-slate-400 pointer-events-none text-[18px]">expand_more</span>
+</div>
+</div>
+<!-- Add Button -->
+<div class="md:col-span-2 flex items-end">
+<button class="w-full py-2.5 bg-slate-900 dark:bg-slate-700 hover:bg-primary dark:hover:bg-primary text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                                    Add
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

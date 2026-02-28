@@ -12,7 +12,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="hidden md:flex w-[60px] flex-col items-center py-4 bg-[var(--surface)] border-r border-[var(--border)] shrink-0"
+      className="hidden md:flex flex-col items-center py-4 border-r border-[var(--border)] shrink-0 bg-white dark:bg-[var(--surface)]"
       style={{ width: 'var(--sidebar-collapsed)' }}
     >
       {navItems.map((item, i) => {
@@ -20,10 +20,10 @@ export default function Sidebar() {
         const content = (
           <span
             className={`
-              w-10 h-10 rounded-xl flex items-center justify-center text-xl border transition-colors duration-150
+              w-10 h-10 rounded-full flex items-center justify-center text-xl transition-colors duration-150
               ${isActive
-                ? 'bg-[var(--surface-hover)] border-brand-500/40'
-                : 'border-transparent hover:bg-[var(--surface-hover)] hover:border-[var(--border)]'
+                ? 'bg-brand-500 text-white'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
               }
             `}
             title={item.label}

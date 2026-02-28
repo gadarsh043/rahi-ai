@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Rahi AI - Trip Planner (Shared Mode)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f97415",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#23170f",
+                        "surface-light": "#ffffff",
+                        "surface-dark": "#2d241e",
+                        "text-main": "#1c130d",
+                        "text-sub": "#9e6b47",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .glass-banner {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .glass-badge {
+            background: rgba(249, 116, 21, 0.15);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgba(249, 116, 21, 0.2);
+        }.checkbox-wrapper input:checked + div {
+            background-color: #f97415;
+            border-color: #f97415;
+        }
+        .checkbox-wrapper input:checked + div svg {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-background-light text-text-main font-display antialiased overflow-hidden h-screen flex flex-col relative">
+<div class="glass-banner w-full px-6 py-3 flex items-center justify-between z-30 relative shadow-sm text-slate-800">
+<div class="flex items-center gap-2">
+<div class="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs border border-indigo-200">SJ</div>
+<div class="flex flex-col leading-none">
+<span class="text-sm font-semibold">Shared by Sarah Jenkins</span>
+<span class="text-[10px] text-slate-500 font-medium tracking-wide uppercase mt-0.5">• View Only Mode</span>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="text-xs text-slate-500 font-medium italic mr-2">
+            Click 'Suggest This' on cards to recommend changes
+        </div>
+<div class="h-6 w-px bg-stone-300 mx-1"></div>
+<button class="bg-primary hover:bg-primary/90 text-white font-medium text-sm px-4 py-1.5 rounded-lg flex items-center gap-2 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">fork_right</span>
+            Fork this trip
+        </button>
+</div>
+</div>
+<div class="flex flex-1 overflow-hidden h-full">
+<aside class="w-64 flex flex-col justify-between border-r border-stone-200 bg-background-light h-full flex-shrink-0">
+<div class="p-6 flex flex-col gap-8">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded-full bg-cover bg-center shrink-0 border border-stone-200 opacity-50 grayscale" data-alt="User profile avatar image" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCQp5qhlsTCmZi5MyO01sFS1CFh1Q12EKRhH_yH-_Vu-g6fCixq5AhtVHNUzcWqsuTtffj3eSjIj1L64FK3Wzxeafy9IolaYkLj0vr4X-S2WMzr18Y3Lj7jxaVpDKojU_Iggz5j2L9RkNQ3eTGvxcpoT2sxtrp_WZKNu2q06nkdqVzxfOREITiQhqFfYpbgXev5ijUSirHqjimi0vmmu2koFSb6TE6ZHM4cNcsNKJ9sP6UFRk_LFz6Xi-SUHIRCLrL9fc32b0rykCk');"></div>
+<div class="flex flex-col">
+<h1 class="text-base font-bold text-slate-900">Rahi AI</h1>
+<p class="text-xs text-text-sub font-medium">Guest Viewer</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2 opacity-60 pointer-events-none">
+<button class="w-full bg-stone-200 text-stone-500 font-semibold py-2.5 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors shadow-none cursor-not-allowed">
+<span class="material-symbols-outlined text-[20px]">add_circle</span>
+<span>New Trip</span>
+</button>
+<div class="mt-4 flex flex-col gap-1">
+<div class="group flex flex-col gap-2 px-3 py-2.5 rounded-lg hover:bg-stone-100 cursor-pointer transition-colors bg-stone-100/50">
+<div class="flex items-center justify-between gap-3 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-sub">chat_bubble</span>
+<span class="text-sm font-medium text-slate-700">Recent Chats</span>
+</div>
+<div class="bg-orange-100 text-orange-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-orange-200 pointer-events-auto">
+<span class="material-symbols-outlined text-[10px] fill-current">notifications</span> 3
+                            </div>
+</div>
+<div class="ml-9 flex items-center justify-between text-xs text-slate-600 bg-white/50 p-2 rounded border border-stone-100 pointer-events-auto">
+<span>Hyderabad to Dallas</span>
+</div>
+</div>
+<div class="group flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg hover:bg-stone-100 cursor-pointer transition-colors">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-text-sub">bookmark</span>
+<span class="text-sm font-medium text-slate-700">Saved Trips</span>
+</div>
+</div>
+</div>
+</nav>
+</div>
+<div class="p-6 border-t border-stone-200">
+<div class="flex items-center gap-2 text-text-sub text-xs">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span>Rahi AI v2.4 (Beta)</span>
+</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<header class="flex-shrink-0 bg-background-light border-b border-stone-200 h-16 px-6 flex items-center justify-between z-20">
+<div class="flex items-center gap-4">
+<button class="text-slate-500 hover:text-slate-800 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div>
+<h2 class="text-lg font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                        HYD <span class="material-symbols-outlined text-sm text-text-sub">arrow_forward</span> Dallas
+                        <span class="bg-primary/10 text-primary text-xs px-2 py-0.5 rounded font-medium ml-2">7 Days</span>
+<button class="glass-badge ml-3 px-2 py-0.5 rounded-full text-xs font-bold text-orange-600 flex items-center gap-1 hover:bg-orange-100 transition-colors cursor-pointer shadow-sm animate-pulse" title="View 3 new suggestions">
+<span class="material-symbols-outlined text-[14px] fill-current">notifications</span> 3
+                        </button>
+</h2>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="h-9 px-3 rounded-lg border border-stone-200 bg-white text-slate-700 text-sm font-medium flex items-center gap-2 hover:bg-stone-50 transition-colors cursor-default">
+<span class="material-symbols-outlined text-[18px]">currency_exchange</span>
+<span>USD</span>
+</button>
+<span class="text-xs text-slate-400 font-medium px-2">Read Only</span>
+<div class="h-9 w-9 rounded-full bg-stone-100 flex items-center justify-center text-stone-400 cursor-default">
+<span class="material-symbols-outlined text-[20px]">notifications_off</span>
+</div>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<div class="w-[55%] flex flex-col bg-stone-50/50 relative">
+<div class="flex-shrink-0 px-6 py-4 border-b border-stone-200 bg-background-light overflow-x-auto scrollbar-hide">
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-semibold shadow-md ring-2 ring-primary ring-offset-2 ring-offset-background-light transition-all">
+<span class="material-symbols-outlined text-[18px]">restaurant</span>
+                            Where to Eat
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">hotel</span>
+                            Stay
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">location_on</span>
+                            Go
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">flight</span>
+                            Flight
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-stone-200 text-slate-600 text-sm font-medium hover:bg-stone-50 hover:border-stone-300 transition-colors">
+<span class="material-symbols-outlined text-[18px]">attach_money</span>
+                            Costs
+                        </button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-6 pb-32">
+<div class="flex items-center justify-between mb-2">
+<h3 class="text-xl font-bold text-slate-900">Restaurant Recommendations</h3>
+<span class="text-sm text-text-sub">Showing 4 of 12 places</span>
+</div>
+<div class="glass-card rounded-xl p-4 shadow-sm flex gap-4 hover:shadow-md transition-shadow group relative">
+<div class="w-32 h-32 rounded-lg bg-cover bg-center flex-shrink-0" data-alt="Modern restaurant interior with warm lighting" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCB8arZcQqn2p97W9-qbWHe2qPRwOGNuOor-3Db2uYc5KeDLLXWzEOApGmXZHxpdy_eJvjf0tHphQgYV0q43nsZhSeY_LYgqEAzjoFwmeOuPazTtF4IVA-XVkcu6qWvRHlCgy_Ud44oxHhXnUi-yqYcLNZWlAjeGVDAkvFHBWwxrgeF_nb7ljrESzPzD2UmHZk_x-PobKm0iqz2isTFNIY9BPXsRUdtyDL9bYkcdP97a5jrUIybtj5Q7CHw5SDl39sTgTUqSn-T7DI');">
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h4 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">The Rustic Spoon</h4>
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                                        4.8 <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+</div>
+</div>
+<p class="text-sm text-text-sub mt-1 line-clamp-2">Farm-to-table dining experience featuring seasonal local ingredients and a cozy atmosphere.</p>
+<div class="mt-2 flex gap-2 text-xs text-slate-500">
+<span class="px-2 py-0.5 bg-stone-100 rounded">American</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">$$$</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">1.2 mi</span>
+</div>
+</div>
+<div class="flex justify-end mt-3 items-center gap-3">
+<button class="text-sm font-medium text-slate-600 hover:text-primary flex items-center gap-1">
+                                    Details <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<button class="bg-white hover:bg-orange-50 text-primary border border-primary/30 hover:border-primary text-sm font-medium px-4 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">campaign</span> Suggest This
+                                </button>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-4 shadow-sm flex gap-4 hover:shadow-md transition-shadow group ring-1 ring-primary/20 bg-primary/5">
+<div class="w-32 h-32 rounded-lg bg-cover bg-center flex-shrink-0" data-alt="Plated gourmet dish on a restaurant table" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAoLztLdBnFaJJj9OKkakHdNNPy-7oHMcYkPKzG9FotOM50YVGF34opgjLRifwwU6fM62kvMRuoBzZZZHSpgg9wZWJa7mpn6PBBeeG3j_7eiw5tKf0K-ud1zbiojSGA_i2aN1gngo3qHwEEGdFN2qhSAWtPjlFn3MRSpe4eITZHNEZ0Ef-j34HZTTYpm3id4cJO1cTo-USTICRGYOOBXuzopumGuaSgxowtz9tvKM5Jue_8IHBsmmtgIZrpxQQvxjixK0Np8KqdkoE');">
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h4 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Dallas Steakhouse Prime</h4>
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                                        4.6 <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+</div>
+</div>
+<p class="text-sm text-text-sub mt-1 line-clamp-2">Classic Texas steakhouse with an extensive wine list and premium cuts of beef.</p>
+<div class="mt-2 flex gap-2 text-xs text-slate-500">
+<span class="px-2 py-0.5 bg-stone-100 rounded">Steakhouse</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">$$$$</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">0.8 mi</span>
+</div>
+</div>
+<div class="flex justify-end mt-3 items-center gap-3">
+<button class="text-sm font-medium text-slate-600 hover:text-primary flex items-center gap-1">
+                                    Details <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<div class="bg-primary/90 text-white text-sm font-semibold px-4 py-1.5 rounded-lg flex items-center gap-2 shadow-sm opacity-100 cursor-default">
+<div class="h-5 w-5 rounded-full bg-white text-primary flex items-center justify-center text-[10px] font-bold">SJ</div>
+                                    Suggested by Sarah Jenkins
+                                </div>
+</div>
+</div>
+</div>
+<div class="glass-card rounded-xl p-4 shadow-sm flex gap-4 hover:shadow-md transition-shadow group relative">
+<div class="w-32 h-32 rounded-lg bg-cover bg-center flex-shrink-0" data-alt="Sushi platter presentation" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAH--0quK6wzAnOaskHBD6hoPc0CQx2miN6AsYzrwjnYSuvIFsjoe8qdsGKo18_cWHgxvOZjPk0sQ6TWXj-uZFvIm60fz51NsIob9sSMxJYdksEq8asLhBMdE1GDRmU-m-t74INC-zgw9dmTgwZzf5OtZj3wPpCUbyZ46pI-Z2SZdsW3I2MODEHJAXK2ZWosLFoB9KMq0QE0uBWr0RLzRL3KZHpyX2ReREpiv46oDpZ3ckysO7TgX1qDBwOqO2yn7e4d3yMRBp46Dc');">
+</div>
+<div class="flex-1 flex flex-col justify-between">
+<div>
+<div class="flex justify-between items-start">
+<h4 class="text-lg font-bold text-slate-900 group-hover:text-primary transition-colors">Uchi Dallas</h4>
+<div class="flex items-center gap-1 bg-green-50 text-green-700 px-1.5 py-0.5 rounded text-xs font-bold">
+                                        4.9 <span class="material-symbols-outlined text-[12px] fill-current">star</span>
+</div>
+</div>
+<p class="text-sm text-text-sub mt-1 line-clamp-2">Contemporary Japanese dining and sushi in a stylish, energetic setting.</p>
+<div class="mt-2 flex gap-2 text-xs text-slate-500">
+<span class="px-2 py-0.5 bg-stone-100 rounded">Japanese</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">$$$$</span>
+<span class="px-2 py-0.5 bg-stone-100 rounded">2.4 mi</span>
+</div>
+</div>
+<div class="flex justify-end mt-3 items-center gap-3">
+<button class="text-sm font-medium text-slate-600 hover:text-primary flex items-center gap-1">
+                                    Details <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+<button class="bg-white hover:bg-orange-50 text-primary border border-primary/30 hover:border-primary text-sm font-medium px-4 py-1.5 rounded-lg flex items-center gap-1 shadow-sm transition-all">
+<span class="material-symbols-outlined text-[18px]">campaign</span> Suggest This
+                                </button>
+</div>
+</div>
+<div class="absolute right-4 bottom-14 z-20 w-72 bg-white rounded-xl shadow-xl border border-stone-200 p-4 animate-fade-in-up transform transition-all">
+<div class="flex justify-between items-center mb-2">
+<h5 class="font-bold text-sm text-slate-800">Why do you suggest this?</h5>
+<button class="text-stone-400 hover:text-stone-600"><span class="material-symbols-outlined text-[16px]">close</span></button>
+</div>
+<textarea class="w-full text-xs p-2 border border-stone-300 rounded-md focus:ring-primary focus:border-primary mb-3 bg-stone-50" placeholder="e.g. Best BBQ in town, my friend recommended it..." rows="2"></textarea>
+<div class="flex justify-end">
+<button class="bg-primary text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-primary/90">Send Suggestion</button>
+</div>
+<div class="absolute bottom-[-6px] right-8 w-3 h-3 bg-white border-b border-r border-stone-200 transform rotate-45"></div>
+</div>
+</div>
+</div>
+<div class="absolute bottom-0 left-0 w-full bg-white/95 backdrop-blur border-t border-stone-200 p-4 z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<div class="flex items-center gap-3 opacity-60 pointer-events-none select-none filter grayscale">
+<button class="flex-shrink-0 bg-stone-100 text-slate-700 rounded-lg p-3 flex items-center justify-center">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<div class="flex-1 relative">
+<input class="w-full bg-stone-50 border border-stone-200 text-slate-900 rounded-lg pl-4 pr-12 py-3" disabled="" placeholder="Editing disabled in shared view" type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 p-1.5 rounded-md">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+<button class="flex-shrink-0 bg-stone-300 text-white font-semibold px-4 py-2 rounded-lg whitespace-nowrap">
+                            Let's Pick
+                        </button>
+</div>
+<div class="absolute inset-0 flex items-center justify-center z-20">
+<span class="bg-slate-800/80 text-white text-xs px-3 py-1.5 rounded-full backdrop-blur-sm shadow-md flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span> Fork to edit with AI
+                         </span>
+</div>
+</div>
+</div>
+<div class="w-[45%] bg-stone-200 h-full relative">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="Map view of city streets with parks and blocks" data-location="Dallas Map View" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCr-70y46ysr8zhVdD--TL-oiAUfFod5jmkdXDlwM-watFlpryeaa9kgc-fKV2bAKTPAQgLvyysvbJmW06xlrxUVzH39S17Zh_tgeoLE8rKyc-NPBGFweTj0sqf4LDMEv-OJLsPVZoWFTh0ql3gxert_lBM9-jaVOlhWRWEp-3IWpbkGBGDC3pK_oR0j89cC7UVUA8vxrO_IXYZCaxvwRIwumAxwOJL7v1fiThp0qFRu4YD2B562naJqs_FFAcnr2cvQMZj4tUm76I');">
+<div class="absolute inset-0 bg-slate-900/5 mix-blend-multiply"></div>
+</div>
+<div class="absolute top-4 right-4 flex flex-col gap-2">
+<button class="glass-card p-2 rounded-lg shadow-md text-slate-700 hover:bg-white transition-colors">
+<span class="material-symbols-outlined">layers</span>
+</button>
+<button class="glass-card p-2 rounded-lg shadow-md text-slate-700 hover:bg-white transition-colors">
+<span class="material-symbols-outlined">my_location</span>
+</button>
+<div class="flex flex-col glass-card rounded-lg shadow-md overflow-hidden">
+<button class="p-2 text-slate-700 hover:bg-white border-b border-stone-100 transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="p-2 text-slate-700 hover:bg-white transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+</div>
+<div class="absolute top-[30%] left-[40%] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-10">
+<div class="relative">
+<div class="bg-primary text-white p-1.5 rounded-full shadow-lg transform group-hover:scale-110 transition-transform ring-4 ring-white/50">
+<span class="material-symbols-outlined text-[20px]">restaurant</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+<div class="glass-card text-slate-900 text-xs font-bold px-2 py-1 rounded shadow-md">
+                                The Rustic Spoon
+                            </div>
+<div class="w-2 h-2 bg-white transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+</div>
+</div>
+</div>
+<div class="absolute top-[45%] left-[55%] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer z-20">
+<div class="relative">
+<div class="bg-emerald-600 text-white p-1.5 rounded-full shadow-md border-2 border-white transform scale-110">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max">
+<div class="bg-slate-900 text-white text-xs font-bold px-2 py-1 rounded shadow-md">
+                                Dallas Steakhouse (Selected)
+                            </div>
+<div class="w-2 h-2 bg-slate-900 transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
+</div>
+</div>
+</div>
+<div class="absolute top-[60%] left-[35%] transform -translate-x-1/2 -translate-y-1/2 group cursor-pointer">
+<div class="bg-white text-slate-600 p-1.5 rounded-full shadow-md border border-slate-200 transform group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[20px]">restaurant</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

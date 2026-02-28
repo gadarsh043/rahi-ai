@@ -145,7 +145,7 @@ export default function CountryAutocomplete({ placeholder, value, onChange }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="glass dark:glass-dark rounded-xl mt-2 overflow-hidden max-h-[280px] overflow-y-auto"
+            className="glass dark:glass-dark rounded-xl mt-2 overflow-hidden max-h-[280px] overflow-y-auto relative z-50"
           >
             {!hasResults ? (
               <div className="text-center text-sm text-[var(--text-muted)] py-6">

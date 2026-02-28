@@ -41,13 +41,13 @@
 
 /* Dark mode colors — using CSS custom properties for theme switching */
 :root {
-  --bg: #FFFFFF;
-  --surface: #F9FAFB;
-  --surface-hover: #F3F4F6;
-  --border: #E5E7EB;
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  --bg: #FDF8F4;
+  --surface: #FFFFFF;
+  --surface-hover: #FFF7ED;
+  --border: #F0E6DA;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
 }
 
 .dark {
@@ -67,18 +67,25 @@ body {
   color: var(--text-primary);
 }
 
+/* Light mode warm gradient */
+:root body,
+.light body {
+  background: #FDF8F4;
+  background-image: radial-gradient(ellipse at 50% -20%, rgba(249, 115, 22, 0.08) 0%, transparent 60%);
+}
+
 /* Dark mode background with subtle radial gradient (anti-slop) */
 .dark body {
   background: #0F172A;
   background-image: radial-gradient(ellipse at 15% 0%, rgba(67, 20, 7, 0.4) 0%, transparent 50%);
 }
 
-/* Glassmorphism utility classes */
+/* Glassmorphism utility classes — light mode */
 @utility glass {
-  background: rgba(249, 250, 251, 0.7);
+  background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(16px) saturate(180%);
   -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 @utility glass-dark {
@@ -89,10 +96,10 @@ body {
 }
 
 @utility glass-strong {
-  background: rgba(249, 250, 251, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(24px) saturate(200%);
   -webkit-backdrop-filter: blur(24px) saturate(200%);
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 @utility glass-strong-dark {

@@ -69,39 +69,53 @@ function canProceedForStep(step, formData) {
 }
 
 function buildPromptText(formData) {
+  const data = formData;
   const parts = [];
-  const originStr = typeof formData.origin === 'object' && formData.origin?.city
-    ? `${formData.origin.city}`
-    : formData.origin;
-  const destStr = typeof formData.destination === 'object' && formData.destination?.city
-    ? `${formData.destination.city}`
-    : formData.destination;
-  if (formData.pace) parts.push(formData.pace);
-  if (formData.budgetVibe) parts.push(`${formData.budgetVibe} budget`);
-  parts.push('trip');
-  if (originStr) parts.push(`from ${originStr}`);
-  if (destStr) parts.push(`to ${destStr}`);
-  if (formData.startDate) {
-    const start = formData.startDate instanceof Date ? formData.startDate : new Date(formData.startDate);
-    const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    if (formData.endDate) {
-      const end = formData.endDate instanceof Date ? formData.endDate : new Date(formData.endDate);
-      const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      parts.push(`${startStr} – ${endStr}`);
+
+  if (data.pace || data.budgetVibe) {
+    const paceText = data.pace ? `${data.pace}` : '';
+    const budgetText = data.budgetVibe || '';
+    if (paceText && budgetText) {
+      parts.push(`I want a ${paceText} ${budgetText} trip`);
+    } else if (paceText) {
+      parts.push(`I want a ${paceText} trip`);
     } else {
-      parts.push(startStr);
+      parts.push(`I want a ${budgetText} trip`);
     }
+  } else {
+    parts.push('I want a trip');
   }
-  if (formData.isFlexible && formData.numDays) parts.push(`${formData.numDays} days`);
-  if (formData.preferences?.length) parts.push(formData.preferences.join(', '));
-  if (formData.accommodationType) parts.push(formData.accommodationType);
-  if (formData.passportCountry) {
-    const passportStr = typeof formData.passportCountry === 'object' && formData.passportCountry?.name
-      ? formData.passportCountry.name
-      : formData.passportCountry;
-    parts.push(`Passport: ${passportStr}`);
+
+  const originCity = typeof data.origin === 'object' && data.origin?.city ? data.origin.city : (data.origin && typeof data.origin === 'string' ? data.origin : null);
+  const destCity = typeof data.destination === 'object' && data.destination?.city ? data.destination.city : (data.destination && typeof data.destination === 'string' ? data.destination : null);
+  if (originCity) parts.push(`from ${originCity}`);
+  if (destCity) parts.push(`to ${destCity}`);
+
+  if (data.startDate && data.endDate) {
+    const start = new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const end = new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const days = Math.ceil((new Date(data.endDate) - new Date(data.startDate)) / (1000 * 60 * 60 * 24));
+    parts.push(`for ${days} days (${start} – ${end})`);
+  } else if (data.isFlexible && data.numDays) {
+    parts.push(`for about ${data.numDays} days`);
   }
-  if (formData.instructions?.trim()) parts.push(formData.instructions.trim());
+
+  const prefs = Array.isArray(data.preferences) ? data.preferences : [];
+  if (prefs.length > 0) {
+    const top = prefs.slice(0, 3).join(', ');
+    const extra = prefs.length > 3 ? ` +${prefs.length - 3} more` : '';
+    parts.push(`focused on ${top}${extra}`);
+  }
+
+  if (data.accommodationType) {
+    parts.push(`staying in ${data.accommodationType}s`);
+  }
+
+  if (data.instructions && String(data.instructions).trim()) {
+    const short = data.instructions.length > 40 ? data.instructions.slice(0, 40) + '...' : data.instructions;
+    parts.push(`(${short})`);
+  }
+
   return parts.join(' ');
 }
 
