@@ -106,3 +106,145 @@ body {
 @utility shadow-brand {
   box-shadow: 0 4px 16px rgba(249, 115, 22, 0.25);
 }
+
+/* react-day-picker dark mode tweaks */
+.rdp {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* Trip calendar: use theme variables so built-in styles have clear differentiation */
+.rdp-trip-calendar .rdp-root {
+  --rdp-accent-color: var(--color-brand-500);
+  --rdp-accent-background-color: rgba(249, 115, 22, 0.2);
+  --rdp-today-color: var(--color-brand-500);
+  --rdp-disabled-opacity: 0.35;
+  --rdp-outside-opacity: 0.5;
+  --rdp-range_middle-background-color: rgba(249, 115, 22, 0.2);
+  --rdp-range_start-date-background-color: var(--color-brand-500);
+  --rdp-range_end-date-background-color: var(--color-brand-500);
+  --rdp-selected-border: 2px solid var(--color-brand-500);
+}
+
+.dark .rdp-trip-calendar .rdp-root {
+  --rdp-accent-color: var(--color-brand-500);
+  --rdp-accent-background-color: rgba(249, 115, 22, 0.25);
+  --rdp-today-color: var(--color-brand-400);
+  --rdp-range_middle-background-color: rgba(249, 115, 22, 0.25);
+}
+
+.dark .rdp {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* Today: clear “current day” cue when not selected */
+.rdp-trip-calendar .rdp-today:not(.rdp-selected):not(.rdp-outside) .rdp-day_button {
+  font-weight: 700;
+  color: var(--color-brand-500);
+  border: 2px solid var(--color-brand-500);
+  background: transparent;
+}
+
+.dark .rdp-trip-calendar .rdp-today:not(.rdp-selected):not(.rdp-outside) .rdp-day_button {
+  color: var(--color-brand-400);
+  border-color: var(--color-brand-400);
+}
+
+/* Disabled (past) dates: clearly non-interactive */
+.rdp-trip-calendar .rdp-disabled:not(.rdp-selected) {
+  opacity: 0.35;
+}
+
+.rdp-trip-calendar .rdp-disabled:not(.rdp-selected) .rdp-day_button {
+  color: var(--text-muted);
+  background: transparent !important;
+  border-color: transparent !important;
+  cursor: not-allowed;
+}
+
+.rdp-trip-calendar .rdp-disabled:hover .rdp-day_button,
+.rdp-trip-calendar .rdp-disabled .rdp-day_button:hover {
+  background: transparent !important;
+}
+
+/* Selected range start/end: solid brand, white text */
+.rdp-trip-calendar .rdp-range_start .rdp-day_button,
+.rdp-trip-calendar .rdp-range_end .rdp-day_button {
+  background-color: var(--color-brand-500) !important;
+  color: white !important;
+}
+
+/* Range middle: visible tint */
+.rdp-trip-calendar .rdp-range_middle .rdp-day_button {
+  background-color: rgba(249, 115, 22, 0.2);
+  color: var(--text-primary);
+}
+
+.dark .rdp-trip-calendar .rdp-range_middle .rdp-day_button {
+  background-color: rgba(249, 115, 22, 0.25);
+  color: var(--text-primary);
+}
+
+/* Default available day: subtle hover */
+.rdp-trip-calendar .rdp-day:not(.rdp-disabled):not(.rdp-selected):not(.rdp-range_middle) .rdp-day_button:hover {
+  background-color: var(--surface-hover);
+}
+
+/* Duration slider styling */
+.duration-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+}
+
+.duration-slider:focus {
+  outline: none;
+}
+
+.duration-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--color-brand-500);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.duration-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.6);
+}
+
+.duration-slider::-moz-range-thumb {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 9999px;
+  background: #ffffff;
+  border: 2px solid var(--color-brand-500);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.45);
+  cursor: pointer;
+  transition: transform 150ms ease-out, box-shadow 150ms ease-out;
+}
+
+.duration-slider::-moz-range-thumb:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.6);
+}
+
+.duration-slider::-webkit-slider-runnable-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.duration-slider::-moz-range-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: transparent;
+}

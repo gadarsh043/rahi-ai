@@ -1,9 +1,11 @@
 /**
  * Placeholder step content so we can test the full stepper flow.
- * Replace with real components (DatePicker, etc.) for remaining steps.
+ * Uses real components for origin/destination + dates. Other steps are simple stubs for now.
  */
 import CityAutocomplete from './CityAutocomplete';
 import { getCitiesByNames } from '../../utils/mockCities';
+import TripDatePicker from './TripDatePicker';
+import DurationSlider from './DurationSlider';
 
 const POPULAR_ORIGIN = getCitiesByNames(['Dubai', 'London', 'Singapore', 'Delhi']);
 const POPULAR_DESTINATION = getCitiesByNames(['Paris', 'Tokyo', 'Bali', 'New York']);
@@ -30,46 +32,33 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 2:
       return (
-        <div className="mt-6 max-w-md space-y-3">
-          <label className="flex items-center gap-2 text-sm text-[var(--text-secondary)]">
-            <input
-              type="checkbox"
-              checked={formData.isFlexible ?? false}
-              onChange={(e) => updateField('isFlexible', e.target.checked)}
-              className="rounded border-[var(--border)]"
-            />
-            Flexible dates
-          </label>
-          <button
-            type="button"
-            onClick={() => updateField('startDate', new Date())}
-            className="border border-[var(--border)] text-[var(--text-secondary)] rounded-xl px-4 py-2 text-sm hover:bg-[var(--surface-hover)]"
-          >
-            Set start date (today)
-          </button>
-          {formData.startDate && (
-            <button
-              type="button"
-              onClick={() => updateField('endDate', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000))}
-              className="block border border-[var(--border)] text-[var(--text-secondary)] rounded-xl px-4 py-2 text-sm hover:bg-[var(--surface-hover)]"
-            >
-              Set end date (+7 days)
-            </button>
-          )}
-        </div>
+        <TripDatePicker
+          startDate={formData.startDate}
+          endDate={formData.endDate}
+          isFlexible={formData.isFlexible}
+          numDays={formData.numDays}
+          onChange={({ startDate, endDate, isFlexible, numDays }) => {
+            updateField('startDate', startDate);
+            updateField('endDate', endDate);
+            updateField('isFlexible', isFlexible);
+            updateField('numDays', numDays);
+          }}
+        />
       );
     case 3:
       return (
-        <div className="mt-6 max-w-md">
-          <input
-            type="number"
-            min={1}
-            max={30}
+        formData.isFlexible ? (
+          <DurationSlider
             value={formData.numDays ?? 7}
-            onChange={(e) => updateField('numDays', parseInt(e.target.value, 10) || 7)}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--text-primary)] focus:border-brand-500 focus:outline-none"
+            onChange={(days) => updateField('numDays', days)}
           />
-        </div>
+        ) : (
+          <div className="mt-6 max-w-md">
+            <p className="text-sm text-[var(--text-muted)]">
+              Turn on &quot;I&apos;m flexible&quot; in the previous step to adjust trip length here.
+            </p>
+          </div>
+        )
       );
     case 4:
       return (

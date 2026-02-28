@@ -36,9 +36,21 @@ function canProceedForStep(step, formData) {
     case 1:
       return formData.destination != null && (typeof formData.destination === 'object' ? formData.destination?.city : String(formData.destination).trim() !== '');
     case 2:
-      return formData.startDate != null;
+      if (formData.isFlexible) return true;
+      if (!formData.startDate || !formData.endDate) return false;
+      {
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.endDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const startDay = new Date(start);
+        startDay.setHours(0, 0, 0, 0);
+        const endDay = new Date(end);
+        endDay.setHours(0, 0, 0, 0);
+        return startDay >= today && endDay > startDay;
+      }
     case 3:
-      return formData.numDays != null && formData.numDays >= 1;
+      return formData.isFlexible && formData.numDays != null && formData.numDays >= 1;
     case 4:
       return formData.pace != null;
     case 5:
