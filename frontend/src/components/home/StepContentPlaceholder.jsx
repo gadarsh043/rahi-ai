@@ -1,32 +1,32 @@
 /**
  * Placeholder step content so we can test the full stepper flow.
- * Replace with real components (CityAutocomplete, DatePicker, etc.) later.
+ * Replace with real components (DatePicker, etc.) for remaining steps.
  */
+import CityAutocomplete from './CityAutocomplete';
+import { getCitiesByNames } from '../../utils/mockCities';
+
+const POPULAR_ORIGIN = getCitiesByNames(['Dubai', 'London', 'Singapore', 'Delhi']);
+const POPULAR_DESTINATION = getCitiesByNames(['Paris', 'Tokyo', 'Bali', 'New York']);
+
 export default function StepContentPlaceholder({ step, formData, updateField }) {
   switch (step) {
     case 0:
       return (
-        <div className="mt-6 max-w-md">
-          <input
-            type="text"
-            placeholder="e.g. Paris"
-            value={formData.origin ?? ''}
-            onChange={(e) => updateField('origin', e.target.value || null)}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-brand-500 focus:outline-none"
-          />
-        </div>
+        <CityAutocomplete
+          placeholder="e.g. Paris, Mumbai"
+          value={formData.origin}
+          onChange={(city) => updateField('origin', city)}
+          popularCities={POPULAR_ORIGIN}
+        />
       );
     case 1:
       return (
-        <div className="mt-6 max-w-md">
-          <input
-            type="text"
-            placeholder="e.g. Tokyo"
-            value={formData.destination ?? ''}
-            onChange={(e) => updateField('destination', e.target.value || null)}
-            className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-brand-500 focus:outline-none"
-          />
-        </div>
+        <CityAutocomplete
+          placeholder="e.g. Tokyo, Bali"
+          value={formData.destination}
+          onChange={(city) => updateField('destination', city)}
+          popularCities={POPULAR_DESTINATION}
+        />
       );
     case 2:
       return (

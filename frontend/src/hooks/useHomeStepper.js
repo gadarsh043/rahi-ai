@@ -32,9 +32,9 @@ function getPrevStep(current, formData) {
 function canProceedForStep(step, formData) {
   switch (step) {
     case 0:
-      return formData.origin != null && String(formData.origin).trim() !== '';
+      return formData.origin != null && (typeof formData.origin === 'object' ? formData.origin?.city : String(formData.origin).trim() !== '');
     case 1:
-      return formData.destination != null && String(formData.destination).trim() !== '';
+      return formData.destination != null && (typeof formData.destination === 'object' ? formData.destination?.city : String(formData.destination).trim() !== '');
     case 2:
       return formData.startDate != null;
     case 3:
@@ -57,11 +57,17 @@ function canProceedForStep(step, formData) {
 
 function buildPromptText(formData) {
   const parts = [];
+  const originStr = typeof formData.origin === 'object' && formData.origin?.city
+    ? `${formData.origin.city}`
+    : formData.origin;
+  const destStr = typeof formData.destination === 'object' && formData.destination?.city
+    ? `${formData.destination.city}`
+    : formData.destination;
   if (formData.pace) parts.push(formData.pace);
   if (formData.budgetVibe) parts.push(`${formData.budgetVibe} budget`);
   parts.push('trip');
-  if (formData.origin) parts.push(`from ${formData.origin}`);
-  if (formData.destination) parts.push(`to ${formData.destination}`);
+  if (originStr) parts.push(`from ${originStr}`);
+  if (destStr) parts.push(`to ${destStr}`);
   if (formData.startDate) {
     const start = formData.startDate instanceof Date ? formData.startDate : new Date(formData.startDate);
     const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });

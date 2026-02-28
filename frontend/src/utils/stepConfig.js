@@ -1,6 +1,6 @@
 export const STEP_CONFIG = [
-  { icon: '✈️', question: 'Where from?', subtitle: 'Your departure city' },
-  { icon: '🌍', question: 'Where to?', subtitle: 'Your destination' },
+  { icon: '🛫', question: 'Where are you flying from?', subtitle: 'City or airport you are flying from.' },
+  { icon: '🌍', question: 'Where do you want to go?', subtitle: 'Pick a city or region you are excited about.' },
   { icon: '📅', question: 'When?', subtitle: 'Pick your travel dates' },
   { icon: '📆', question: 'How long?', subtitle: 'Trip duration' },
   { icon: '😎', question: 'Pace?', subtitle: 'How do you like to travel?' },
