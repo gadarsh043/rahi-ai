@@ -6,6 +6,8 @@ import CityAutocomplete from './CityAutocomplete';
 import { getCitiesByNames } from '../../utils/mockCities';
 import TripDatePicker from './TripDatePicker';
 import DurationSlider from './DurationSlider';
+import PaceSelector from './PaceSelector';
+import BudgetVibeSelector from './BudgetVibeSelector';
 
 const POPULAR_ORIGIN = getCitiesByNames(['Dubai', 'London', 'Singapore', 'Delhi']);
 const POPULAR_DESTINATION = getCitiesByNames(['Paris', 'Tokyo', 'Bali', 'New York']);
@@ -62,41 +64,17 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 4:
       return (
-        <div className="mt-6 flex flex-wrap gap-2 max-w-md">
-          {['relaxed', 'moderate', 'active', 'intense'].map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => updateField('pace', p)}
-              className={`rounded-xl px-4 py-2 text-sm font-medium border transition-colors ${
-                formData.pace === p
-                  ? 'bg-brand-500 text-white border-brand-500'
-                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
+        <PaceSelector
+          value={formData.pace}
+          onChange={(pace) => updateField('pace', pace)}
+        />
       );
     case 5:
       return (
-        <div className="mt-6 flex flex-wrap gap-2 max-w-md">
-          {['$', '$$', '$$$', '$$$$'].map((b) => (
-            <button
-              key={b}
-              type="button"
-              onClick={() => updateField('budgetVibe', b)}
-              className={`rounded-xl px-4 py-2 text-sm font-medium border transition-colors ${
-                formData.budgetVibe === b
-                  ? 'bg-brand-500 text-white border-brand-500'
-                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
-              }`}
-            >
-              {b}
-            </button>
-          ))}
-        </div>
+        <BudgetVibeSelector
+          value={formData.budgetVibe}
+          onChange={(budgetVibe) => updateField('budgetVibe', budgetVibe)}
+        />
       );
     case 6:
       return (
