@@ -5,6 +5,8 @@ import StepQuestion from '../components/home/StepQuestion';
 import StepIndicator from '../components/home/StepIndicator';
 import StepNavigation from '../components/home/StepNavigation';
 import StepContentPlaceholder from '../components/home/StepContentPlaceholder';
+import PromptBox from '../components/home/PromptBox';
+import JoinTrip from '../components/home/JoinTrip';
 
 export default function HomePage() {
   const {
@@ -12,6 +14,8 @@ export default function HomePage() {
     formData,
     direction,
     canProceed,
+    promptText,
+    isLastStep,
     goNext,
     goBack,
     goToStep,
@@ -24,7 +28,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-1 min-h-0 min-w-0">
       <div className="flex flex-1 flex-col items-center min-w-0">
-        <div className="flex flex-1 flex-col w-full max-w-lg px-4 py-8 min-h-0">
+        <div className="flex flex-1 flex-col w-full max-w-lg px-4 py-8 min-h-0 pb-32">
         <StepQuestion
           icon={config?.icon}
           question={config?.question}
@@ -67,6 +71,14 @@ export default function HomePage() {
             onNext={goNext}
           />
         </div>
+
+        <PromptBox
+          promptText={promptText}
+          isComplete={isLastStep}
+          formData={formData}
+          onGenerate={(data) => console.log('Generate trip — formData:', data)}
+        />
+        <JoinTrip />
         </div>
       </div>
     </div>
