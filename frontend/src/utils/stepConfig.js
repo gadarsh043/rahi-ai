@@ -5,8 +5,8 @@ export const STEP_CONFIG = [
   { icon: '⏱', question: 'How many days?', subtitle: 'Roughly how long do you want to be away?' },
   { icon: '🚶', question: "What's your travel pace?", subtitle: 'This shapes how many activities we plan per day' },
   { icon: '💰', question: "What's your budget vibe?", subtitle: 'No exact numbers needed — just a vibe' },
-  { icon: '🎯', question: 'Into?', subtitle: 'Interests and preferences' },
-  { icon: '🛏️', question: 'Stay?', subtitle: 'Accommodation type' },
+  { icon: '❤️', question: "What are you into?", subtitle: 'Pick everything that excites you' },
+  { icon: '🛏', question: 'Where do you want to stay?', subtitle: 'Your preferred accommodation type' },
   { icon: '🛂', question: 'Passport?', subtitle: 'Nationality for visa info' },
   { icon: '✨', question: 'Anything else?', subtitle: 'Extra notes for your trip' },
 ];

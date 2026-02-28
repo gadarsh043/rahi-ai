@@ -56,8 +56,7 @@ function canProceedForStep(step, formData) {
     case 5:
       return formData.budgetVibe != null;
     case 6:
-    case 9:
-      return true;
+      return Array.isArray(formData.preferences) && formData.preferences.length >= 2;
     case 7:
       return formData.accommodationType != null;
     case 8:

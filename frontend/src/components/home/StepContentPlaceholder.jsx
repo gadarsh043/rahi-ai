@@ -8,6 +8,8 @@ import TripDatePicker from './TripDatePicker';
 import DurationSlider from './DurationSlider';
 import PaceSelector from './PaceSelector';
 import BudgetVibeSelector from './BudgetVibeSelector';
+import PreferencePills from './PreferencePills';
+import AccommodationSelector from './AccommodationSelector';
 
 const POPULAR_ORIGIN = getCitiesByNames(['Dubai', 'London', 'Singapore', 'Delhi']);
 const POPULAR_DESTINATION = getCitiesByNames(['Paris', 'Tokyo', 'Bali', 'New York']);
@@ -78,28 +80,17 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 6:
       return (
-        <div className="mt-6 max-w-md">
-          <p className="text-sm text-[var(--text-muted)]">Optional — tap Next to continue.</p>
-        </div>
+        <PreferencePills
+          value={formData.preferences}
+          onChange={(preferences) => updateField('preferences', preferences)}
+        />
       );
     case 7:
       return (
-        <div className="mt-6 flex flex-wrap gap-2 max-w-md">
-          {['Hotel', 'Hostel', 'Apartment'].map((a) => (
-            <button
-              key={a}
-              type="button"
-              onClick={() => updateField('accommodationType', a)}
-              className={`rounded-xl px-4 py-2 text-sm font-medium border transition-colors ${
-                formData.accommodationType === a
-                  ? 'bg-brand-500 text-white border-brand-500'
-                  : 'border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-hover)]'
-              }`}
-            >
-              {a}
-            </button>
-          ))}
-        </div>
+        <AccommodationSelector
+          value={formData.accommodationType}
+          onChange={(accommodationType) => updateField('accommodationType', accommodationType)}
+        />
       );
     case 8:
       return (
