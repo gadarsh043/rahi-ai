@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TopBar from './components/layout/TopBar';
 import Sidebar from './components/layout/Sidebar';
 import HomePage from './pages/HomePage';
-import PlanPage from './pages/PlanPage';
+import PlanPage from './pages/PlanPage/PlanPage';
 import SettingsPage from './pages/SettingsPage';
 
 export default function App() {

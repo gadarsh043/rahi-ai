@@ -505,3 +505,78 @@ Sequential stepper. One step visible at a time. framer-motion AnimatePresence fo
 - ❌ No Inter, Roboto, Arial, system fonts
 - ❌ No purple gradients, no generic blue/white themes
 - ❌ Don't modify PROJECT_SPEC.md or MWEB_UI_SPEC.md
+
+
+## Plan View Architecture
+
+### Layout Structure
+```
+┌──────┬───────────────────────────┬──────────────────────┐
+│      │ PlanHeader                │                      │
+│ Side │ TabBar (scrollable pills) │                      │
+│ bar  ├───────────────────────────┤   MapPanel            │
+│      │                           │   (Leaflet + OSM)    │
+│      │   TabContent              │   Color-coded markers │
+│      │   (scrollable)            │                      │
+│      ├───────────────────────────┤                      │
+│      │ ActionBar                 │                      │
+│      │ [Chat input] [Let's Pick] │                      │
+└──────┴───────────────────────────┴──────────────────────┘
+```
+
+- Content panel: flex-1, min-w-0, overflow-y-auto
+- Map panel: w-[45%], hidden below lg breakpoint, border-l
+- ActionBar: sticky bottom of content panel
+- Full height: h-[calc(100vh-56px)] accounting for TopBar
+
+### Three Modes (one PlanView component)
+- `editing`: owner, full chat + Let's Pick, all interactions
+- `shared`: viewer via ?shared=CODE, read-only, suggest + fork
+- `saved`: frozen "My Trip" at /trip/:id, PDF + booking links
+
+### Data Flow
+- All trip data lives in Zustand `tripStore`
+- Tabs read from `trip.places` filtered by category
+- Map reads from `trip.places` filtered by `activeTab`
+- Chat messages stored in `tripStore.chatMessages`
+- Let's Pick reads/writes `trip.places[].isInItinerary`
+
+### Tab IDs
+eat | stay | go | flight | costs | trip | next
+
+### Map Setup (MVP)
+Using Leaflet + OpenStreetMap (free), NOT Google Maps JS API.
+- react-leaflet for React integration
+- Custom divIcon markers with category colors
+- Switch to Google Maps later if needed (just swap MapPanel internals)
+
+### Marker Colors
+- restaurant: #EF4444 (red)
+- hotel: #3B82F6 (blue)
+- attraction: #10B981 (green)
+- cafe: #F59E0B (amber)
+- outdoor: #14B8A6 (teal)
+
+### Component Ownership
+```
+PlanView/
+├── PlanHeader.jsx        — trip title, currency, share
+├── TabBar.jsx            — 7 scrollable pill tabs
+├── TabContent.jsx        — switch/router for active tab
+├── ActionBar.jsx         — chat input + Let's Pick button
+├── MapPanel.jsx          — Leaflet map with markers
+├── ChatPanel.jsx         — message history + mock AI
+├── LetsPickPopup.jsx     — full-screen place curation
+├── PlaceCard.jsx         — shared card (eat/stay/go)
+├── FlightCard.jsx        — collapsible flight card
+├── Timeline.jsx          — day-by-day itinerary
+├── CostBreakdown.jsx     — progress bar breakdown
+└── tabs/
+    ├── EatTab.jsx
+    ├── StayTab.jsx
+    ├── PlacesTab.jsx
+    ├── FlightTab.jsx
+    ├── CostsTab.jsx
+    ├── TripTab.jsx
+    └── NextTab.jsx
+```

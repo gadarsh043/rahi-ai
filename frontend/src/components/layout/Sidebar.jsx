@@ -41,6 +41,14 @@ export default function Sidebar() {
           </div>
         );
       })}
+      <div className="mt-4">
+        <a
+          href="/plan/mock"
+          className="text-xs text-[var(--text-muted)] hover:text-brand-500"
+        >
+          [Dev: Open Mock Trip]
+        </a>
+      </div>
     </aside>
   );
 }
