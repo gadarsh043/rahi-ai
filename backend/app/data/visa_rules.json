@@ -1,0 +1,179 @@
+{
+  "IN": {
+    "US": {
+      "default": {
+        "visa_required": true,
+        "type": "B1/B2 Tourist Visa",
+        "processing": "3-8 weeks (schedule interview at US consulate)",
+        "validity": "Up to 10 years, multiple entry",
+        "checklist": [
+          "Valid passport (6+ months validity)",
+          "DS-160 confirmation page",
+          "Visa appointment confirmation",
+          "Passport-size photo (2x2 inches)",
+          "Bank statements (last 3 months)",
+          "Employment/enrollment letter",
+          "Travel itinerary",
+          "Hotel reservations"
+        ],
+        "warnings": [
+          "Apply at least 2 months before travel",
+          "Wait times vary by consulate — check ustraveldocs.com"
+        ]
+      },
+      "F-1": {
+        "visa_required": false,
+        "note": "Valid F-1 visa + I-20 with travel signature (within 1 year) is sufficient for re-entry.",
+        "checklist": [
+          "Valid passport with F-1 stamp",
+          "I-20 with recent travel signature",
+          "Valid I-94",
+          "Proof of enrollment"
+        ],
+        "warnings": ["Get travel signature from your DSO before departing"]
+      },
+      "H-1B": {
+        "visa_required": false,
+        "note": "Valid H-1B stamp sufficient for re-entry.",
+        "checklist": [
+          "Valid passport with H-1B stamp",
+          "I-797 approval notice",
+          "Employment verification letter"
+        ],
+        "warnings": [
+          "If visa stamp expired, you'll need to renew at a US consulate before re-entry"
+        ]
+      },
+      "green_card": {
+        "visa_required": false,
+        "note": "Permanent residents need only their green card for re-entry.",
+        "checklist": ["Valid Green Card", "Valid passport"],
+        "warnings": ["Trips over 6 months may affect residency status"]
+      }
+    },
+    "UK": {
+      "default": {
+        "visa_required": true,
+        "type": "Standard Visitor Visa",
+        "processing": "3-4 weeks",
+        "validity": "6 months",
+        "checklist": [
+          "Valid passport",
+          "Bank statements",
+          "Employment letter",
+          "Hotel booking",
+          "Return ticket"
+        ],
+        "warnings": ["Apply via gov.uk/standard-visitor-visa"]
+      }
+    },
+    "TH": {
+      "default": {
+        "visa_required": false,
+        "type": "Visa on Arrival (30 days)",
+        "processing": "On arrival",
+        "validity": "30 days",
+        "checklist": [
+          "Valid passport (6+ months)",
+          "Return ticket within 30 days",
+          "Proof of accommodation"
+        ],
+        "warnings": ["Can extend once for 30 more days at immigration office"]
+      }
+    },
+    "JP": {
+      "default": {
+        "visa_required": true,
+        "type": "Tourist Visa",
+        "processing": "5-7 business days",
+        "validity": "15-90 days",
+        "checklist": [
+          "Valid passport",
+          "Visa application form",
+          "Photo",
+          "Flight itinerary",
+          "Hotel bookings",
+          "Bank statement"
+        ],
+        "warnings": ["Apply at nearest Japanese embassy/consulate"]
+      }
+    },
+    "AE": {
+      "default": {
+        "visa_required": true,
+        "type": "Tourist Visa (30-day on arrival for some nationalities)",
+        "processing": "3-5 business days if pre-applied",
+        "validity": "30 days",
+        "checklist": [
+          "Valid passport (6+ months)",
+          "Return ticket",
+          "Hotel booking"
+        ],
+        "warnings": [
+          "Check if eligible for visa on arrival based on nationality"
+        ]
+      }
+    },
+    "SG": {
+      "default": {
+        "visa_required": false,
+        "type": "Visa-free entry (30 days)",
+        "processing": "On arrival",
+        "validity": "30 days",
+        "checklist": [
+          "Valid passport (6+ months)",
+          "Return ticket",
+          "Proof of funds"
+        ],
+        "warnings": []
+      }
+    }
+  },
+  "US": {
+    "UK": {
+      "default": {
+        "visa_required": false,
+        "type": "Visa Waiver (ESTA)",
+        "processing": "Usually instant, up to 72 hours",
+        "validity": "2 years / 90 days per visit",
+        "checklist": ["Valid passport", "ESTA approval", "Return ticket"],
+        "warnings": ["Apply for ESTA at least 72 hours before departure"]
+      }
+    },
+    "JP": {
+      "default": {
+        "visa_required": false,
+        "type": "Visa-free entry (90 days)",
+        "processing": "On arrival",
+        "validity": "90 days",
+        "checklist": ["Valid passport", "Return ticket"],
+        "warnings": []
+      }
+    },
+    "IN": {
+      "default": {
+        "visa_required": true,
+        "type": "e-Tourist Visa",
+        "processing": "3-5 business days",
+        "validity": "30 days / 1 year / 5 years options",
+        "checklist": ["Valid passport", "Digital photo", "Return ticket"],
+        "warnings": ["Apply at indianvisaonline.gov.in"]
+      }
+    }
+  },
+  "_default": {
+    "visa_required": null,
+    "type": "Check with embassy",
+    "processing": "Varies",
+    "checklist": [
+      "Valid passport (6+ months validity)",
+      "Return ticket",
+      "Proof of accommodation",
+      "Proof of funds"
+    ],
+    "warnings": [
+      "Check visa requirements at your destination's embassy or consulate website"
+    ]
+  }
+}
+

@@ -25,6 +25,7 @@ class TripGenerateRequest(BaseModel):
     dietary: list[str] = []
     disability: list[str] = []
     num_travelers: int = 1
+    lives_in_destination: Optional[bool] = None
     currency: str = "USD"
 
 

@@ -1,0 +1,123 @@
+{
+  "US": {
+    "language": "English",
+    "emergency_numbers": { "police": "911", "ambulance": "911", "fire": "911" },
+    "tipping": "15-20% at restaurants, $1-2 per drink at bars, 15-20% for taxis",
+    "power_plug": "Type A/B, 120V 60Hz",
+    "sim_advice": "Buy prepaid SIM at any carrier store (T-Mobile, AT&T) or use eSIM (Airalo, Holafly)",
+    "water_safety": "Tap water is safe to drink everywhere",
+    "timezone": "Multiple zones: EST (UTC-5), CST (UTC-6), MST (UTC-7), PST (UTC-8)",
+    "currency_info": "US Dollar (USD). Cards accepted everywhere. Carry some cash for tips.",
+    "dress_code": "Casual. Some upscale restaurants require smart casual."
+  },
+  "UK": {
+    "language": "English",
+    "emergency_numbers": {
+      "police": "999",
+      "ambulance": "999",
+      "fire": "999",
+      "alt": "112"
+    },
+    "tipping": "10-15% at restaurants (check if service charge included). Not expected at pubs.",
+    "power_plug": "Type G, 230V 50Hz",
+    "sim_advice": "Buy SIM at Heathrow arrivals (Three, EE, Vodafone) or use eSIM",
+    "water_safety": "Tap water is safe to drink",
+    "timezone": "GMT (UTC+0), BST (UTC+1) in summer",
+    "currency_info": "British Pound (GBP). Contactless payments widely accepted.",
+    "dress_code": "Smart casual for most places. Some clubs enforce dress codes."
+  },
+  "JP": {
+    "language": "Japanese (limited English outside tourist areas)",
+    "emergency_numbers": { "police": "110", "ambulance": "119", "fire": "119" },
+    "tipping": "No tipping — it can be considered rude",
+    "power_plug": "Type A, 100V 50/60Hz (same as US plugs, lower voltage)",
+    "sim_advice": "Rent pocket WiFi at airport or buy tourist SIM (Sakura Mobile, IIJmio)",
+    "water_safety": "Tap water is safe and excellent quality",
+    "timezone": "JST (UTC+9), no daylight saving",
+    "currency_info": "Japanese Yen (JPY). Cash is king — many small shops don't take cards. Get yen at 7-Eleven ATMs.",
+    "dress_code": "Neat and modest. Remove shoes indoors. Cover shoulders at temples."
+  },
+  "TH": {
+    "language": "Thai (English common in tourist areas)",
+    "emergency_numbers": {
+      "police": "191",
+      "ambulance": "1669",
+      "tourist_police": "1155"
+    },
+    "tipping": "Not expected but appreciated. Round up or leave 20-50 baht.",
+    "power_plug": "Type A/B/C, 220V 50Hz (bring universal adapter)",
+    "sim_advice": "Buy SIM at airport (AIS, DTAC, TrueMove). Very cheap data plans.",
+    "water_safety": "Do NOT drink tap water. Buy bottled water.",
+    "timezone": "ICT (UTC+7)",
+    "currency_info": "Thai Baht (THB). Cards accepted at malls/hotels. Street food is cash only.",
+    "dress_code": "Light, breathable clothes. Cover knees and shoulders at temples."
+  },
+  "IN": {
+    "language": "Hindi, English (widely spoken in cities)",
+    "emergency_numbers": {
+      "police": "100",
+      "ambulance": "102",
+      "fire": "101",
+      "unified": "112"
+    },
+    "tipping": "10% at restaurants. Round up for rickshaws/taxis.",
+    "power_plug": "Type C/D/M, 230V 50Hz (bring universal adapter)",
+    "sim_advice": "Buy SIM at airport (Jio, Airtel). Need passport copy. Activation takes 1-24 hours.",
+    "water_safety": "Do NOT drink tap water. Use bottled or filtered water only.",
+    "timezone": "IST (UTC+5:30)",
+    "currency_info": "Indian Rupee (INR). UPI payments very common. Cards accepted at most places in cities.",
+    "dress_code": "Modest at religious sites. Light cotton clothes for heat."
+  },
+  "AE": {
+    "language": "Arabic (English widely spoken)",
+    "emergency_numbers": { "police": "999", "ambulance": "998", "fire": "997" },
+    "tipping": "10-15% at restaurants. Service charge often included.",
+    "power_plug": "Type G (same as UK), 220V 50Hz",
+    "sim_advice": "Buy SIM at airport (du, Etisalat). Tourist SIMs available.",
+    "water_safety": "Tap water is safe but most people drink bottled",
+    "timezone": "GST (UTC+4)",
+    "currency_info": "UAE Dirham (AED). Cards accepted everywhere. ATMs widely available.",
+    "dress_code": "Modest in public — cover shoulders and knees. More relaxed in hotels/resorts."
+  },
+  "SG": {
+    "language": "English, Mandarin, Malay, Tamil (English is primary)",
+    "emergency_numbers": { "police": "999", "ambulance": "995", "fire": "995" },
+    "tipping": "Not expected — service charge usually included",
+    "power_plug": "Type G (UK-style), 230V 50Hz",
+    "sim_advice": "Buy tourist SIM at Changi Airport (Singtel, StarHub)",
+    "water_safety": "Tap water is safe and excellent quality",
+    "timezone": "SGT (UTC+8)",
+    "currency_info": "Singapore Dollar (SGD). Cashless society — cards and PayNow everywhere.",
+    "dress_code": "Casual. Air conditioning is intense — bring a light layer."
+  },
+  "FR": {
+    "language": "French (limited English outside Paris)",
+    "emergency_numbers": {
+      "police": "17",
+      "ambulance": "15",
+      "fire": "18",
+      "unified": "112"
+    },
+    "tipping": "Service included by law. Round up for good service.",
+    "power_plug": "Type C/E, 230V 50Hz",
+    "sim_advice": "Buy SIM at any Tabac shop or Orange/SFR store",
+    "water_safety": "Tap water is safe to drink",
+    "timezone": "CET (UTC+1), CEST (UTC+2) in summer",
+    "currency_info": "Euro (EUR). Cards widely accepted. Some markets are cash-only.",
+    "dress_code": "Smart casual. Parisians dress well — avoid overly casual/touristy outfits."
+  },
+  "_default": {
+    "language": "Check before travel",
+    "emergency_numbers": {
+      "note": "Look up local emergency numbers before your trip"
+    },
+    "tipping": "Varies by country — research local customs",
+    "power_plug": "Bring a universal adapter",
+    "sim_advice": "Buy a local SIM at the airport or use an eSIM service like Airalo",
+    "water_safety": "When in doubt, drink bottled water",
+    "timezone": "Check timeanddate.com",
+    "currency_info": "Check exchange rates before travel. Notify your bank of travel plans.",
+    "dress_code": "Research local dress codes, especially for religious sites"
+  }
+}
+

@@ -189,9 +189,9 @@ async def handle_suggestion(
 
 @router.post("/plans/{trip_id}/rebuild")
 async def rebuild_itinerary(trip_id: str, user=Depends(get_current_user)):
-    """Regenerate itinerary using ONLY in-itinerary places."""
     from app.services.llm_service import get_llm
-    from app.prompts.itinerary import ITINERARY_SYSTEM, build_itinerary_prompt
+    from app.services.places_service import format_places_lean
+    from app.prompts.itinerary import ITINERARY_SYSTEM_LEAN, build_itinerary_prompt_lean
     import json
 
     supabase = get_supabase()
@@ -209,15 +209,100 @@ async def rebuild_itinerary(trip_id: str, user=Depends(get_current_user)):
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
 
+    itinerary = trip.get("itinerary", {})
+    days = itinerary.get("itinerary", []) if isinstance(itinerary, dict) else []
+
     places_resp = (
         supabase.table("trip_places")
-        .select("google_place_id, name, category, rating, price_level, address")
+        .select("*")
         .eq("trip_id", trip_id)
         .eq("is_in_itinerary", True)
         .execute()
     )
     places = places_resp.data or []
 
+    recent_resp = (
+        supabase.table("chat_messages")
+        .select("itinerary_diff")
+        .eq("trip_id", trip_id)
+        .eq("role", "assistant")
+        .order("created_at", desc=True)
+        .limit(10)
+        .execute()
+    )
+
+    affected_days = set()
+    for msg in (recent_resp.data or []):
+        diff = msg.get("itinerary_diff") or {}
+        for change in diff.get("changes", []) or []:
+            if change.get("day_number"):
+                affected_days.add(change["day_number"])
+            pid = change.get("place_id")
+            if pid:
+                for day in days:
+                    for act in day.get("activities", []) or []:
+                        if act.get("place_id") == pid:
+                            affected_days.add(day.get("day_number"))
+
+    # PATCH MODE: 1-2 affected days
+    if 0 < len(affected_days) <= 2 and days:
+        patched_days = list(days)
+        patch_success = True
+
+        for day_num in affected_days:
+            day_places = [p for p in places if p.get("day_number") == day_num]
+            unassigned = [p for p in places if not p.get("day_number")]
+
+            places_text = "\n".join(
+                [
+                    f"- {p['name']} | {p.get('category','?')} | rating {p.get('rating','N/A')}"
+                    for p in day_places
+                ]
+            )
+            if unassigned:
+                places_text += "\nUnassigned (include if they fit):\n"
+                places_text += "\n".join(
+                    [f"- {p['name']} | {p.get('category','?')}" for p in unassigned[:5]]
+                )
+
+            prompt = f"""Rewrite Day {day_num} of a {trip.get('num_days')}-day {trip.get('pace','moderate')} trip to {trip.get('destination_city')}.
+
+Places for this day:
+{places_text}
+
+JSON only: {{"day_number":{day_num},"title":"Day title","activities":[{{"time":"10:00","type":"food|attraction|hotel|free","title":"Name","detail":"2-3 sentences","place_id":"id"}}]}}"""
+
+            try:
+                raw = await llm.json_completion(
+                    "Rewrite one day of a travel itinerary. JSON only.", prompt
+                )
+                new_day = json.loads(raw)
+                replaced = False
+                for i, d in enumerate(patched_days):
+                    if d.get("day_number") == day_num:
+                        patched_days[i] = new_day
+                        replaced = True
+                        break
+                if not replaced:
+                    patched_days.append(new_day)
+            except Exception:
+                patch_success = False
+                break
+
+        if patch_success:
+            new_itinerary = {
+                "itinerary": patched_days,
+                "narrative": itinerary.get("narrative", "") if isinstance(itinerary, dict) else "",
+            }
+            supabase.table("trips").update({"itinerary": new_itinerary}).eq("id", trip_id).execute()
+            return {
+                "itinerary": new_itinerary,
+                "message": f"Updated Day {', '.join(str(d) for d in sorted(affected_days))}!",
+                "mode": "patch",
+            }
+
+    # FULL REGEN MODE
+    lean_places = format_places_lean(places, max_per_category=10)
     params = {
         "destination_city": trip["destination_city"],
         "destination_country": trip.get("destination_country", ""),
@@ -234,18 +319,13 @@ async def rebuild_itinerary(trip_id: str, user=Depends(get_current_user)):
         "end_date": trip.get("end_date"),
     }
 
-    prompt = build_itinerary_prompt(places, params)
-    response = await llm.json_completion(ITINERARY_SYSTEM, prompt)
+    prompt = build_itinerary_prompt_lean(lean_places, params)
+    response = await llm.json_completion(ITINERARY_SYSTEM_LEAN, prompt)
 
     try:
         itinerary_data = json.loads(response)
-        (
-            supabase.table("trips")
-            .update({"itinerary": itinerary_data})
-            .eq("id", trip_id)
-            .execute()
-        )
-        return {"itinerary": itinerary_data, "message": "Itinerary rebuilt!"}
+        supabase.table("trips").update({"itinerary": itinerary_data}).eq("id", trip_id).execute()
+        return {"itinerary": itinerary_data, "message": "Full itinerary rebuilt!", "mode": "full"}
     except json.JSONDecodeError:
         raise HTTPException(status_code=500, detail="Failed to parse itinerary")
 

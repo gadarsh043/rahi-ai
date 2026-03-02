@@ -8,11 +8,17 @@ from fastapi.responses import StreamingResponse
 
 from app.dependencies import get_current_user
 from app.models.trip import TripGenerateRequest
-from app.prompts.essentials import ESSENTIALS_SYSTEM, build_essentials_prompt
-from app.prompts.itinerary import ITINERARY_SYSTEM, build_itinerary_prompt
+from app.prompts.itinerary import ITINERARY_SYSTEM_LEAN, build_itinerary_prompt_lean
+from app.services.cost_service import estimate_costs
+from app.services.essentials_service import (
+    detect_visa_status,
+    get_travel_essentials,
+    get_visa_info,
+    normalize_country_code,
+)
 from app.services.geocode_service import geocode_city
 from app.services.llm_service import get_llm
-from app.services.places_service import fetch_all_categories
+from app.services.places_service import fetch_all_categories, format_places_lean
 from app.utils.supabase_client import get_supabase
 
 router = APIRouter()
@@ -42,7 +48,8 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
 
     itinerary_data: dict | None = None
     cost_data: dict | None = None
-    essentials_data: dict | None = None
+    visa_info: dict | None = None
+    travel_essentials: dict | None = None
 
     try:
         # Phase 1: Status
@@ -88,10 +95,11 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
 
         # Phase 3: Generate itinerary via LLM (stream chunks)
         params = req.model_dump()
-        itinerary_prompt = build_itinerary_prompt(flat_places, params)
+        lean_places_text = format_places_lean(flat_places, max_per_category=10)
+        itinerary_prompt = build_itinerary_prompt_lean(lean_places_text, params)
 
         full_response = ""
-        async for chunk in llm.stream_completion(ITINERARY_SYSTEM, itinerary_prompt):
+        async for chunk in llm.stream_completion(ITINERARY_SYSTEM_LEAN, itinerary_prompt):
             full_response += chunk
             yield sse_event("narrative_chunk", {"text": chunk})
 
@@ -106,7 +114,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
 
         if itinerary_data is None:
             # Fallback: request JSON separately
-            json_response = await llm.json_completion(ITINERARY_SYSTEM, itinerary_prompt)
+            json_response = await llm.json_completion(ITINERARY_SYSTEM_LEAN, itinerary_prompt)
             try:
                 itinerary_data = json.loads(json_response)
             except Exception:
@@ -121,62 +129,53 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
             },
         )
 
-        # Phase 4: Essentials + Cost (parallel)
+        # Phase 4: Visa + Essentials + Costs (ZERO tokens — static data + formula)
         yield sse_event(
             "status",
             {"phase": "enriching", "message": "Getting visa info and cost estimates..."},
         )
 
-        essentials_prompt = build_essentials_prompt(params)
+        # Pull optional profile settings (visa status, passport country)
+        profile = {}
+        try:
+            profile_resp = (
+                supabase.table("profiles")
+                .select("visa_status, passport_country")
+                .eq("id", user["id"])
+                .single()
+                .execute()
+            )
+            profile = profile_resp.data or {}
+        except Exception:
+            profile = {}
 
-        cost_system = (
-            'You are a travel cost estimator. Based on the destination, duration, budget level, and '
-            'accommodation type, estimate costs. Respond in JSON only: '
-            '{"accommodation":{"total":N,"per_night":N,"nights":N},'
-            '"food":{"total":N,"per_day":N},'
-            '"activities":{"total":N},'
-            '"flights":{"total":N},'
-            '"local_transport":{"total":N},'
-            '"total":N,"per_person":N,"daily_avg":N,"currency":"USD"}'
-        )
-        cost_prompt = (
-            f"Estimate trip costs: {req.num_days} days in {req.destination_city}, "
-            f"{req.budget_vibe} budget, {req.accommodation_type}, {req.num_travelers} travelers, "
-            f"currency {req.currency}."
-        )
+        visa_status = detect_visa_status(req.instructions) or profile.get("visa_status")
+        dest_country = normalize_country_code(req.destination_country or "")
+        passport = normalize_country_code(req.passport_country or profile.get("passport_country") or "")
+        origin_country = normalize_country_code(req.origin_country or "")
 
-        essentials_task = llm.json_completion(ESSENTIALS_SYSTEM, essentials_prompt)
-        cost_task = llm.json_completion(cost_system, cost_prompt)
-
-        essentials_raw, cost_raw = await asyncio.gather(
-            essentials_task, cost_task, return_exceptions=True
-        )
-
-        if isinstance(essentials_raw, str):
-            try:
-                essentials_data = json.loads(essentials_raw)
-            except Exception:
-                essentials_data = {}
+        if req.lives_in_destination is True:
+            visa_info = {
+                "visa_required": False,
+                "note": "You live here — no visa needed!",
+                "checklist": [],
+                "warnings": [],
+            }
         else:
-            essentials_data = {}
-
-        yield sse_event("visa_info", essentials_data.get("visa_info", {}) if essentials_data else {})
-        yield sse_event(
-            "travel_essentials",
-            essentials_data.get("travel_essentials", {}) if essentials_data else {},
+            visa_info = get_visa_info(passport, dest_country, visa_status)
+        travel_essentials = get_travel_essentials(dest_country)
+        cost_data = estimate_costs(
+            destination_country=dest_country,
+            num_days=req.num_days,
+            budget_vibe=req.budget_vibe,
+            accommodation_type=req.accommodation_type,
+            num_travelers=req.num_travelers,
+            origin_country=origin_country,
+            currency=req.currency,
         )
 
-        if isinstance(cost_raw, str):
-            try:
-                cost_data = json.loads(cost_raw)
-            except Exception:
-                cost_data = {"total": 0}
-        else:
-            cost_data = {"total": 0}
-
-        if isinstance(cost_data, dict):
-            cost_data["label"] = "estimated"
-
+        yield sse_event("visa_info", visa_info)
+        yield sse_event("travel_essentials", travel_essentials)
         yield sse_event("cost_estimate", cost_data)
 
         # Phase 5: Save to Supabase
@@ -205,6 +204,8 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                     "raw_places_data": {"places": flat_places},
                     "itinerary": itinerary_data,
                     "cost_estimate": cost_data,
+                    "visa_info": visa_info,
+                    "travel_essentials": travel_essentials,
                     "status": "planning",
                 }
             ).execute()

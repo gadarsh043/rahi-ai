@@ -100,6 +100,7 @@ async def fetch_places_nearby(
                 "google_maps_url": p.get("googleMapsUri", ""),
                 "website": p.get("websiteUri", ""),
                 "types": p.get("types", []),
+                "opening_hours": p.get("regularOpeningHours", {}),
             }
         )
 
@@ -132,5 +133,80 @@ async def fetch_all_categories(lat: float, lng: float) -> dict[str, list]:
             all_places[cat] = result
 
     return all_places
+
+
+def summarize_hours(opening_hours: dict | None) -> str:
+    """Compress Google's verbose opening hours into a short string."""
+    if not opening_hours:
+        return "hours N/A"
+
+    periods = opening_hours.get("periods", [])
+    if not periods:
+        weekday_text = opening_hours.get("weekdayDescriptions", [])
+        if weekday_text:
+            first = weekday_text[0] if weekday_text else ""
+            if ":" in first:
+                hours_part = first.split(":", 1)[1].strip()
+                return hours_part[:20]
+        return "hours N/A"
+
+    if len(periods) == 1:
+        p = periods[0]
+        if p.get("open", {}).get("hour") == 0 and not p.get("close"):
+            return "24hrs"
+
+    first_period = periods[0]
+    open_h = first_period.get("open", {}).get("hour", 0)
+    open_m = first_period.get("open", {}).get("minute", 0)
+    close_h = first_period.get("close", {}).get("hour", 17)
+    close_m = first_period.get("close", {}).get("minute", 0)
+
+    def fmt(h, m):
+        suffix = "AM" if h < 12 else "PM"
+        display_h = h if h <= 12 else h - 12
+        if display_h == 0:
+            display_h = 12
+        if m:
+            return f"{display_h}:{m:02d}{suffix}"
+        return f"{display_h}{suffix}"
+
+    return f"{fmt(open_h, open_m)}-{fmt(close_h, close_m)}"
+
+
+def format_places_lean(places: list, max_per_category: int = 10) -> str:
+    """
+    Format places as compact strings for LLM prompt.
+    Pre-filters to top places by rating per category.
+    """
+    by_cat: dict[str, list] = {}
+    for p in places:
+        cat = p.get("category", "other")
+        by_cat.setdefault(cat, []).append(p)
+
+    lines: list[str] = []
+    for cat, items in by_cat.items():
+        sorted_items = sorted(
+            items, key=lambda x: x.get("rating") or 0, reverse=True
+        )[:max_per_category]
+
+        lines.append(f"\n### {cat.upper()} ({len(sorted_items)} places)")
+        for p in sorted_items:
+            name = p.get("name", "Unknown")
+            place_id = p.get("google_place_id", "")
+            rating = p.get("rating", "N/A")
+            price = (
+                "$" * (p.get("price_level") or 1)
+                if p.get("price_level") is not None
+                else "?"
+            )
+            hours = summarize_hours(p.get("opening_hours"))
+            famous = p.get("famous_for", "")
+
+            line = f"- {name} (ID:{place_id}) | ⭐{rating} | {price} | 🕐{hours}"
+            if famous:
+                line += f" | {famous}"
+            lines.append(line)
+
+    return "\n".join(lines)
 
 

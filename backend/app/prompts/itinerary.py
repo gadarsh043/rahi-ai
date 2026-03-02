@@ -68,3 +68,23 @@ Available REAL places (use ONLY these):
 Create the itinerary now. Remember: JSON format only, use exact place names and IDs from the list above."""
 
 
+ITINERARY_SYSTEM_LEAN = """Create a day-by-day travel itinerary using ONLY the provided places. Respect opening hours and travel time between locations. Match the traveler's pace.
+
+JSON format:
+{"itinerary":[{"day_number":1,"title":"Day title","activities":[{"time":"10:00","type":"food|attraction|hotel|free","title":"Activity","detail":"2-3 sentence tip","place_id":"google_id or null"}]}],"narrative":"2-3 paragraph trip overview"}"""
+
+
+def build_itinerary_prompt_lean(places_text: str, params: dict) -> str:
+    return f"""Plan a {params['num_days']}-day trip to {params['destination_city']}, {params.get('destination_country', '')}.
+
+Travelers: {params.get('num_travelers', 1)} | Pace: {params['pace']} | Budget: {params['budget_vibe']} | Stay: {params.get('accommodation_type', 'hotel')}
+Interests: {', '.join(params.get('preferences', []))}
+Dietary: {', '.join(params.get('dietary', []))}
+Notes: {params.get('instructions', 'None')}
+
+REAL places (use ONLY these — respect opening hours):
+{places_text}
+
+Create the itinerary. JSON only."""
+
+
