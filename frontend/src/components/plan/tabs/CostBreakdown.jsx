@@ -1,15 +1,56 @@
 export default function CostBreakdown({ estimate, numTravelers }) {
   if (!estimate) return null;
 
-  const { accommodation, food, activities, flights, localTransport, total, perPerson, dailyAvg, currency, label } =
-    estimate;
+  const safeNum = (v) => {
+    const n = typeof v === 'number' ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const accommodation = estimate.accommodation;
+  const food = estimate.food;
+  const activities = estimate.activities;
+  const flights = estimate.flights;
+  const localTransport = estimate.localTransport ?? estimate.local_transport;
+
+  const total = safeNum(estimate.total);
+  const perPerson = safeNum(
+    estimate.perPerson ?? estimate.per_person ?? (numTravelers ? total / numTravelers : total)
+  );
+  const dailyAvg = safeNum(estimate.dailyAvg ?? estimate.daily_avg);
+  const currency = estimate.currency || 'USD';
+  const label = estimate.label;
 
   const categories = [
-    { key: 'accommodation', icon: '🛏', label: accommodation?.label || 'Accommodation', amount: accommodation?.total || 0 },
-    { key: 'food', icon: '🍽', label: food?.label || 'Food & Drinks', amount: food?.total || 0 },
-    { key: 'activities', icon: '🎟', label: 'Activities & Tickets', amount: activities?.total || 0 },
-    { key: 'flights', icon: '✈️', label: flights?.label || 'Flights', amount: flights?.total || 0 },
-    { key: 'localTransport', icon: '🚕', label: localTransport?.label || 'Local Transport', amount: localTransport?.total || 0 },
+    {
+      key: 'accommodation',
+      icon: '🛏',
+      label: accommodation?.label || 'Accommodation',
+      amount: safeNum(accommodation?.total ?? accommodation),
+    },
+    {
+      key: 'food',
+      icon: '🍽',
+      label: food?.label || 'Food & Drinks',
+      amount: safeNum(food?.total ?? food),
+    },
+    {
+      key: 'activities',
+      icon: '🎟',
+      label: 'Activities & Tickets',
+      amount: safeNum(activities?.total ?? activities),
+    },
+    {
+      key: 'flights',
+      icon: '✈️',
+      label: flights?.label || 'Flights',
+      amount: safeNum(flights?.total ?? flights),
+    },
+    {
+      key: 'localTransport',
+      icon: '🚕',
+      label: localTransport?.label || 'Local Transport',
+      amount: safeNum(localTransport?.total ?? localTransport),
+    },
   ];
 
   return (
@@ -46,14 +87,16 @@ export default function CostBreakdown({ estimate, numTravelers }) {
                 <span className="text-[var(--text-primary)]">{catLabel}</span>
               </span>
               <span className="font-semibold text-[var(--text-primary)]">
-                ${amount.toLocaleString()}
+                ${safeNum(amount).toLocaleString()}
               </span>
             </div>
             <div className="h-2 bg-[var(--surface-hover)] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full bg-brand-500"
                 style={{
-                  width: total > 0 ? `${Math.max(4, (amount / total) * 100)}%` : '0%',
+                  width: total > 0
+                    ? `${Math.max(4, (safeNum(amount) / total) * 100)}%`
+                    : '0%',
                 }}
               />
             </div>

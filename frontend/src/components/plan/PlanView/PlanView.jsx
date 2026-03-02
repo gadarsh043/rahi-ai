@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import useTripStore from '../../../stores/tripStore';
 import { PLAN_SECTIONS } from '../../../utils/mockTripData';
 import useScrollSpy from '../../../hooks/useScrollSpy';
@@ -9,6 +9,7 @@ import MapPanel from '../MapPanel/MapPanel';
 import ActionBar from './ActionBar';
 import LetsPickPopup from '../LetsPickPopup/LetsPickPopup';
 import ChatDrawer from '../ChatDrawer/ChatDrawer';
+import RebuildBanner from '../RebuildBanner/RebuildBanner';
 import EatTab from '../tabs/EatTab';
 import StayTab from '../tabs/StayTab';
 import PlacesTab from '../tabs/PlacesTab';
@@ -39,6 +40,28 @@ export default function PlanView() {
     sectionIds
   );
 
+  const [forcedVisible, setForcedVisible] = useState(() => new Set());
+
+  const forcedVisibleLookup = useMemo(() => forcedVisible, [forcedVisible]);
+
+  const handleTabClick = (id) => {
+    const targetIndex = PLAN_SECTIONS.findIndex((s) => s.id === id);
+    if (targetIndex >= 0) {
+      setForcedVisible((prev) => {
+        const next = new Set(prev);
+        for (let i = 0; i <= targetIndex; i += 1) {
+          next.add(PLAN_SECTIONS[i].id);
+        }
+        return next;
+      });
+    }
+
+    // Scroll on next paint so any forced sections can mount first.
+    requestAnimationFrame(() => scrollToSection(id));
+    // One more nudge after layout settles (lazy sections can expand heights).
+    setTimeout(() => scrollToSection(id), 150);
+  };
+
   useEffect(() => {
     setActiveSectionId(activeId);
   }, [activeId, setActiveSectionId]);
@@ -50,12 +73,13 @@ export default function PlanView() {
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative">
           <div className="px-6 pt-6 pb-2">
             <PlanHeader />
-            <TabBar activeId={activeId} onTabClick={scrollToSection} />
+            <TabBar activeId={activeId} onTabClick={handleTabClick} />
           </div>
           <div
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto scroll-smooth"
           >
+            <RebuildBanner />
             {PLAN_SECTIONS.map((section) => {
               const SectionComponent = sectionComponents[section.id];
               return (
@@ -64,6 +88,7 @@ export default function PlanView() {
                   id={section.id}
                   title={section.label}
                   icon={section.icon}
+                  forceVisible={forcedVisibleLookup.has(section.id)}
                 >
                   <SectionComponent />
                 </LazySection>

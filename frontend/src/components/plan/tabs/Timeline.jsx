@@ -3,20 +3,27 @@ export default function Timeline({ itinerary }) {
 
   return (
     <div className="mt-4">
-      {itinerary.map((day) => (
-        <div key={day.dayNumber} className="mb-8">
+      {itinerary.map((day, dayIndex) => {
+        const dayNumber = day.dayNumber ?? day.day_number ?? dayIndex + 1;
+        const dayTitle = day.title ?? day.day_title ?? '';
+        const activities = Array.isArray(day.activities) ? day.activities : [];
+        return (
+        <div key={`day-${dayNumber}-${dayTitle || dayIndex}`} className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-xs font-bold uppercase tracking-wider text-brand-500">
-              Day {day.dayNumber}
+              Day {dayNumber}
             </span>
             <span className="text-sm font-semibold text-[var(--text-primary)]">
-              {day.title}
+              {dayTitle}
             </span>
           </div>
 
           <div className="space-y-3 ml-2 border-l-2 border-[var(--border)] pl-4">
-            {day.activities.map((activity) => (
-              <div key={`${day.dayNumber}-${activity.time}-${activity.title}`} className="relative">
+            {activities.map((activity, actIndex) => (
+              <div
+                key={`act-${dayNumber}-${activity.time || 't'}-${activity.title || 'a'}-${actIndex}`}
+                className="relative"
+              >
                 {/* Time dot */}
                 <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 rounded-full bg-brand-500 border-2 border-[var(--bg)]" />
 
@@ -39,7 +46,7 @@ export default function Timeline({ itinerary }) {
             ))}
           </div>
         </div>
-      ))}
+      );})}
     </div>
   );
 }

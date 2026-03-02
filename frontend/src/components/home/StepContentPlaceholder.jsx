@@ -3,7 +3,6 @@
  * Uses real components for origin/destination + dates. Other steps are simple stubs for now.
  */
 import CityAutocomplete from './CityAutocomplete';
-import { getCitiesByNames } from '../../utils/mockCities';
 import TripDatePicker from './TripDatePicker';
 import DurationSlider from './DurationSlider';
 import PaceSelector from './PaceSelector';
@@ -13,9 +12,6 @@ import AccommodationSelector from './AccommodationSelector';
 import CountryAutocomplete from './CountryAutocomplete';
 import InstructionsInput from './InstructionsInput';
 
-const POPULAR_ORIGIN = getCitiesByNames(['Dubai', 'London', 'Singapore', 'Delhi']);
-const POPULAR_DESTINATION = getCitiesByNames(['Paris', 'Tokyo', 'Bali', 'New York']);
-
 export default function StepContentPlaceholder({ step, formData, updateField }) {
   switch (step) {
     case 0:
@@ -24,7 +20,6 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
           placeholder="e.g. Paris, Mumbai"
           value={formData.origin}
           onChange={(city) => updateField('origin', city)}
-          popularCities={POPULAR_ORIGIN}
         />
       );
     case 1:
@@ -33,7 +28,6 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
           placeholder="e.g. Tokyo, Bali"
           value={formData.destination}
           onChange={(city) => updateField('destination', city)}
-          popularCities={POPULAR_DESTINATION}
         />
       );
     case 2:

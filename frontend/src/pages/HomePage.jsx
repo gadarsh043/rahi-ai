@@ -65,6 +65,15 @@ export default function HomePage() {
         ? dataToSend.passportCountry.name
         : dataToSend.passportCountry;
 
+    const startDate =
+      dataToSend.startDate instanceof Date
+        ? dataToSend.startDate.toISOString().slice(0, 10)
+        : dataToSend.startDate;
+    const endDate =
+      dataToSend.endDate instanceof Date
+        ? dataToSend.endDate.toISOString().slice(0, 10)
+        : dataToSend.endDate;
+
     const generateParams = {
       origin_city: origin?.city || (dataToSend.origin || ''),
       origin_country: origin?.country || '',
@@ -75,8 +84,8 @@ export default function HomePage() {
       destination_country: destination?.country || '',
       destination_lat: destination?.lat ?? 0,
       destination_lng: destination?.lng ?? 0,
-      start_date: dataToSend.startDate,
-      end_date: dataToSend.endDate,
+      start_date: startDate || null,
+      end_date: endDate || null,
       num_days: dataToSend.numDays ?? 7,
       pace: dataToSend.pace || 'moderate',
       budget_vibe: dataToSend.budgetVibe || '$$',

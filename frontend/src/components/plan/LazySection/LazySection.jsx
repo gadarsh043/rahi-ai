@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-export default function LazySection({ id, title, icon, children }) {
+export default function LazySection({ id, title, icon, children, forceVisible = false }) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
 
@@ -26,7 +26,7 @@ export default function LazySection({ id, title, icon, children }) {
         <span className="text-xl">{icon}</span>
         <h2 className="text-lg font-bold text-[var(--text-primary)]">{title}</h2>
       </div>
-      {isVisible ? (
+      {isVisible || forceVisible ? (
         children
       ) : (
         <div className="space-y-3">

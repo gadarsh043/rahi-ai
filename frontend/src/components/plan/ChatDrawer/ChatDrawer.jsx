@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
 import { sendChatMessage } from '../../../services/api';
+import { renderChatMarkdown } from '../../../utils/formatChat';
 
 function ChatMessage({ message }) {
   return (
@@ -28,7 +29,13 @@ function ChatMessage({ message }) {
             : 'bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] rounded-bl-sm'
         }`}
       >
-        {message.content}
+        {message.role === 'user' ? (
+          <p className="text-sm">{message.content}</p>
+        ) : (
+          <div className="text-sm leading-relaxed text-[var(--text-primary)]">
+            {renderChatMarkdown(message.content)}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -45,9 +52,12 @@ export default function ChatDrawer() {
   const removePlace = useTripStore((s) => s.removePlace);
   const addPlaceToItinerary = useTripStore((s) => s.addPlaceToItinerary);
   const selectFlight = useTripStore((s) => s.selectFlight);
+  const streamingMessage = useTripStore((s) => s.streamingMessage);
+  const updateStreamingMessage = useTripStore((s) => s.updateStreamingMessage);
+  const finalizeStreamingMessage = useTripStore((s) => s.finalizeStreamingMessage);
+  const addPendingChange = useTripStore((s) => s.addPendingChange);
 
   const [input, setInput] = useState('');
-  const [streamingMessage, setStreamingMessage] = useState('');
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -72,52 +82,52 @@ export default function ChatDrawer() {
     });
     setInput('');
     setChatThinking(true);
-    setStreamingMessage('');
+    updateStreamingMessage('');
 
     let fullMessage = '';
     try {
       await sendChatMessage(trip.id, text, (event, data) => {
         if (event === 'message_chunk') {
           fullMessage += data.text;
-          setStreamingMessage(fullMessage);
+          updateStreamingMessage(fullMessage);
         }
         if (event === 'itinerary_update') {
           const changes = data.changes || [];
           changes.forEach((change) => {
             if (change.action === 'remove') {
               removePlace?.(change.place_id);
+              addPendingChange?.(change);
             } else if (change.action === 'add') {
               addPlaceToItinerary?.(
                 change.place_id,
                 change.day_number,
                 change.time_slot
               );
+              addPendingChange?.(change);
             } else if (change.action === 'select_flight') {
               selectFlight?.(change.flight_id);
+              addPendingChange?.(change);
             }
           });
         }
         if (event === 'done') {
           setChatThinking(false);
           if (fullMessage.trim()) {
-            addChatMessage({
-              id: `assistant-${Date.now()}`,
-              role: 'assistant',
-              content: fullMessage,
-            });
+            finalizeStreamingMessage(fullMessage);
+          } else {
+            updateStreamingMessage(null);
           }
-          setStreamingMessage('');
         }
         if (event === 'error') {
           setChatThinking(false);
-          setStreamingMessage('');
+          updateStreamingMessage(null);
         }
       });
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Chat error', err);
       setChatThinking(false);
-      setStreamingMessage('');
+      updateStreamingMessage(null);
     }
   };
 
@@ -176,16 +186,16 @@ export default function ChatDrawer() {
               {chatMessages.map((msg) => (
                 <ChatMessage key={msg.id ?? `${msg.role}-${Math.random()}`} message={msg} />
               ))}
-            {streamingMessage && (
-              <ChatMessage
-                message={{
-                  id: 'assistant-streaming',
-                  role: 'assistant',
-                  content: streamingMessage,
-                }}
-              />
-            )}
-              {isChatThinking && (
+              {streamingMessage && (
+                <ChatMessage
+                  message={{
+                    id: 'assistant-streaming',
+                    role: 'assistant',
+                    content: streamingMessage,
+                  }}
+                />
+              )}
+              {isChatThinking && !streamingMessage && (
                 <div className="flex gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-[var(--surface-hover)] flex items-center justify-center text-xs">
                     ✨

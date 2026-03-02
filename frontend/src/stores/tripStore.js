@@ -16,16 +16,36 @@ const useTripStore = create((set, get) => ({
   chatOpen: false,
   chatMessages: [],
   isChatThinking: false,
+  chatThinking: false,
+
+  // Streaming message (shown while bot is typing)
+  streamingMessage: null,
+
+  // Pending changes (for rebuild banner)
+  pendingChanges: [],
 
   // Let's Pick state
   letsPickOpen: false,
 
   // Actions
   setTrip: (trip) =>
-    set({
-      trip,
-      mapCenter: { lat: trip.destinationLat, lng: trip.destinationLng },
-      chatMessages: trip.chatMessages || [],
+    set((s) => {
+      const existingMessages =
+        s.chatMessages && s.chatMessages.length > 0
+          ? s.chatMessages
+          : trip.chatMessages || trip.chat_messages || [];
+
+      const destLat = trip.destinationLat ?? trip.destination_lat;
+      const destLng = trip.destinationLng ?? trip.destination_lng;
+
+      return {
+        trip,
+        mapCenter:
+          destLat != null && destLng != null
+            ? { lat: destLat, lng: destLng }
+            : s.mapCenter,
+        chatMessages: existingMessages,
+      };
     }),
   setActiveSectionId: (id) => set({ activeSectionId: id }),
   setMode: (mode) => set({ mode }),
@@ -36,12 +56,36 @@ const useTripStore = create((set, get) => ({
   setChatOpen: (open) => set({ chatOpen: open }),
   openChat: () => set({ chatOpen: true }),
   closeChat: () => set({ chatOpen: false }),
-  setChatThinking: (value) => set({ isChatThinking: value }),
+  setChatThinking: (value) => set({ isChatThinking: value, chatThinking: value }),
 
   addChatMessage: (msg) =>
+    set((s) => {
+      // Avoid duplicating assistant messages while streaming is active
+      if (s.streamingMessage && msg?.role === 'assistant') return s;
+      return {
+        chatMessages: [...s.chatMessages, msg],
+      };
+    }),
+
+  updateStreamingMessage: (text) => set({ streamingMessage: text }),
+  finalizeStreamingMessage: (text) =>
     set((s) => ({
-      chatMessages: [...s.chatMessages, msg],
+      streamingMessage: null,
+      chatMessages: [
+        ...s.chatMessages,
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: text,
+        },
+      ],
     })),
+
+  addPendingChange: (change) =>
+    set((s) => ({
+      pendingChanges: [...s.pendingChanges, change],
+    })),
+  clearPendingChanges: () => set({ pendingChanges: [] }),
 
   // Load mock data
   loadMockTrip: () => {
