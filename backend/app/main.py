@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.routes import generate, chat, plans, pick, nearby, user, credits, webhooks
@@ -20,6 +21,25 @@ app.add_middleware(
 @app.get("/health")
 async def health():
     return {"status": "ok", "env": settings.env}
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    import traceback
+
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Something went wrong. Please try again."},
+    )
+
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc) -> JSONResponse:  # type: ignore[override]
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Not found."},
+    )
 
 
 app.include_router(generate.router, prefix="/v1", tags=["generate"])
