@@ -74,13 +74,23 @@ export default function PlanPage() {
   const trip = useTripStore((s) => s.trip);
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Loading your trip...');
+  const [genError, setGenError] = useState(false);
+  const [lastGenerateParams, setLastGenerateParams] = useState(null);
 
   const loadExistingTrip = useCallback(
-    async (tripId) => {
+    async (tripId, shareCode) => {
       try {
         setLoading(true);
         setLoadingMessage('Loading your trip...');
-        const data = await fetchPlan(tripId);
+        const data = await fetchPlan(tripId, shareCode);
+        if (data?.error) {
+          setLoading(false);
+          return;
+        }
+        if (data?.error) {
+          setLoading(false);
+          return;
+        }
         const normalized = normalizeTrip(
           data.trip,
           data.places,
@@ -104,10 +114,16 @@ export default function PlanPage() {
     async (params) => {
       setLoading(true);
       setLoadingMessage('Finding the best places for your trip...');
+       setGenError(false);
+       setLastGenerateParams(params);
       try {
         await generateTrip(params, (event, data) => {
           if (event === 'status' && data?.message) {
             setLoadingMessage(data.message);
+          }
+          if (event === 'error') {
+            setGenError(true);
+            setLoading(false);
           }
           if (event === 'done' && data?.trip_id) {
             // After generation completes, load the full trip from API and update URL
@@ -127,6 +143,8 @@ export default function PlanPage() {
 
   useEffect(() => {
     const generateParams = location.state?.generateParams;
+    const searchParams = new URLSearchParams(location.search);
+    const shared = searchParams.get('shared') || null;
 
     if (generateParams) {
       startGeneration(generateParams);
@@ -140,9 +158,37 @@ export default function PlanPage() {
     }
 
     if (id) {
-      loadExistingTrip(id);
+      loadExistingTrip(id, shared);
     }
-  }, [id, location.state, loadExistingTrip, loadMockTrip, startGeneration]);
+  }, [id, location.search, location.state, loadExistingTrip, loadMockTrip, startGeneration]);
+
+  if (genError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] px-4">
+        <div className="text-center max-w-sm">
+          <div className="text-5xl mb-4">🌧️</div>
+          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
+            Trip planning hit a snag
+          </h2>
+          <p className="text-sm text-[var(--text-muted)] mb-6">
+            This happens sometimes. Your selections are saved — just retry.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              if (lastGenerateParams) {
+                setGenError(false);
+                startGeneration(lastGenerateParams);
+              }
+            }}
+            className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
+          >
+            🔄 Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!trip || loading) {
     return (

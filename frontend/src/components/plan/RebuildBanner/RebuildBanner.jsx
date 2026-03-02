@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useTripStore from '../../../stores/tripStore';
+import { apiPost } from '../../../services/apiClient';
 
 export default function RebuildBanner() {
   const pendingChanges = useTripStore((s) => s.pendingChanges);
@@ -13,15 +14,14 @@ export default function RebuildBanner() {
   const handleRebuild = async () => {
     setRebuilding(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/v1';
-      const resp = await fetch(`${API_URL}/plans/${trip.id}/rebuild`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('supabase_token') || ''}`,
-        },
-      });
-      const data = await resp.json();
+      const data = await apiPost(
+        `/plans/${trip.id}/rebuild`,
+        {},
+        { context: 'rebuild' },
+      );
+      if (data?.error) {
+        return;
+      }
       if (data.itinerary) {
         setTrip({
           ...trip,
