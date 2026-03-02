@@ -104,7 +104,7 @@ async def chat_stream(req: ChatRequest, user: dict):
         }
     ).execute()
 
-    result = classify_message(req.message, places, pending_action)
+    result = classify_message(req.message, places, pending_action, trip)
 
     if result["type"] == "need_llm":
         result = await handle_llm_fallback(req.message, trip, places)

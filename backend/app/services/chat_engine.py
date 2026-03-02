@@ -81,11 +81,139 @@ def find_place_by_name(name: str, places: list) -> Optional[dict]:
 
 
 # ============================================
+# SCOPE GUARD — Block trip-redefining requests
+# ============================================
+
+DESTINATION_CHANGE_PATTERNS = [
+    r"(?:change|switch|move)\s+(?:the\s+)?(?:destination|trip|city)\s+to\s+(.+?)(?:\s*[.,!?]?\s*$)",
+    r"(?:let\'?s?\s+)?(?:go|fly|travel|head)\s+to\s+(.+?)\s+instead",
+    r"(?:change|switch)\s+(?:it\s+)?to\s+(.+?)\s+instead",
+    r"(?:i\s+want\s+to\s+go\s+to|how\s+about)\s+(.+?)\s+instead",
+    r"(?:make\s+it|change\s+it\s+to)\s+(?:a\s+)?(.+?)\s+trip",
+    r"(?:actually|instead)\s+(?:let\'?s?\s+)?(?:go|plan|do)\s+(.+?)(?:\s*[.,!?]?\s*$)",
+]
+
+ORIGIN_CHANGE_PATTERNS = [
+    r"(?:change|switch)\s+(?:the\s+)?(?:origin|departure|starting)\s+(?:city\s+)?to\s+(.+?)(?:\s*[.,!?]?\s*$)",
+    r"(?:flying|departing|leaving)\s+from\s+(.+?)\s+instead",
+    r"(?:actually\s+)?(?:i\'?m?\s+)?(?:in|from|starting\s+from)\s+(.+?)(?:\s+now|\s+instead)(?:\s*[.,!?]?\s*$)",
+]
+
+DURATION_CHANGE_PATTERNS = [
+    r"(?:make\s+it|change\s+(?:it\s+)?to|do)\s+(\d+)\s+days?",
+    r"(\d+)\s+days?\s+(?:instead|trip)",
+]
+
+START_OVER_PATTERNS = [
+    r"(?:start\s+(?:over|fresh|again|from\s+scratch))",
+    r"(?:new|different|completely\s+different)\s+(?:itinerary|trip|plan)",
+    r"(?:scrap|redo|redo)\s+(?:this|the|everything)",
+    r"(?:plan\s+(?:a\s+)?(?:new|different)\s+trip)",
+]
+
+
+def check_scope_guard(message: str, trip: dict) -> dict | None:
+    """
+    Returns a friendly redirect message if the request would change the trip's identity.
+    Returns None if the request is within scope (allowed).
+    """
+    msg_lower = message.lower().strip()
+    dest_city = (trip.get("destination_city") or "").lower()
+    origin_city = (trip.get("origin_city") or "").lower()
+    num_days = trip.get("num_days") or 7
+
+    # Destination change
+    for pattern in DESTINATION_CHANGE_PATTERNS:
+        m = re.search(pattern, msg_lower)
+        if m:
+            new_dest = m.group(1).strip()
+
+            # Allow day trips / excursions
+            day_trip_words = ["day trip", "side trip", "excursion", "detour", "visit"]
+            if any(w in msg_lower for w in day_trip_words):
+                return None
+
+            # Ignore if they are referencing the current destination
+            if new_dest and (new_dest in dest_city or dest_city in new_dest):
+                return None
+
+            return {
+                "type": "scope_blocked",
+                "response": (
+                    "That sounds like an amazing trip! 🌍\n\n"
+                    f"Switching from **{trip.get('destination_city', 'your destination')}** to "
+                    f"**{new_dest.title()}** is a whole new adventure — new places, new flights, new everything.\n\n"
+                    f"👉 Hit **New Trip** to plan your {new_dest.title()} trip.\n"
+                    f"This {trip.get('destination_city', '')} trip will stay saved in your sidebar.\n\n"
+                    "Want to keep tweaking this trip instead?"
+                ),
+            }
+
+    # Origin change
+    for pattern in ORIGIN_CHANGE_PATTERNS:
+        m = re.search(pattern, msg_lower)
+        if m:
+            new_origin = m.group(1).strip()
+            if new_origin and (new_origin in origin_city or origin_city in new_origin):
+                return None
+
+            return {
+                "type": "scope_blocked",
+                "response": (
+                    f"Noted! Flying from **{new_origin.title()}** instead of "
+                    f"**{trip.get('origin_city', 'your city')}** changes the flight options and logistics.\n\n"
+                    f"👉 Hit **New Trip** and set your origin to {new_origin.title()}.\n"
+                    "This trip stays saved!\n\n"
+                    "Anything else for this trip?"
+                ),
+            }
+
+    # Major duration change (±3+ days)
+    for pattern in DURATION_CHANGE_PATTERNS:
+        m = re.search(pattern, msg_lower)
+        if m:
+            new_days = int(m.group(1))
+            diff = abs(new_days - num_days)
+            if diff <= 2:
+                return None
+
+            return {
+                "type": "scope_blocked",
+                "response": (
+                    f"Going from **{num_days} days** to **{new_days} days** is a pretty big shift — "
+                    "the whole schedule would need to be replanned from scratch.\n\n"
+                    f"👉 Hit **New Trip** to plan a {new_days}-day version.\n"
+                    "Or I can **add/remove a day or two** from this trip if you'd like?\n\n"
+                    "What works?"
+                ),
+            }
+
+    # Start over
+    for pattern in START_OVER_PATTERNS:
+        if re.search(pattern, msg_lower):
+            return {
+                "type": "scope_blocked",
+                "response": (
+                    "Want a fresh start? No problem! 🔄\n\n"
+                    "👉 Hit **New Trip** to start from scratch.\n"
+                    f"This {trip.get('destination_city', '')} trip will stay saved in your sidebar "
+                    "in case you want to come back to it.\n\n"
+                    "Or if you just want to change a few things, I can help with that right here!"
+                ),
+            }
+
+    return None
+
+
+# ============================================
 # MAIN CLASSIFIER
 # ============================================
 
 def classify_message(
-    message: str, places: list, pending_action: Optional[dict] = None
+    message: str,
+    places: list,
+    pending_action: Optional[dict] = None,
+    trip: dict | None = None,
 ) -> dict:
     """
     Returns:
@@ -98,6 +226,17 @@ def classify_message(
     """
     msg = message.strip()
     msg_lower = msg.lower()
+
+    # Step -1: SCOPE GUARD — block trip-redefining requests
+    if trip:
+        scope_block = check_scope_guard(message, trip)
+        if scope_block:
+            return {
+                "type": "execute",
+                "action": None,
+                "response": scope_block["response"],
+                "pending_action": None,
+            }
 
     # Step 0: If there's a pending action, interpret this as an answer
     if pending_action:
