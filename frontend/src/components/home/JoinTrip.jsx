@@ -1,15 +1,28 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { apiGet } from '../../services/apiClient';
 
 export default function JoinTrip() {
   const [showInput, setShowInput] = useState(false);
   const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const handleJoin = (e) => {
+  const handleJoin = async (e) => {
     e.preventDefault();
-    // UI only — no backend
-    setShowInput(false);
-    setCode('');
+    if (!code.trim() || loading) return;
+    setLoading(true);
+    const cleaned = code.trim().toUpperCase();
+    const result = await apiGet(`/plans/join/${cleaned}`, {
+      context: 'join',
+    });
+    if (!result.error && result.trip_id) {
+      setShowInput(false);
+      setCode('');
+      navigate(`/plan/${result.trip_id}?shared=${cleaned}`);
+    }
+    setLoading(false);
   };
 
   return (
@@ -53,9 +66,10 @@ export default function JoinTrip() {
           />
           <button
             type="submit"
-            className="rounded-xl px-3 py-2 text-xs font-semibold bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors"
+            className="rounded-xl px-3 py-2 text-xs font-semibold bg-[var(--surface)] border border-[var(--border)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer disabled:opacity-60"
+            disabled={!code.trim() || loading}
           >
-            Join
+            {loading ? '...' : 'Join'}
           </button>
         </motion.form>
       )}

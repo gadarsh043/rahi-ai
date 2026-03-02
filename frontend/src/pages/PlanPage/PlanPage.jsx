@@ -71,6 +71,7 @@ export default function PlanPage() {
 
   const loadMockTrip = useTripStore((s) => s.loadMockTrip);
   const setTrip = useTripStore((s) => s.setTrip);
+  const setMode = useTripStore((s) => s.setMode);
   const trip = useTripStore((s) => s.trip);
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Loading your trip...');
@@ -87,10 +88,6 @@ export default function PlanPage() {
           setLoading(false);
           return;
         }
-        if (data?.error) {
-          setLoading(false);
-          return;
-        }
         const normalized = normalizeTrip(
           data.trip,
           data.places,
@@ -98,6 +95,13 @@ export default function PlanPage() {
         );
         if (normalized) {
           setTrip(normalized);
+          if (shareCode) {
+            setMode('shared');
+          } else if (normalized.status === 'saved') {
+            setMode('saved');
+          } else {
+            setMode('editing');
+          }
         }
         setLoading(false);
       } catch (err) {
@@ -107,7 +111,7 @@ export default function PlanPage() {
         setLoading(false);
       }
     },
-    [setTrip]
+    [fetchPlan, setMode, setTrip]
   );
 
   const startGeneration = useCallback(

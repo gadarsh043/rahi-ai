@@ -10,6 +10,7 @@ import ActionBar from './ActionBar';
 import LetsPickPopup from '../LetsPickPopup/LetsPickPopup';
 import ChatDrawer from '../ChatDrawer/ChatDrawer';
 import RebuildBanner from '../RebuildBanner/RebuildBanner';
+import SharedBanner from '../SharedBanner/SharedBanner';
 import EatTab from '../tabs/EatTab';
 import StayTab from '../tabs/StayTab';
 import PlacesTab from '../tabs/PlacesTab';
@@ -34,6 +35,8 @@ export default function PlanView() {
   const letsPickOpen = useTripStore((s) => s.letsPickOpen);
   const chatOpen = useTripStore((s) => s.chatOpen);
   const setActiveSectionId = useTripStore((s) => s.setActiveSectionId);
+  const mode = useTripStore((s) => s.mode);
+  const trip = useTripStore((s) => s.trip);
 
   const sectionIds = PLAN_SECTIONS.map((s) => s.id);
   const { activeId, scrollToSection, scrollContainerRef } = useScrollSpy(
@@ -72,6 +75,9 @@ export default function PlanView() {
         {/* Content Panel */}
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative">
           <div className="px-6 pt-6 pb-2">
+            {mode === 'shared' && (
+              <SharedBanner ownerName={trip?.owner_name} />
+            )}
             <PlanHeader />
             <TabBar activeId={activeId} onTabClick={handleTabClick} />
           </div>
@@ -79,7 +85,7 @@ export default function PlanView() {
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto scroll-smooth"
           >
-            <RebuildBanner />
+            {mode !== 'shared' && <RebuildBanner />}
             {PLAN_SECTIONS.map((section) => {
               const SectionComponent = sectionComponents[section.id];
               return (
@@ -96,7 +102,7 @@ export default function PlanView() {
             })}
             <div className="h-[50vh]" />
           </div>
-          <ActionBar />
+          {mode !== 'shared' && <ActionBar />}
         </div>
 
         {/* Map Panel */}
@@ -134,8 +140,8 @@ export default function PlanView() {
         </div>
       )}
 
-      <ChatDrawer />
-      <LetsPickPopup />
+      {mode !== 'shared' && <ChatDrawer />}
+      {mode !== 'shared' && <LetsPickPopup />}
     </>
   );
 }
