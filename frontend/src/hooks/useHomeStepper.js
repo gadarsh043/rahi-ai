@@ -7,11 +7,13 @@ const INITIAL_FORM_DATA = {
   endDate: null,
   isFlexible: false,
   numDays: 7,
+  numTravelers: 1,
   pace: null,
   budgetVibe: null,
   preferences: [],
   accommodationType: null,
   passportCountry: null,
+  livesInDestination: null,
   instructions: '',
 };
 
@@ -98,6 +100,10 @@ function buildPromptText(formData) {
     parts.push(`for ${days} days (${start} – ${end})`);
   } else if (data.isFlexible && data.numDays) {
     parts.push(`for about ${data.numDays} days`);
+  }
+
+  if (data.numTravelers && Number(data.numTravelers) > 1) {
+    parts.push(`for ${Number(data.numTravelers)} travelers`);
   }
 
   const prefs = Array.isArray(data.preferences) ? data.preferences : [];

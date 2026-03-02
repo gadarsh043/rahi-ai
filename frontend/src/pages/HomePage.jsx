@@ -96,6 +96,7 @@ export default function HomePage() {
       dietary: dataToSend.dietary || [],
       disability: dataToSend.disability || [],
       num_travelers: dataToSend.numTravelers || 1,
+      lives_in_destination: dataToSend.livesInDestination,
       currency: dataToSend.currency || 'USD',
     };
 

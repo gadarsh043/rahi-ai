@@ -105,3 +105,19 @@ export async function getNearby(lat, lng, categories) {
   return resp.json();
 }
 
+export async function fetchProfile() {
+  const resp = await fetch(`${API_URL}/user/profile`, {
+    headers: getAuthHeaders(),
+  });
+  return resp.json();
+}
+
+export async function updateProfile(payload) {
+  const resp = await fetch(`${API_URL}/user/profile`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+  return resp.json();
+}
+
