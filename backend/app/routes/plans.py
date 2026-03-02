@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import Response
 
 from app.dependencies import get_current_user
 from app.utils.supabase_client import get_supabase
@@ -261,6 +262,54 @@ async def fork_trip(trip_id: str, user=Depends(get_current_user)):
         supabase.table("trip_places").insert(new_place).execute()
 
     return {"new_trip_id": new_id, "message": "Trip forked!"}
+
+
+@router.get("/plans/{trip_id}/pdf")
+async def download_pdf(trip_id: str, user=Depends(get_current_user)) -> Response:
+    """Generate and return trip PDF."""
+    from app.services.pdf_service import generate_trip_pdf
+    from app.services.essentials_service import get_visa_info, get_travel_essentials
+
+    supabase = get_supabase()
+
+    trip_resp = (
+        supabase.table("trips")
+        .select("*")
+        .eq("id", trip_id)
+        .eq("user_id", user["id"])
+        .single()
+        .execute()
+    )
+    trip = trip_resp.data
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    places_resp = (
+        supabase.table("trip_places")
+        .select("*")
+        .eq("trip_id", trip_id)
+        .eq("is_in_itinerary", True)
+        .execute()
+    )
+    places = places_resp.data or []
+
+    visa_info = trip.get("visa_info") or get_visa_info(
+        trip.get("origin_country", "") or "",
+        trip.get("destination_country", "") or "",
+    )
+    essentials = trip.get("travel_essentials") or get_travel_essentials(
+        trip.get("destination_country", "") or ""
+    )
+
+    pdf_bytes = generate_trip_pdf(trip, places, visa_info, essentials)
+
+    filename = f"rahi-{trip.get('origin_city','')}-to-{trip.get('destination_city','')}-{trip.get('num_days','')}days.pdf"
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
 
 
 @router.post("/plans/{trip_id}/rebuild")
