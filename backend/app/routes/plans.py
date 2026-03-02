@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.dependencies import get_current_user
 from app.utils.supabase_client import get_supabase
 import secrets
+import uuid
 
 router = APIRouter()
 
@@ -138,6 +139,22 @@ async def share_plan(trip_id: str, user=Depends(get_current_user)):
     return {"share_code": code, "share_url": f"/plan/{trip_id}?shared={code}"}
 
 
+@router.get("/plans/join/{code}")
+async def join_trip(code: str):
+    """Resolve a share code to a trip id (no auth)."""
+    supabase = get_supabase()
+    resp = (
+        supabase.table("trips")
+        .select("id")
+        .eq("share_code", code.upper())
+        .single()
+        .execute()
+    )
+    if not resp.data:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    return {"trip_id": resp.data["id"]}
+
+
 @router.post("/plans/{trip_id}/suggest")
 async def suggest(trip_id: str, body: dict):
     """Public endpoint — no auth. Viewer suggests a change."""
@@ -185,6 +202,65 @@ async def handle_suggestion(
         .execute()
     )
     return {"message": f"Suggestion {action}"}
+
+
+@router.post("/plans/{trip_id}/fork")
+async def fork_trip(trip_id: str, user=Depends(get_current_user)):
+    """Copy a shared trip into the requesting user's trips."""
+    supabase = get_supabase()
+
+    original = (
+        supabase.table("trips").select("*").eq("id", trip_id).single().execute()
+    )
+    if not original.data:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    trip = original.data
+
+    new_id = str(uuid.uuid4())
+    new_trip = {
+        "id": new_id,
+        "user_id": user["id"],
+        "origin_city": trip["origin_city"],
+        "origin_country": trip.get("origin_country"),
+        "origin_lat": trip.get("origin_lat"),
+        "origin_lng": trip.get("origin_lng"),
+        "destination_city": trip["destination_city"],
+        "destination_country": trip.get("destination_country"),
+        "destination_lat": trip.get("destination_lat"),
+        "destination_lng": trip.get("destination_lng"),
+        "start_date": trip.get("start_date"),
+        "end_date": trip.get("end_date"),
+        "num_days": trip.get("num_days"),
+        "pace": trip.get("pace"),
+        "budget_vibe": trip.get("budget_vibe"),
+        "accommodation_type": trip.get("accommodation_type"),
+        "travel_preferences": trip.get("travel_preferences"),
+        "instructions": trip.get("instructions"),
+        "num_travelers": trip.get("num_travelers"),
+        "itinerary": trip.get("itinerary"),
+        "narrative": trip.get("narrative"),
+        "cost_estimate": trip.get("cost_estimate"),
+        "transport_mode": trip.get("transport_mode"),
+        "transport_data": trip.get("transport_data"),
+        "visa_info": trip.get("visa_info"),
+        "travel_essentials": trip.get("travel_essentials"),
+        "status": "planning",
+    }
+
+    supabase.table("trips").insert(new_trip).execute()
+
+    places_resp = (
+        supabase.table("trip_places").select("*").eq("trip_id", trip_id).execute()
+    )
+
+    for p in places_resp.data or []:
+        new_place = dict(p)
+        new_place["id"] = str(uuid.uuid4())
+        new_place["trip_id"] = new_id
+        supabase.table("trip_places").insert(new_place).execute()
+
+    return {"new_trip_id": new_id, "message": "Trip forked!"}
 
 
 @router.post("/plans/{trip_id}/rebuild")
