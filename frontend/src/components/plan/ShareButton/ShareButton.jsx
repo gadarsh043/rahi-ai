@@ -93,8 +93,7 @@ export default function ShareButton() {
                 </div>
                 <p className="text-xs text-[var(--text-muted)]">
                   Share the 6‑character code with friends. They can join from the
-                  home page using <span className="font-mono">{shareCode}</span>, or
-                  you can share the full link for one‑tap access.
+                  home page using <span className="font-mono">{shareCode}</span>.
                 </p>
               </div>
             ) : (
