@@ -1,26 +1,56 @@
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
-
 from app.dependencies import get_current_user
 from app.models.trip import ChatRequest
-from app.prompts.chat import CHAT_SYSTEM
 from app.services.llm_service import get_llm
+from app.services.chat_engine import (
+    classify_message,
+    format_day_summaries,
+    format_day_schedule,
+)
 from app.utils.supabase_client import get_supabase
 import json
 
 router = APIRouter()
 
 
-@router.get("/test-llm")
-async def test_llm():
-    from app.services.llm_service import get_llm
+CLASSIFIER_SYSTEM = """You classify travel itinerary chat messages. Given a user message and their places list, determine intent.
 
-    llm = get_llm()
-    result = await llm.completion(
-        "You are a helpful assistant.",
-        "Say hello in 10 words or less.",
-    )
-    return {"response": result}
+Respond ONLY with this JSON:
+{
+  "intent": "remove" | "add" | "swap" | "vibe_change" | "question" | "other",
+  "target_place": "name or null",
+  "new_place": "name or null",
+  "target_day": number or null,
+  "preference": "description or null"
+}
+
+Examples:
+- "I don't like Kerry Park, too touristy" → {"intent":"remove", "target_place":"Kerry Park", "preference":"touristy"}
+- "Something more romantic for day 3" → {"intent":"vibe_change", "target_day":3, "preference":"romantic"}
+- "How far is the aquarium?" → {"intent":"question", "target_place":"aquarium"}"""
+
+
+VIBE_CHANGE_SYSTEM = """You're Rahi AI, a friendly travel planner. The user wants to change the vibe of a specific day.
+
+Given the current day schedule and available alternative places, suggest swaps.
+
+IMPORTANT FORMATTING RULES:
+- Use line breaks between items
+- Use **bold** for place names
+- Use emoji for visual clarity
+- Keep it conversational and warm
+- End with a clear question
+
+Respond in this exact format (plain text with markdown, NOT JSON):
+
+Here's a more [vibe] Day [N]:
+
+🕐 [time] — **[Place Name]** (keep — [reason])
+🔄 [time] → Swap **[old]** for **[new]** ([why it fits])
+🔄 [time] → Swap **[old]** for **[new]** ([why it fits])
+
+Want me to make these changes?"""
 
 
 @router.post("/chat")
@@ -37,16 +67,10 @@ async def chat(req: ChatRequest, user=Depends(get_current_user)):
 
 
 async def chat_stream(req: ChatRequest, user: dict):
-    llm = get_llm()
     supabase = get_supabase()
 
-    # Load trip context
     trip_resp = (
-        supabase.table("trips")
-        .select("*")
-        .eq("id", req.trip_id)
-        .single()
-        .execute()
+        supabase.table("trips").select("*").eq("id", req.trip_id).single().execute()
     )
     trip = trip_resp.data
 
@@ -62,36 +86,16 @@ async def chat_stream(req: ChatRequest, user: dict):
         supabase.table("chat_messages")
         .select("*")
         .eq("trip_id", req.trip_id)
-        .order("created_at")
+        .eq("role", "assistant")
+        .order("created_at", desc=True)
+        .limit(1)
         .execute()
     )
-    history = history_resp.data or []
+    last_assistant = history_resp.data[0] if history_resp.data else None
+    pending_action = None
+    if last_assistant and last_assistant.get("itinerary_diff"):
+        pending_action = last_assistant["itinerary_diff"].get("pending_action")
 
-    places_summary = "\n".join(
-        [
-            f"- {p['name']} (ID: {p['google_place_id']}, category: {p['category']}, in_itinerary: {p.get('is_in_itinerary', False)})"
-            for p in places
-        ]
-    )
-
-    recent_chat = "\n".join(
-        [f"{m['role']}: {m['content']}" for m in history[-5:]]
-    )
-
-    context = f"""Current trip: {trip['origin_city']} → {trip['destination_city']}, {trip['num_days']} days, {trip['pace']} pace.
-
-Current places:
-{places_summary}
-
-Current itinerary:
-{json.dumps(trip.get('itinerary', {}), indent=2)[:2000]}
-
-Recent chat:
-{recent_chat}"""
-
-    user_prompt = f"{context}\n\nUser request: {req.message}"
-
-    # Save user message
     supabase.table("chat_messages").insert(
         {
             "trip_id": req.trip_id,
@@ -100,41 +104,39 @@ Recent chat:
         }
     ).execute()
 
-    try:
-        # Get AI response (JSON mode for structured changes)
-        response_raw = await llm.json_completion(CHAT_SYSTEM, user_prompt)
-        response_data = json.loads(response_raw)
+    result = classify_message(req.message, places, pending_action)
 
-        ai_message = response_data.get("message", "I've updated your trip!")
-        changes = response_data.get("changes", [])
+    if result["type"] == "need_llm":
+        result = await handle_llm_fallback(req.message, trip, places)
 
-        # Stream the message in small chunks
-        for i in range(0, len(ai_message), 20):
-            chunk = ai_message[i : i + 20]
+    if result["type"] == "ask" and result["response"] is None:
+        result["response"] = build_schedule_response(result, trip, places)
+
+    response_text = (
+        result["response"] or "I'm not sure what you mean. Could you rephrase?"
+    )
+    changes = result.get("action")
+
+    if changes and not isinstance(changes, list):
+        changes = [changes]
+
+    lines = response_text.split("\n")
+    for i, line in enumerate(lines):
+        chunk = line + ("\n" if i < len(lines) - 1 else "")
+        if chunk:
             yield f"event: message_chunk\ndata: {json.dumps({'text': chunk})}\n\n"
 
-        # Apply changes to database
+    if changes:
         for change in changes:
-            action = change.get("action")
-            place_id = change.get("place_id")
-            if not action or not place_id:
-                continue
-
-            if action == "remove":
+            if change["action"] == "remove":
                 (
                     supabase.table("trip_places")
-                    .update(
-                        {
-                            "is_in_itinerary": False,
-                            "day_number": None,
-                            "time_slot": None,
-                        }
-                    )
+                    .update({"is_in_itinerary": False, "day_number": None, "time_slot": None})
                     .eq("trip_id", req.trip_id)
-                    .eq("google_place_id", place_id)
+                    .eq("google_place_id", change["place_id"])
                     .execute()
                 )
-            elif action == "add":
+            elif change["action"] == "add":
                 (
                     supabase.table("trip_places")
                     .update(
@@ -145,25 +147,258 @@ Recent chat:
                         }
                     )
                     .eq("trip_id", req.trip_id)
-                    .eq("google_place_id", place_id)
+                    .eq("google_place_id", change["place_id"])
                     .execute()
                 )
 
-        yield f"event: itinerary_update\ndata: {json.dumps({'changes': changes})}\n\n"
+    yield (
+        "event: itinerary_update\n"
+        f"data: {json.dumps({'changes': changes or [], 'needs_rebuild': bool(changes)})}\n\n"
+    )
 
-        # Save assistant message
-        supabase.table("chat_messages").insert(
-            {
-                "trip_id": req.trip_id,
-                "role": "assistant",
-                "content": ai_message,
-                "itinerary_diff": {"changes": changes},
-            }
-        ).execute()
+    supabase.table("chat_messages").insert(
+        {
+            "trip_id": req.trip_id,
+            "role": "assistant",
+            "content": response_text,
+            "itinerary_diff": {
+                "changes": changes or [],
+                "pending_action": result.get("pending_action"),
+            },
+        }
+    ).execute()
 
-        yield f"event: done\ndata: {json.dumps({'message': 'done'})}\n\n"
+    yield f"event: done\ndata: {json.dumps({'message': 'done'})}\n\n"
 
-    except Exception as e:  # noqa: BLE001
-        yield f"event: error\ndata: {json.dumps({'message': str(e)})}\n\n"
+
+def build_schedule_response(result: dict, trip: dict, places: list) -> str:
+    pending = result.get("pending_action", {})
+    itinerary = trip.get("itinerary", {})
+    days = itinerary.get("itinerary", []) if isinstance(itinerary, dict) else []
+
+    if pending.get("awaiting") == "pick_day":
+        place_name = pending.get("place_name", "this place")
+        summary = format_day_summaries(days, trip.get("num_days", 7))
+        return (
+            f"Great choice! Where should I put **{place_name}**?\n\n"
+            f"Here's your current schedule:\n\n"
+            f"{summary}\n\n"
+            "Which day works best?"
+        )
+
+    if pending.get("awaiting") == "pick_time":
+        day_num = pending.get("day_number", 1)
+        place_name = pending.get("place_name", "this place")
+        schedule = format_day_schedule(days, day_num)
+        return (
+            f"Here's what Day {day_num} looks like:\n\n"
+            f"{schedule}\n\n"
+            f"What time would you like to add **{place_name}**?"
+        )
+
+    return "Could you tell me more about what you'd like to change?"
+
+
+async def handle_llm_fallback(message: str, trip: dict, places: list) -> dict:
+    llm = get_llm()
+
+    in_itinerary = [p for p in places if p.get("is_in_itinerary")]
+    place_names = [p["name"] for p in in_itinerary]
+
+    classifier_prompt = (
+        f'User message: "{message}"\n'
+        f"Places in itinerary: {', '.join(place_names)}\n"
+        "What is the user's intent?"
+    )
+
+    try:
+        raw = await llm.json_completion(CLASSIFIER_SYSTEM, classifier_prompt)
+        classified = json.loads(raw)
+    except Exception:
+        classified = {"intent": "other"}
+
+    intent = classified.get("intent", "other")
+
+    if intent == "remove":
+        target = classified.get("target_place")
+        if target:
+            from app.services.chat_engine import find_place_by_name, handle_remove
+            return handle_remove(target, places)
+
+    if intent == "swap":
+        target = classified.get("target_place")
+        new = classified.get("new_place")
+        if target and new:
+            from app.services.chat_engine import handle_swap
+            return handle_swap(target, new, places)
+
+    if intent == "add":
+        target = classified.get("target_place")
+        if target:
+            from app.services.chat_engine import handle_add
+            day = classified.get("target_day")
+            return handle_add(target, day, None, places)
+
+    if intent == "vibe_change":
+        return await handle_vibe_change(
+            message,
+            trip,
+            places,
+            classified.get("target_day"),
+            classified.get("preference", ""),
+        )
+
+    if intent == "question":
+        return await handle_question(message, trip, places)
+
+    return await handle_general_chat(message, trip, places)
+
+
+async def handle_vibe_change(
+    message: str, trip: dict, places: list, target_day: int = None, preference: str = ""
+) -> dict:
+    llm = get_llm()
+    itinerary = trip.get("itinerary", {})
+    days = itinerary.get("itinerary", []) if isinstance(itinerary, dict) else []
+
+    day_data = None
+    if target_day:
+        for d in days:
+            if d.get("day_number") == target_day:
+                day_data = d
+                break
+
+    if not day_data and days:
+        target_day = None
+
+    not_in = [p for p in places if not p.get("is_in_itinerary")]
+    alternatives = "\n".join(
+        [
+            f"- {p['name']} ({p['category']}) — Rating: {p.get('rating', 'N/A')}"
+            for p in not_in[:15]
+        ]
+    )
+
+    if day_data:
+        current = "\n".join(
+            [
+                f"  {a.get('time', '??:??')} — {a.get('title', 'Activity')}"
+                for a in day_data.get("activities", [])
+            ]
+        )
+        user_prompt = (
+            f'User wants: "{message}"\n\n'
+            f"Current Day {target_day} — {day_data.get('title', '')}:\n{current}\n\n"
+            f"Available alternatives:\n{alternatives}\n\n"
+            f"Suggest changes for Day {target_day}. Use the format specified."
+        )
+    else:
+        current = format_day_summaries(days, trip.get("num_days", 7))
+        user_prompt = (
+            f'User wants: "{message}"\n\n'
+            f"Current schedule:\n{current}\n\n"
+            f"Available alternatives:\n{alternatives}\n\n"
+            "Suggest changes. Use the format specified."
+        )
+
+    try:
+        response = await llm.completion(VIBE_CHANGE_SYSTEM, user_prompt)
+        return {
+            "type": "ask",
+            "action": None,
+            "response": response.strip(),
+            "pending_action": {
+                "type": "vibe_confirm",
+                "awaiting": "confirm",
+                "original_message": message,
+                "target_day": target_day,
+                "preference": preference,
+            },
+        }
+    except Exception as e:
+        return {
+            "type": "ask",
+            "action": None,
+            "response": (
+                "I had trouble thinking about that. Could you try rephrasing?\n\n"
+                f"(Error: {str(e)[:100]})"
+            ),
+            "pending_action": None,
+        }
+
+
+async def handle_question(message: str, trip: dict, places: list) -> dict:
+    llm = get_llm()
+
+    in_itinerary = [p for p in places if p.get("is_in_itinerary")]
+    places_brief = ", ".join([p["name"] for p in in_itinerary])
+
+    prompt = (
+        f"Trip: {trip.get('origin_city', '?')} → {trip.get('destination_city', '?')}, {trip.get('num_days', '?')} days.\n"
+        f"Places in itinerary: {places_brief}\n\n"
+        f"User question: {message}\n\n"
+        "Answer helpfully and concisely. Use line breaks for readability. Use **bold** for emphasis."
+    )
+
+    try:
+        response = await llm.completion(
+            "You are Rahi AI, a friendly travel assistant. Answer travel questions concisely with good formatting.",
+            prompt,
+        )
+        return {
+            "type": "execute",
+            "action": None,
+            "response": response.strip(),
+            "pending_action": None,
+        }
+    except Exception:
+        return {
+            "type": "execute",
+            "action": None,
+            "response": "I'm having trouble answering that right now. Could you try again?",
+            "pending_action": None,
+        }
+
+
+async def handle_general_chat(message: str, trip: dict, places: list) -> dict:
+    llm = get_llm()
+
+    in_itinerary = [p for p in places if p.get("is_in_itinerary")]
+    not_in = [p for p in places if not p.get("is_in_itinerary")][:10]
+
+    places_text = "In itinerary:\n" + "\n".join(
+        [
+            f"- {p['name']} (ID: {p['google_place_id']}, Day {p.get('day_number', '?')} at {p.get('time_slot', '?')})"
+            for p in in_itinerary
+        ]
+    )
+    places_text += "\n\nAvailable (not in itinerary):\n" + "\n".join(
+        [f"- {p['name']} (ID: {p['google_place_id']}, {p['category']})" for p in not_in]
+    )
+
+    from app.prompts.chat import CHAT_SYSTEM
+
+    context = (
+        f"Trip: {trip['origin_city']} → {trip['destination_city']}, {trip['num_days']} days.\n\n"
+        f"{places_text}\n\n"
+        f"User: {message}"
+    )
+
+    try:
+        raw = await llm.json_completion(CHAT_SYSTEM, context)
+        data = json.loads(raw)
+        return {
+            "type": "execute",
+            "action": data.get("changes", []) or None,
+            "response": data.get("message", "Done!"),
+            "pending_action": None,
+        }
+    except Exception:
+        return {
+            "type": "execute",
+            "action": None,
+            "response": "I had trouble processing that. Could you try a simpler request?",
+            "pending_action": None,
+        }
 
 

@@ -186,3 +186,66 @@ async def handle_suggestion(
     )
     return {"message": f"Suggestion {action}"}
 
+
+@router.post("/plans/{trip_id}/rebuild")
+async def rebuild_itinerary(trip_id: str, user=Depends(get_current_user)):
+    """Regenerate itinerary using ONLY in-itinerary places."""
+    from app.services.llm_service import get_llm
+    from app.prompts.itinerary import ITINERARY_SYSTEM, build_itinerary_prompt
+    import json
+
+    supabase = get_supabase()
+    llm = get_llm()
+
+    trip_resp = (
+        supabase.table("trips")
+        .select("*")
+        .eq("id", trip_id)
+        .eq("user_id", user["id"])
+        .single()
+        .execute()
+    )
+    trip = trip_resp.data
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    places_resp = (
+        supabase.table("trip_places")
+        .select("google_place_id, name, category, rating, price_level, address")
+        .eq("trip_id", trip_id)
+        .eq("is_in_itinerary", True)
+        .execute()
+    )
+    places = places_resp.data or []
+
+    params = {
+        "destination_city": trip["destination_city"],
+        "destination_country": trip.get("destination_country", ""),
+        "origin_city": trip["origin_city"],
+        "num_days": trip["num_days"],
+        "pace": trip.get("pace", "moderate"),
+        "budget_vibe": trip.get("budget_vibe", "$$"),
+        "accommodation_type": trip.get("accommodation_type", "hotel"),
+        "preferences": trip.get("travel_preferences", []),
+        "dietary": [],
+        "instructions": trip.get("instructions", ""),
+        "num_travelers": trip.get("num_travelers", 1),
+        "start_date": trip.get("start_date"),
+        "end_date": trip.get("end_date"),
+    }
+
+    prompt = build_itinerary_prompt(places, params)
+    response = await llm.json_completion(ITINERARY_SYSTEM, prompt)
+
+    try:
+        itinerary_data = json.loads(response)
+        (
+            supabase.table("trips")
+            .update({"itinerary": itinerary_data})
+            .eq("id", trip_id)
+            .execute()
+        )
+        return {"itinerary": itinerary_data, "message": "Itinerary rebuilt!"}
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="Failed to parse itinerary")
+
