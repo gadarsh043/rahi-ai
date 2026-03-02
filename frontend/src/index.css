@@ -255,3 +255,9 @@ body {
   border-radius: 9999px;
   background: transparent;
 }
+
+/* Leaflet custom marker wrapper */
+.custom-marker {
+  background: transparent !important;
+  border: none !important;
+}

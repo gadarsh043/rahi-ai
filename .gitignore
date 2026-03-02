@@ -7,6 +7,8 @@ venv/
 env/
 
 # Build
+frontend/.env
+backend/.env
 frontend/dist/
 frontend/build/
 *.egg-info/
@@ -47,4 +49,3 @@ frontend/public/splash/
 PROJECT_SPEC.md
 NEXT_STEPS.md
 MWEB_UI_SPEC.md
-HOME_PAGE_PROMPTS.md

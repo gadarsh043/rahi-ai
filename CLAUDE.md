@@ -507,76 +507,82 @@ Sequential stepper. One step visible at a time. framer-motion AnimatePresence fo
 - ❌ Don't modify PROJECT_SPEC.md or MWEB_UI_SPEC.md
 
 
-## Plan View Architecture
+Plan View Architecture
+Pattern: Scroll-Spy (Uber Eats / Airbnb)
+All 7 sections stacked in one scrollable page. Sticky tabs auto-highlight as you scroll past each section. Click tab = smooth-scroll to section. NOT separate tab views.
+Layout
+┌──────┬──────────────────────────┬──────────────────────┐
+│      │ PlanHeader               │                      │
+│ Side │ StickyTabBar (scroll-spy)│                      │
+│ bar  ├──────────────────────────┤   MapPanel            │
+│      │ 🍽 Where to Eat          │   (Leaflet + OSM)    │
+│      │ 🏠 Where to Stay         │   Color-coded markers │
+│      │ 📍 Places to Go          │   Filtered by scroll  │
+│      │ 📋 Your Itinerary        │   position            │
+│      │ ✈️ Flights               │                      │
+│      │ 💰 Costs                 │                      │
+│      │ ➡️ What's Next           │                      │
+│      ├──────────────────────────┤                      │
+│      │ ActionBar                │                      │
+│      │ [✨ Ask Rahi...] [Pick]  │                      │
+└──────┴──────────────────────────┴──────────────────────┘
+Chat: Right Drawer (not bottom panel)
 
-### Layout Structure
-```
-┌──────┬───────────────────────────┬──────────────────────┐
-│      │ PlanHeader                │                      │
-│ Side │ TabBar (scrollable pills) │                      │
-│ bar  ├───────────────────────────┤   MapPanel            │
-│      │                           │   (Leaflet + OSM)    │
-│      │   TabContent              │   Color-coded markers │
-│      │   (scrollable)            │                      │
-│      ├───────────────────────────┤                      │
-│      │ ActionBar                 │                      │
-│      │ [Chat input] [Let's Pick] │                      │
-└──────┴───────────────────────────┴──────────────────────┘
-```
+Desktop: 400px drawer slides from right, overlays map
+Mobile: full-screen overlay with backdrop
+Chat MUTATES trip state (removes places, selects flights)
+Triggered by ActionBar button, NOT an inline input
 
-- Content panel: flex-1, min-w-0, overflow-y-auto
-- Map panel: w-[45%], hidden below lg breakpoint, border-l
-- ActionBar: sticky bottom of content panel
-- Full height: h-[calc(100vh-56px)] accounting for TopBar
+Progressive Loading
+LazySection wraps each section with IntersectionObserver.
+Sections render skeleton placeholders until 200px from viewport.
+Once visible, stays rendered (no unmounting).
+Three Modes (one PlanView component)
 
-### Three Modes (one PlanView component)
-- `editing`: owner, full chat + Let's Pick, all interactions
-- `shared`: viewer via ?shared=CODE, read-only, suggest + fork
-- `saved`: frozen "My Trip" at /trip/:id, PDF + booking links
+editing: owner, chat + Let's Pick, all interactions
+shared: viewer via ?shared=CODE, read-only, suggest + fork
+saved: frozen "My Trip" at /trip/:id, PDF + booking links
 
-### Data Flow
-- All trip data lives in Zustand `tripStore`
-- Tabs read from `trip.places` filtered by category
-- Map reads from `trip.places` filtered by `activeTab`
-- Chat messages stored in `tripStore.chatMessages`
-- Let's Pick reads/writes `trip.places[].isInItinerary`
+Data Flow
 
-### Tab IDs
-eat | stay | go | flight | costs | trip | next
+All trip data in Zustand tripStore
+Sections read from trip.places filtered by category
+Map reads from trip.places filtered by activeSectionId
+Chat messages in tripStore.chatMessages
+Chat responses trigger removePlace() / addPlaceToItinerary() / selectFlight()
 
-### Map Setup (MVP)
-Using Leaflet + OpenStreetMap (free), NOT Google Maps JS API.
-- react-leaflet for React integration
-- Custom divIcon markers with category colors
-- Switch to Google Maps later if needed (just swap MapPanel internals)
+Section IDs (scroll-spy targets)
+eat | stay | go | trip | flight | costs | next
+Map: Leaflet + OpenStreetMap (free, no API key)
 
-### Marker Colors
-- restaurant: #EF4444 (red)
-- hotel: #3B82F6 (blue)
-- attraction: #10B981 (green)
-- cafe: #F59E0B (amber)
-- outdoor: #14B8A6 (teal)
+react-leaflet for React integration
+Custom L.divIcon markers with category colors
+Swap to Google Maps later by replacing MapPanel internals
 
-### Component Ownership
-```
+Marker Colors
+
+restaurant: #EF4444 (red)
+hotel: #3B82F6 (blue)
+attraction: #10B981 (green)
+cafe: #F59E0B (amber)
+outdoor: #14B8A6 (teal)
+
+Component Tree
 PlanView/
-├── PlanHeader.jsx        — trip title, currency, share
-├── TabBar.jsx            — 7 scrollable pill tabs
-├── TabContent.jsx        — switch/router for active tab
-├── ActionBar.jsx         — chat input + Let's Pick button
-├── MapPanel.jsx          — Leaflet map with markers
-├── ChatPanel.jsx         — message history + mock AI
-├── LetsPickPopup.jsx     — full-screen place curation
-├── PlaceCard.jsx         — shared card (eat/stay/go)
-├── FlightCard.jsx        — collapsible flight card
-├── Timeline.jsx          — day-by-day itinerary
-├── CostBreakdown.jsx     — progress bar breakdown
-└── tabs/
-    ├── EatTab.jsx
-    ├── StayTab.jsx
-    ├── PlacesTab.jsx
-    ├── FlightTab.jsx
-    ├── CostsTab.jsx
-    ├── TripTab.jsx
-    └── NextTab.jsx
-```
+├── PlanHeader.jsx         — back, title, currency, share
+├── StickyTabBar.jsx       — scroll-spy tab pills
+├── LazySection.jsx        — IntersectionObserver wrapper
+├── ActionBar.jsx          — chat trigger + Let's Pick button
+├── MapPanel.jsx           — Leaflet map with filtered markers
+├── ChatDrawer.jsx         — right drawer (desktop) / overlay (mobile)
+├── LetsPickPopup.jsx      — full-screen place curation
+├── PlaceCard.jsx          — shared card (eat/stay/go)
+├── FlightCard.jsx         — collapsible flight card
+└── sections/
+    ├── EatSection.jsx
+    ├── StaySection.jsx
+    ├── PlacesSection.jsx
+    ├── TripSection.jsx     — day-by-day timeline
+    ├── FlightSection.jsx
+    ├── CostsSection.jsx
+    └── NextSection.jsx     — visa + checklist + essentials

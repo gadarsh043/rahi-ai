@@ -1,28 +1,117 @@
+import { useEffect } from 'react';
 import useTripStore from '../../../stores/tripStore';
+import { PLAN_SECTIONS } from '../../../utils/mockTripData';
+import useScrollSpy from '../../../hooks/useScrollSpy';
+import PlanHeader from './PlanHeader';
+import TabBar from './TabBar';
+import LazySection from '../LazySection/LazySection';
+import MapPanel from '../MapPanel/MapPanel';
+import ActionBar from './ActionBar';
+import LetsPickPopup from '../LetsPickPopup/LetsPickPopup';
+import ChatDrawer from '../ChatDrawer/ChatDrawer';
+import EatTab from '../tabs/EatTab';
+import StayTab from '../tabs/StayTab';
+import PlacesTab from '../tabs/PlacesTab';
+import FlightTab from '../tabs/FlightTab';
+import CostsTab from '../tabs/CostsTab';
+import TripTab from '../tabs/TripTab';
+import NextTab from '../tabs/NextTab';
+
+const sectionComponents = {
+  eat: EatTab,
+  stay: StayTab,
+  go: PlacesTab,
+  trip: TripTab,
+  flight: FlightTab,
+  costs: CostsTab,
+  next: NextTab,
+};
 
 export default function PlanView() {
-  const trip = useTripStore((s) => s.trip);
+  const showMap = useTripStore((s) => s.showMap);
+  const toggleMap = useTripStore((s) => s.toggleMap);
+  const letsPickOpen = useTripStore((s) => s.letsPickOpen);
+  const chatOpen = useTripStore((s) => s.chatOpen);
+  const setActiveSectionId = useTripStore((s) => s.setActiveSectionId);
+
+  const sectionIds = PLAN_SECTIONS.map((s) => s.id);
+  const { activeId, scrollToSection, scrollContainerRef } = useScrollSpy(
+    sectionIds
+  );
+
+  useEffect(() => {
+    setActiveSectionId(activeId);
+  }, [activeId, setActiveSectionId]);
 
   return (
-    <div className="flex h-[calc(100vh-56px)]">
-      {/* Content Panel */}
-      <div className="flex-1 min-w-0 overflow-y-auto p-6">
-        <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-          {trip.originCity} → {trip.destinationCity}
-        </h1>
-        <p className="text-[var(--text-secondary)]">
-          {trip.numDays} days · {trip.pace} · {trip.budgetVibe}
-        </p>
-        <p className="mt-4 text-sm text-[var(--text-muted)]">Plan View shell loaded. Tabs coming next.</p>
+    <>
+      <div className="flex h-[calc(100vh-56px)]">
+        {/* Content Panel */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative">
+          <div className="px-6 pt-6 pb-2">
+            <PlanHeader />
+            <TabBar activeId={activeId} onTabClick={scrollToSection} />
+          </div>
+          <div
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto scroll-smooth"
+          >
+            {PLAN_SECTIONS.map((section) => {
+              const SectionComponent = sectionComponents[section.id];
+              return (
+                <LazySection
+                  key={section.id}
+                  id={section.id}
+                  title={section.label}
+                  icon={section.icon}
+                >
+                  <SectionComponent />
+                </LazySection>
+              );
+            })}
+            <div className="h-[50vh]" />
+          </div>
+          <ActionBar />
+        </div>
+
+        {/* Map Panel */}
+        {!letsPickOpen && !chatOpen && (
+          <div className="hidden lg:block w-[45%] bg-[var(--surface)] border-l border-[var(--border)]">
+            <MapPanel />
+          </div>
+        )}
       </div>
 
-      {/* Map Panel placeholder */}
-      <div className="hidden lg:block w-[45%] bg-[var(--surface)] border-l border-[var(--border)]">
-        <div className="flex items-center justify-center h-full text-[var(--text-muted)]">
-          Map placeholder
+      {/* Mobile map toggle button */}
+      {!letsPickOpen && !chatOpen && (
+        <button
+          type="button"
+          onClick={toggleMap}
+          className="fixed bottom-24 right-4 lg:hidden z-50 w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform"
+        >
+          🗺️
+        </button>
+      )}
+
+      {/* Mobile full-screen map overlay */}
+      {showMap && !letsPickOpen && !chatOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden bg-[var(--bg)]">
+          <div className="absolute top-3 right-3 z-[1001]">
+            <button
+              type="button"
+              onClick={toggleMap}
+              className="px-3 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs text-[var(--text-secondary)] shadow-sm"
+            >
+              Close map
+            </button>
+          </div>
+          <MapPanel />
         </div>
-      </div>
-    </div>
+      )}
+
+      <ChatDrawer />
+      <LetsPickPopup />
+    </>
   );
 }
 

@@ -4,7 +4,7 @@ import { MOCK_TRIP } from '../utils/mockTripData';
 const useTripStore = create((set, get) => ({
   // Trip data
   trip: null,
-  activeTab: 'eat',
+  activeSectionId: 'eat',
   mode: 'editing', // 'editing' | 'shared' | 'saved'
 
   // Map state
@@ -15,6 +15,7 @@ const useTripStore = create((set, get) => ({
   // Chat state
   chatOpen: false,
   chatMessages: [],
+  isChatThinking: false,
 
   // Let's Pick state
   letsPickOpen: false,
@@ -26,12 +27,16 @@ const useTripStore = create((set, get) => ({
       mapCenter: { lat: trip.destinationLat, lng: trip.destinationLng },
       chatMessages: trip.chatMessages || [],
     }),
-  setActiveTab: (tab) => set({ activeTab: tab }),
+  setActiveSectionId: (id) => set({ activeSectionId: id }),
   setMode: (mode) => set({ mode }),
   setSelectedMarker: (id) => set({ selectedMarkerId: id }),
   toggleMap: () => set((s) => ({ showMap: !s.showMap })),
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   toggleLetsPick: () => set((s) => ({ letsPickOpen: !s.letsPickOpen })),
+  setChatOpen: (open) => set({ chatOpen: open }),
+  openChat: () => set({ chatOpen: true }),
+  closeChat: () => set({ chatOpen: false }),
+  setChatThinking: (value) => set({ isChatThinking: value }),
 
   addChatMessage: (msg) =>
     set((s) => ({
@@ -45,7 +50,7 @@ const useTripStore = create((set, get) => ({
       mapCenter: { lat: MOCK_TRIP.destinationLat, lng: MOCK_TRIP.destinationLng },
       chatMessages: MOCK_TRIP.chatMessages,
       mode: 'editing',
-      activeTab: 'eat',
+      activeSectionId: 'eat',
     });
   },
 

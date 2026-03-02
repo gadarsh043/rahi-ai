@@ -478,3 +478,14 @@ export const PLAN_TABS = [
   { id: 'next', label: "What's Next", icon: '➡️', shortLabel: 'Next' },
 ];
 
+export const PLAN_SECTIONS = [
+  { id: 'eat', label: 'Where to Eat', icon: '🍽', shortLabel: 'Eat' },
+  { id: 'stay', label: 'Where to Stay', icon: '🏠', shortLabel: 'Stay' },
+  { id: 'go', label: 'Places to Go', icon: '📍', shortLabel: 'Go' },
+  { id: 'trip', label: 'Your Itinerary', icon: '📋', shortLabel: 'Trip' },
+  { id: 'flight', label: 'Flights', icon: '✈️', shortLabel: 'Flight' },
+  { id: 'costs', label: 'Costs', icon: '💰', shortLabel: 'Costs' },
+  { id: 'next', label: "What's Next", icon: '➡️', shortLabel: 'Next' },
+];
+
+
