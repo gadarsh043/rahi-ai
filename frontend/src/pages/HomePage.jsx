@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useHomeStepper } from '../hooks/useHomeStepper';
 import { STEP_CONFIG } from '../utils/stepConfig';
 import StepQuestion from '../components/home/StepQuestion';
@@ -34,6 +35,8 @@ export default function HomePage() {
     updateField,
   } = useHomeStepper();
 
+  const navigate = useNavigate();
+
   const config = STEP_CONFIG[currentStep];
   const isForward = direction === 'forward';
   const helper = STEP_HELPERS[currentStep];
@@ -46,8 +49,49 @@ export default function HomePage() {
       : edited;
     updateField('instructions', newInstructions);
     const dataToSend = { ...data, instructions: newInstructions };
-    console.log('Generate trip — formData:', dataToSend);
-    console.log('Generate trip — prompt (for AI):', promptString);
+
+    // Build backend payload for TripGenerateRequest
+    const origin =
+      dataToSend.origin && typeof dataToSend.origin === 'object'
+        ? dataToSend.origin
+        : null;
+    const destination =
+      dataToSend.destination && typeof dataToSend.destination === 'object'
+        ? dataToSend.destination
+        : null;
+    const passport =
+      dataToSend.passportCountry &&
+      typeof dataToSend.passportCountry === 'object'
+        ? dataToSend.passportCountry.name
+        : dataToSend.passportCountry;
+
+    const generateParams = {
+      origin_city: origin?.city || (dataToSend.origin || ''),
+      origin_country: origin?.country || '',
+      origin_lat: origin?.lat ?? 0,
+      origin_lng: origin?.lng ?? 0,
+      destination_city:
+        destination?.city || (dataToSend.destination || ''),
+      destination_country: destination?.country || '',
+      destination_lat: destination?.lat ?? 0,
+      destination_lng: destination?.lng ?? 0,
+      start_date: dataToSend.startDate,
+      end_date: dataToSend.endDate,
+      num_days: dataToSend.numDays ?? 7,
+      pace: dataToSend.pace || 'moderate',
+      budget_vibe: dataToSend.budgetVibe || '$$',
+      accommodation_type: dataToSend.accommodationType || 'hotel',
+      preferences: dataToSend.preferences || [],
+      passport_country: passport || '',
+      instructions: dataToSend.instructions || '',
+      dietary: dataToSend.dietary || [],
+      disability: dataToSend.disability || [],
+      num_travelers: dataToSend.numTravelers || 1,
+      currency: dataToSend.currency || 'USD',
+    };
+
+    // Navigate to Plan page with generation params; PlanPage will handle SSE
+    navigate('/plan/new', { state: { generateParams } });
   };
 
   const handleSubmit = (e) => {

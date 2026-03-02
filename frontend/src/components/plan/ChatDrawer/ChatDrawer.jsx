@@ -1,40 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
-
-const MOCK_ACTIONS = [
-  {
-    response:
-      "Done! I've removed Terry Black's BBQ from your itinerary and replaced it with Cosmic Café for Day 1 lunch. Scroll up to the Eat section to see the change!",
-    action: (store) => {
-      store.removePlace?.('place-r1');
-      store.addPlaceToItinerary?.('place-r5', 1, '12:30');
-    },
-  },
-  {
-    response:
-      "I've selected the Qatar Airways flight for you — great choice, 2 checked bags included! Check the Flights section.",
-    action: (store) => {
-      store.selectFlight?.('flight-3');
-    },
-  },
-  {
-    response:
-      'Added Reunion Tower to Day 3 evening! Perfect for sunset views after the Perot Museum.',
-    action: (store) => {
-      store.addPlaceToItinerary?.('place-a5', 3, '17:30');
-    },
-  },
-  {
-    response:
-      "Added Pepe's & Mito's to your itinerary for Day 2 breakfast — they have amazing breakfast tacos!",
-    action: (store) => {
-      store.addPlaceToItinerary?.('place-r4', 2, '08:30');
-    },
-  },
-];
-
-let mockIdx = 0;
+import { sendChatMessage } from '../../../services/api';
 
 function ChatMessage({ message }) {
   return (
@@ -74,14 +41,19 @@ export default function ChatDrawer() {
   const addChatMessage = useTripStore((s) => s.addChatMessage);
   const isChatThinking = useTripStore((s) => s.isChatThinking);
   const setChatThinking = useTripStore((s) => s.setChatThinking);
+  const trip = useTripStore((s) => s.trip);
+  const removePlace = useTripStore((s) => s.removePlace);
+  const addPlaceToItinerary = useTripStore((s) => s.addPlaceToItinerary);
+  const selectFlight = useTripStore((s) => s.selectFlight);
 
   const [input, setInput] = useState('');
+  const [streamingMessage, setStreamingMessage] = useState('');
   const endRef = useRef(null);
   const inputRef = useRef(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages, isChatThinking]);
+  }, [chatMessages, isChatThinking, streamingMessage]);
 
   useEffect(() => {
     if (chatOpen) {
@@ -89,27 +61,64 @@ export default function ChatDrawer() {
     }
   }, [chatOpen]);
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  const handleSend = async () => {
+    if (!input.trim() || !trip) return;
+    const text = input.trim();
+
     addChatMessage({
       id: `user-${Date.now()}`,
       role: 'user',
-      content: input.trim(),
+      content: text,
     });
     setInput('');
     setChatThinking(true);
+    setStreamingMessage('');
 
-    setTimeout(() => {
-      const action = MOCK_ACTIONS[mockIdx % MOCK_ACTIONS.length];
-      mockIdx += 1;
-      setChatThinking(false);
-      addChatMessage({
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: action.response,
+    let fullMessage = '';
+    try {
+      await sendChatMessage(trip.id, text, (event, data) => {
+        if (event === 'message_chunk') {
+          fullMessage += data.text;
+          setStreamingMessage(fullMessage);
+        }
+        if (event === 'itinerary_update') {
+          const changes = data.changes || [];
+          changes.forEach((change) => {
+            if (change.action === 'remove') {
+              removePlace?.(change.place_id);
+            } else if (change.action === 'add') {
+              addPlaceToItinerary?.(
+                change.place_id,
+                change.day_number,
+                change.time_slot
+              );
+            } else if (change.action === 'select_flight') {
+              selectFlight?.(change.flight_id);
+            }
+          });
+        }
+        if (event === 'done') {
+          setChatThinking(false);
+          if (fullMessage.trim()) {
+            addChatMessage({
+              id: `assistant-${Date.now()}`,
+              role: 'assistant',
+              content: fullMessage,
+            });
+          }
+          setStreamingMessage('');
+        }
+        if (event === 'error') {
+          setChatThinking(false);
+          setStreamingMessage('');
+        }
       });
-      action.action(useTripStore.getState());
-    }, 1800);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Chat error', err);
+      setChatThinking(false);
+      setStreamingMessage('');
+    }
   };
 
   return (
@@ -167,6 +176,15 @@ export default function ChatDrawer() {
               {chatMessages.map((msg) => (
                 <ChatMessage key={msg.id ?? `${msg.role}-${Math.random()}`} message={msg} />
               ))}
+            {streamingMessage && (
+              <ChatMessage
+                message={{
+                  id: 'assistant-streaming',
+                  role: 'assistant',
+                  content: streamingMessage,
+                }}
+              />
+            )}
               {isChatThinking && (
                 <div className="flex gap-2.5">
                   <div className="w-7 h-7 rounded-full bg-[var(--surface-hover)] flex items-center justify-center text-xs">

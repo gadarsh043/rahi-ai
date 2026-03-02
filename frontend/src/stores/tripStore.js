@@ -65,6 +65,55 @@ const useTripStore = create((set, get) => ({
     if (!trip) return [];
     return trip.places.filter((p) => p.isInItinerary);
   },
+
+  // Mutations used by chat / Let's Pick flows
+  removePlace: (placeId) =>
+    set((s) => {
+      if (!s.trip || !Array.isArray(s.trip.places)) return s;
+      const places = s.trip.places.map((p) => {
+        const matches =
+          p.id === placeId ||
+          p.googlePlaceId === placeId ||
+          p.google_place_id === placeId;
+        if (!matches) return p;
+        return {
+          ...p,
+          isInItinerary: false,
+          dayNumber: null,
+          timeSlot: null,
+        };
+      });
+      return { trip: { ...s.trip, places } };
+    }),
+
+  addPlaceToItinerary: (placeId, dayNumber, timeSlot) =>
+    set((s) => {
+      if (!s.trip || !Array.isArray(s.trip.places)) return s;
+      const places = s.trip.places.map((p) => {
+        const matches =
+          p.id === placeId ||
+          p.googlePlaceId === placeId ||
+          p.google_place_id === placeId;
+        if (!matches) return p;
+        return {
+          ...p,
+          isInItinerary: true,
+          dayNumber: dayNumber ?? p.dayNumber ?? null,
+          timeSlot: timeSlot ?? p.timeSlot ?? null,
+        };
+      });
+      return { trip: { ...s.trip, places } };
+    }),
+
+  selectFlight: (flightId) =>
+    set((s) => {
+      if (!s.trip || !Array.isArray(s.trip.flights)) return s;
+      const flights = s.trip.flights.map((f) => ({
+        ...f,
+        isSelected: f.id === flightId,
+      }));
+      return { trip: { ...s.trip, flights } };
+    }),
 }));
 
 export default useTripStore;
