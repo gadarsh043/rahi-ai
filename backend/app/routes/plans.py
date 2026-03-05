@@ -25,7 +25,7 @@ async def list_plans(user=Depends(get_current_user)):
 
     plans = resp.data or []
 
-    # Get suggestion counts per plan
+    # Get pending suggestion counts per plan
     for plan in plans:
         sug_resp = (
             supabase.table("trip_suggestions")
@@ -34,7 +34,10 @@ async def list_plans(user=Depends(get_current_user)):
             .eq("status", "pending")
             .execute()
         )
-        plan["suggestion_count"] = getattr(sug_resp, "count", None) or 0
+        count = getattr(sug_resp, "count", None) or 0
+        # Backwards-compatible key + explicit pending_suggestions for UI
+        plan["suggestion_count"] = count
+        plan["pending_suggestions"] = count
 
     return {"plans": plans}
 
@@ -109,6 +112,72 @@ async def save_plan(trip_id: str, user=Depends(get_current_user)):
     # TODO: Generate PDF here (Prompt 7)
 
     return {"message": "Trip saved!", "trip_id": trip_id}
+
+
+@router.post("/plans/{trip_id}/refresh-flights")
+async def refresh_flights(trip_id: str, user=Depends(get_current_user)):
+    """
+    Force-refresh flight search for a trip, respecting the FlightService cache.
+    """
+    from app.services.flight_service import FlightService
+    from app.utils.iata_codes import resolve_iata
+
+    supabase = get_supabase()
+
+    trip_resp = (
+        supabase.table("trips")
+        .select("*")
+        .eq("id", trip_id)
+        .eq("user_id", user["id"])
+        .single()
+        .execute()
+    )
+    trip = trip_resp.data
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    transport_data_existing = trip.get("transport_data") or {}
+    resolved_origin = resolve_iata(trip.get("origin_city", ""))
+    resolved_dest = resolve_iata(trip.get("destination_city", ""))
+    origin_code = resolved_origin or transport_data_existing.get("origin_code")
+    dest_code = resolved_dest or transport_data_existing.get("destination_code")
+    departure_date = str(trip.get("start_date") or "") or ""
+    return_date = str(trip.get("end_date") or "") or None
+    adults = trip.get("num_travelers") or 1
+
+    if not origin_code or not dest_code or not departure_date:
+        raise HTTPException(
+            status_code=400,
+            detail="Trip is missing origin/destination codes or dates for flight search.",
+        )
+
+    result = await FlightService.search_flights(
+        origin_code=origin_code,
+        destination_code=dest_code,
+        departure_date=departure_date,
+        return_date=return_date,
+        adults=adults,
+    )
+
+    existing_transport = trip.get("transport_data") or {}
+    transport_data = {
+        **existing_transport,
+        "mode": trip.get("transport_mode") or "flight",
+        "origin_code": origin_code,
+        "destination_code": dest_code,
+        "departure_date": departure_date,
+        "return_date": return_date,
+        **result,
+    }
+
+    (
+        supabase.table("trips")
+        .update({"transport_data": transport_data, "transport_mode": "flight"})
+        .eq("id", trip_id)
+        .execute()
+    )
+
+    return transport_data
 
 
 @router.post("/plans/{trip_id}/share")

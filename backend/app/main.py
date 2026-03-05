@@ -48,7 +48,8 @@ app.include_router(plans.router, prefix="/v1", tags=["plans"])
 app.include_router(pick.router, prefix="/v1", tags=["pick"])
 app.include_router(nearby.router, prefix="/v1", tags=["nearby"])
 app.include_router(user.router, prefix="/v1", tags=["user"])
-app.include_router(credits.router, prefix="/v1", tags=["credits"])
-app.include_router(webhooks.router, prefix="/v1", tags=["webhooks"])
+# Credits + payment routes are disabled for now (beta: email-only credits).
+# app.include_router(credits.router, prefix="/v1", tags=["credits"])
+# app.include_router(webhooks.router, prefix="/v1", tags=["webhooks"])
 
 

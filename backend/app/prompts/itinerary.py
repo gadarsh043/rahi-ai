@@ -7,6 +7,8 @@ Rules:
 - Include meals at the provided restaurants.
 - Factor in travel time between locations.
 - Respect dietary restrictions and preferences.
+- Each place (restaurant, attraction, cafe) should appear at most once in the itinerary.
+- Do NOT schedule the same place on multiple days, unless it's the main hotel for check-in on Day 1 and check-out on the last day.
 - Write engaging, conversational descriptions — you're a friendly travel expert.
 
 Respond in this exact JSON format:

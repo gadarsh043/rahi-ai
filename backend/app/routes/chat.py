@@ -9,6 +9,7 @@ from app.services.chat_engine import (
     format_day_schedule,
 )
 from app.utils.supabase_client import get_supabase
+from app.prompts.chat import CHAT_SYSTEM, build_chat_context
 import json
 
 router = APIRouter()
@@ -70,9 +71,22 @@ async def chat_stream(req: ChatRequest, user: dict):
     supabase = get_supabase()
 
     trip_resp = (
-        supabase.table("trips").select("*").eq("id", req.trip_id).single().execute()
+        supabase.table("trips")
+        .select("*")
+        .eq("id", req.trip_id)
+        .single()
+        .execute()
     )
     trip = trip_resp.data
+    if not trip:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=404, detail="Trip not found")
+
+    if trip.get("user_id") != user.get("id"):
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=403, detail="Not your trip")
 
     places_resp = (
         supabase.table("trip_places")
@@ -200,58 +214,31 @@ def build_schedule_response(result: dict, trip: dict, places: list) -> str:
 
 
 async def handle_llm_fallback(message: str, trip: dict, places: list) -> dict:
+    """Fallback when rule-based classifier can't handle the message.
+
+    Build a concise, trip-aware context and let the LLM answer directly.
+    """
     llm = get_llm()
 
-    in_itinerary = [p for p in places if p.get("is_in_itinerary")]
-    place_names = [p["name"] for p in in_itinerary]
+    trip_context = build_chat_context(trip, places)
 
-    classifier_prompt = (
-        f'User message: "{message}"\n'
-        f"Places in itinerary: {', '.join(place_names)}\n"
-        "What is the user's intent?"
+    system_prompt = CHAT_SYSTEM.format(
+        trip_context=trip_context,
+        destination_city=trip.get("destination_city", "the destination"),
+        mutation_instructions=(
+            "If you decide specific itinerary changes are needed, describe them "
+            "in your message but DO NOT output JSON. The backend will handle applying changes."
+        ),
     )
 
-    try:
-        raw = await llm.json_completion(CLASSIFIER_SYSTEM, classifier_prompt)
-        classified = json.loads(raw)
-    except Exception:
-        classified = {"intent": "other"}
+    response_text = await llm.completion(system_prompt, message)
 
-    intent = classified.get("intent", "other")
-
-    if intent == "remove":
-        target = classified.get("target_place")
-        if target:
-            from app.services.chat_engine import find_place_by_name, handle_remove
-            return handle_remove(target, places)
-
-    if intent == "swap":
-        target = classified.get("target_place")
-        new = classified.get("new_place")
-        if target and new:
-            from app.services.chat_engine import handle_swap
-            return handle_swap(target, new, places)
-
-    if intent == "add":
-        target = classified.get("target_place")
-        if target:
-            from app.services.chat_engine import handle_add
-            day = classified.get("target_day")
-            return handle_add(target, day, None, places)
-
-    if intent == "vibe_change":
-        return await handle_vibe_change(
-            message,
-            trip,
-            places,
-            classified.get("target_day"),
-            classified.get("preference", ""),
-        )
-
-    if intent == "question":
-        return await handle_question(message, trip, places)
-
-    return await handle_general_chat(message, trip, places)
+    return {
+        "type": "answer",
+        "response": response_text,
+        "action": None,
+        "pending_action": None,
+    }
 
 
 async def handle_vibe_change(

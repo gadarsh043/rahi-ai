@@ -3,7 +3,7 @@ import json
 import traceback
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 
 from app.dependencies import get_current_user
@@ -17,8 +17,10 @@ from app.services.essentials_service import (
     normalize_country_code,
 )
 from app.services.geocode_service import geocode_city
+from app.services.flight_service import FlightService
 from app.services.llm_service import get_llm
 from app.services.places_service import fetch_all_categories, format_places_lean
+from app.utils.iata_codes import resolve_iata
 from app.utils.supabase_client import get_supabase
 
 router = APIRouter()
@@ -26,6 +28,30 @@ router = APIRouter()
 
 @router.post("/generate")
 async def generate_trip(req: TripGenerateRequest, user=Depends(get_current_user)):
+    # Simple credits gate: 5 free trips, then ask user to email for more.
+    supabase = get_supabase()
+    try:
+        profile_resp = (
+            supabase.table("profiles")
+            .select("trips_remaining")
+            .eq("id", user["id"])
+            .single()
+            .execute()
+        )
+        profile = profile_resp.data or {}
+        trips_remaining = profile.get("trips_remaining")
+        if trips_remaining is not None and trips_remaining <= 0:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "message": "You've used all your free trips! Email g.adarsh043@gmail.com to request more credits.",
+                    "type": "credits_exhausted",
+                },
+            )
+    except Exception:
+        # If this fails, fall through — we don't want to block generation
+        pass
+
     return StreamingResponse(
         generate_stream(req, user),
         media_type="text/event-stream",
@@ -55,7 +81,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
         # Phase 1: Status
         yield sse_event("status", {"phase": "fetching", "message": "Finding the best places..."})
 
-        # Geocode if needed (frontend may not send lat/lng)
+        # Geocode destination if needed (frontend may not send lat/lng)
         dest_lat = req.destination_lat
         dest_lng = req.destination_lng
         if not dest_lat or not dest_lng:
@@ -63,6 +89,10 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
             if geo:
                 dest_lat = geo["lat"]
                 dest_lng = geo["lng"]
+
+        # Basic origin coordinates fallback to request values
+        origin_lat = req.origin_lat
+        origin_lng = req.origin_lng
 
         # Phase 2: Fetch places (parallel)
         all_places = await fetch_all_categories(dest_lat, dest_lng)
@@ -129,10 +159,13 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
             },
         )
 
-        # Phase 4: Visa + Essentials + Costs (ZERO tokens — static data + formula)
+        # Phase 4: Transport + Visa + Essentials + Costs
         yield sse_event(
             "status",
-            {"phase": "enriching", "message": "Getting visa info and cost estimates..."},
+            {
+                "phase": "enriching",
+                "message": "Figuring out flights, visa info, and cost estimates...",
+            },
         )
 
         # Pull optional profile settings (visa status, passport country)
@@ -174,6 +207,90 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
             currency=req.currency,
         )
 
+        # Decide transport mode based on distance
+        transport_mode = None
+        transport_data: dict | None = None
+
+        try:
+            if origin_lat is not None and origin_lng is not None and dest_lat and dest_lng:
+                # Simple great-circle distance
+                from math import atan2, cos, radians, sin, sqrt
+
+                R = 6371.0
+                lat1 = radians(origin_lat)
+                lat2 = radians(dest_lat)
+                dlat = radians(dest_lat - origin_lat)
+                dlng = radians(dest_lng - origin_lng)
+                a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlng / 2) ** 2
+                c = 2 * atan2(sqrt(a), sqrt(1 - a))
+                distance_km = R * c
+
+                same_country = origin_country == dest_country and origin_country is not None
+
+                if distance_km > 800:
+                    transport_mode = "flight"
+                elif distance_km > 300 and not same_country:
+                    transport_mode = "flight"
+                elif distance_km > 300 and same_country:
+                    transport_mode = "flight"
+                elif distance_km > 50:
+                    transport_mode = "drive"
+                else:
+                    transport_mode = "drive"
+
+                transport_payload = {
+                    "mode": transport_mode,
+                    "distance_km": round(distance_km, 1),
+                }
+
+                # If we can, attach reasoning
+                if transport_mode == "flight":
+                    transport_payload["reasoning"] = (
+                        f"Approx. {int(distance_km)} km between cities — flying is the most practical option."
+                    )
+                else:
+                    hours = distance_km / 80 if distance_km else 0
+                    transport_payload["reasoning"] = (
+                        f"Short to medium distance (~{int(distance_km)} km) — driving is a good fit."
+                    )
+
+                # If mode is flight and we have basic dates, call FlightService
+                if transport_mode == "flight":
+                    origin_code = req.origin_iata or resolve_iata(req.origin_city or "")
+                    dest_code = req.destination_iata or resolve_iata(req.destination_city or "")
+                    departure_date = str(req.start_date) if req.start_date else ""
+                    return_date = str(req.end_date) if req.end_date else None
+
+                    if origin_code and dest_code and departure_date:
+                        flights_result = await FlightService.search_flights(
+                            origin_code=origin_code,
+                            destination_code=dest_code,
+                            departure_date=departure_date,
+                            return_date=return_date,
+                            adults=req.num_travelers or 1,
+                        )
+                        transport_data = {
+                            "mode": transport_mode,
+                            "origin_code": origin_code,
+                            "destination_code": dest_code,
+                            "departure_date": departure_date,
+                            "return_date": return_date,
+                            **flights_result,
+                        }
+                        transport_payload.update(
+                            {
+                                "flights": flights_result.get("flights", []),
+                                "cached": flights_result.get("cached", False),
+                                "fetched_at": flights_result.get("fetched_at"),
+                                "next_refresh": flights_result.get("next_refresh"),
+                            }
+                        )
+
+                yield sse_event("transport", transport_payload)
+        except Exception:
+            transport_mode = None
+            transport_data = None
+
         yield sse_event("visa_info", visa_info)
         yield sse_event("travel_essentials", travel_essentials)
         yield sse_event("cost_estimate", cost_data)
@@ -204,6 +321,8 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                     "raw_places_data": {"places": flat_places},
                     "itinerary": itinerary_data,
                     "cost_estimate": cost_data,
+                    "transport_mode": transport_mode,
+                    "transport_data": transport_data,
                     "visa_info": visa_info,
                     "travel_essentials": travel_essentials,
                     "status": "planning",
