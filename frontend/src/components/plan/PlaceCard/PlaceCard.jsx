@@ -1,4 +1,6 @@
-export default function PlaceCard({ place, variant = 'standard', showActions = true }) {
+import { memo } from 'react';
+
+export default memo(function PlaceCard({ place, variant = 'standard', showActions = true }) {
   const isHotel = place.category === 'hotel';
   const isAttraction = place.category === 'attraction';
 
@@ -163,5 +165,5 @@ export default function PlaceCard({ place, variant = 'standard', showActions = t
       </div>
     </Wrapper>
   );
-}
+});
 

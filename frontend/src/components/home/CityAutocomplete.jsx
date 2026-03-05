@@ -90,7 +90,7 @@ export default function CityAutocomplete({ label, value, onChange, placeholder }
         onChange={handleInput}
         onFocus={() => results.length > 0 && setIsOpen(true)}
         placeholder={placeholder || 'Search any city...'}
-        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-brand-500/50 transition-colors text-base"
+        className="w-full bg-[var(--surface)] border border-[var(--border)] rounded-xl px-4 py-3 text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-brand-500/50 focus-visible:ring-2 focus-visible:ring-brand-500/30 transition-colors text-base"
       />
 
       {loading && (

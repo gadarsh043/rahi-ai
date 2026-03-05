@@ -116,7 +116,7 @@ export default function FlightTab() {
               ? `Available at ${refreshTip.at} (${refreshTip.mins} min)`
               : undefined
           }
-          className={`text-xs px-3 py-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] transition-colors ${
+          className={`text-xs px-3 py-1.5 min-h-[44px] rounded-full border border-[var(--border)] bg-[var(--surface)] transition-colors ${
             !canRefresh || refreshing
               ? 'text-[var(--text-muted)] cursor-not-allowed opacity-60'
               : 'text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] cursor-pointer'
@@ -285,7 +285,7 @@ export default function FlightTab() {
             </div>
           </div>
           <p className="text-sm text-[var(--text-secondary)]">
-            Rahi recommends driving for this distance. Always check live traffic, tolls, and road
+            Rahify recommends driving for this distance. Always check live traffic, tolls, and road
             conditions before you go.
           </p>
           <div className="flex flex-wrap gap-2">
@@ -318,7 +318,7 @@ export default function FlightTab() {
       {renderHeader('Travel Details', null)}
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-2">
         <p className="text-sm text-[var(--text-secondary)]">
-          Rahi will soon show train, bus, and ferry options here. For now, use the map and your
+          Rahify will soon show train, bus, and ferry options here. For now, use the map and your
           favorite travel sites to pick the best route.
         </p>
       </div>

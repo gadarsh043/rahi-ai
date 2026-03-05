@@ -57,6 +57,7 @@ export default function InstructionsInput({ value = '', onChange }) {
             onClick={() => appendChip(chip.label)}
             whileTap={{ scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            aria-label={`Add ${chip.label}`}
             className="border border-[var(--border)] rounded-full px-3 py-1.5 text-sm text-[var(--text-secondary)] hover:border-brand-400 hover:text-brand-400 cursor-pointer transition-colors duration-150"
           >
             {chip.emoji} {chip.label}

@@ -123,7 +123,7 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
 
       {/* Desktop dropdown */}
       {open && (
-        <div className="hidden md:block absolute right-0 mt-2 w-64 max-w-xs bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl z-50">
+        <div className="hidden md:block absolute right-0 mt-2 w-[min(256px,calc(100vw-2rem))] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl z-[var(--z-dropdown)]">
           <div className="p-3 border-b border-[var(--border)]">
             <input
               type="text"
@@ -196,13 +196,13 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            className="fixed inset-0 z-[var(--z-overlay-backdrop)] bg-black/40 md:hidden"
             onClick={() => setOpen(false)}
             aria-label="Close currency selector"
           >
             {/* scrim */}
           </button>
-          <div className="fixed inset-x-0 bottom-0 z-50 md:hidden">
+          <div className="fixed inset-x-0 bottom-0 z-[var(--z-overlay)] md:hidden">
             <div className="mx-auto w-full max-w-md rounded-t-2xl bg-[var(--surface)] border-t border-[var(--border)] shadow-xl">
               <div className="pt-3 pb-2 flex flex-col items-center">
                 <div className="w-10 h-1 rounded-full bg-[var(--border)] mb-2" />

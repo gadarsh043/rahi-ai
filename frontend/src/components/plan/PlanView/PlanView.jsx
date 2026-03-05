@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Component, useEffect, useMemo, useState } from 'react';
 import useTripStore from '../../../stores/tripStore';
 import { PLAN_SECTIONS } from '../../../utils/mockTripData';
 import useScrollSpy from '../../../hooks/useScrollSpy';
@@ -18,6 +18,21 @@ import FlightTab from '../tabs/FlightTab';
 import CostsTab from '../tabs/CostsTab';
 import TripTab from '../tabs/TripTab';
 import NextTab from '../tabs/NextTab';
+
+class MapErrorBoundary extends Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() { return { hasError: true }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-full text-sm text-[var(--text-muted)]">
+          Map failed to load. Try refreshing.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const sectionComponents = {
   eat: EatTab,
@@ -122,7 +137,7 @@ export default function PlanView() {
         {/* Map Panel — hidden on mobile, side panel on desktop */}
         {!letsPickOpen && !chatOpen && (
           <div className="hidden lg:block lg:w-[45%] lg:h-full lg:sticky lg:top-0 bg-[var(--surface)] border-l border-[var(--border)]">
-            <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
+            <MapErrorBoundary><MapPanel trip={trip} places={trip?.places} activeTab={activeId} /></MapErrorBoundary>
           </div>
         )}
       </div>
@@ -132,7 +147,7 @@ export default function PlanView() {
         <button
           type="button"
           onClick={toggleMap}
-          className="fixed bottom-32 right-4 lg:hidden z-50 w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform"
+          className="fixed bottom-32 right-4 lg:hidden z-[var(--z-sticky)] w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform"
         >
           🗺️
         </button>
@@ -140,8 +155,8 @@ export default function PlanView() {
 
       {/* Mobile full-screen map overlay */}
       {showMap && !letsPickOpen && !chatOpen && (
-        <div className="fixed inset-0 z-[200] lg:hidden bg-[var(--bg)] flex flex-col">
-          <div className="absolute top-3 right-3 z-[1001]">
+        <div className="fixed inset-0 z-[var(--z-overlay-backdrop)] lg:hidden bg-[var(--bg)] flex flex-col">
+          <div className="absolute top-3 right-3 z-[var(--z-overlay)]">
             <button
               type="button"
               onClick={toggleMap}
@@ -151,7 +166,7 @@ export default function PlanView() {
             </button>
           </div>
           <div className="flex-1">
-            <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
+            <MapErrorBoundary><MapPanel trip={trip} places={trip?.places} activeTab={activeId} /></MapErrorBoundary>
           </div>
         </div>
       )}

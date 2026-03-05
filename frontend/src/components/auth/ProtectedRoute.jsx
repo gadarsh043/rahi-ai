@@ -17,7 +17,7 @@ export default function ProtectedRoute({ children }) {
   if (!initialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
-        <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div role="status" aria-label="Loading" className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

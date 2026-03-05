@@ -158,7 +158,7 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
                   )
                 }
                 disabled={(formData.numTravelers || 1) <= 1}
-                className="w-10 h-10 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-xl font-bold flex items-center justify-center hover:bg-[var(--surface-hover)] disabled:opacity-30 transition-all"
+                className="w-11 h-11 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-xl font-bold flex items-center justify-center hover:bg-[var(--surface-hover)] disabled:opacity-30 transition-all"
               >
                 -
               </button>
@@ -174,7 +174,7 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
                   )
                 }
                 disabled={(formData.numTravelers || 1) >= 10}
-                className="w-10 h-10 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-xl font-bold flex items-center justify-center hover:bg-[var(--surface-hover)] disabled:opacity-30 transition-all"
+                className="w-11 h-11 rounded-full border border-[var(--border)] bg-[var(--surface)] text-[var(--text-primary)] text-xl font-bold flex items-center justify-center hover:bg-[var(--surface-hover)] disabled:opacity-30 transition-all"
               >
                 +
               </button>

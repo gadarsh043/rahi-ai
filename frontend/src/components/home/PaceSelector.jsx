@@ -21,7 +21,7 @@ export default function PaceSelector({ value, onChange }) {
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}
             className={`
-              relative glass dark:glass-dark rounded-2xl p-4 text-center border-2 cursor-pointer transition-all duration-150
+              relative bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 text-center border-2 cursor-pointer transition-all duration-150
               ${isSelected
                 ? 'border-brand-500 bg-brand-500/8 dark:bg-brand-500/12 shadow-brand'
                 : 'border-transparent hover:border-brand-500/30'

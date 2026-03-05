@@ -338,12 +338,12 @@ export default function Sidebar() {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/40 md:hidden"
+            className="fixed inset-0 z-[var(--z-overlay-backdrop)] bg-black/40 md:hidden"
             onClick={() => setSidebarExpanded(false)}
           >
             {/* scrim */}
           </button>
-          <div className="fixed top-0 left-0 bottom-0 z-50 w-[85vw] max-w-[320px] md:hidden transform translate-x-0 transition-transform duration-300 ease-out bg-white dark:bg-[var(--surface)] border-r border-[var(--border)] shadow-xl">
+          <div className="fixed top-0 left-0 bottom-0 z-[var(--z-overlay)] w-[85vw] max-w-[320px] md:hidden transform translate-x-0 transition-transform duration-250 ease-out bg-white dark:bg-[var(--surface)] border-r border-[var(--border)] shadow-xl">
             <ExpandedSidebarContent
               plans={plans}
               onNavigate={() => setSidebarExpanded(false)}

@@ -164,7 +164,7 @@ export default function NextTab() {
                 key={item.id}
                 type="button"
                 onClick={() => toggleItem(item.id)}
-                className="w-full flex items-start gap-2 text-left text-xs"
+                className="w-full flex items-start gap-2 text-left text-xs min-h-[44px] py-2"
               >
                 <span
                   className={`mt-0.5 inline-flex w-4 h-4 rounded border flex-shrink-0 items-center justify-center ${

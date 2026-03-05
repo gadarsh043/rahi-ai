@@ -1,11 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
 import { sendChatMessage } from '../../../services/api';
 import { renderChatMarkdown } from '../../../utils/formatChat';
 import { toast } from '../../common/Toast/Toast';
 
-function ChatMessage({ message }) {
+const ChatMessage = memo(function ChatMessage({ message }) {
   return (
     <div
       className={`flex gap-2.5 ${
@@ -40,7 +40,7 @@ function ChatMessage({ message }) {
       </div>
     </div>
   );
-}
+});
 
 export default function ChatDrawer() {
   const chatOpen = useTripStore((s) => s.chatOpen);
@@ -69,7 +69,8 @@ export default function ChatDrawer() {
 
   useEffect(() => {
     if (chatOpen) {
-      setTimeout(() => inputRef.current?.focus(), 300);
+      const t = setTimeout(() => inputRef.current?.focus(), 300);
+      return () => clearTimeout(t);
     }
   }, [chatOpen]);
 
@@ -147,7 +148,7 @@ export default function ChatDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeChat}
-            className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+            className="fixed inset-0 bg-black/40 z-[var(--z-overlay-backdrop)] lg:hidden"
           />
 
           {/* Mobile bottom sheet */}
@@ -156,8 +157,7 @@ export default function ChatDrawer() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-x-0 bottom-0 z-[150] lg:hidden bg-[var(--bg)] rounded-t-2xl shadow-2xl border-t border-[var(--border)] flex flex-col"
-            style={{ height: '85vh', maxHeight: '85vh' }}
+            className="fixed inset-x-0 bottom-0 z-[var(--z-drawer)] lg:hidden bg-[var(--bg)] rounded-t-2xl shadow-2xl border-t border-[var(--border)] flex flex-col h-[85dvh] max-h-[85dvh]"
           >
             {/* Drag handle */}
             <div className="w-9 h-1 bg-[var(--text-muted)] rounded-full mx-auto mt-3 opacity-40" />
@@ -167,7 +167,7 @@ export default function ChatDrawer() {
               <div className="flex items-center gap-2">
                 <span className="text-lg">✨</span>
                 <h2 className="font-semibold text-sm text-[var(--text-primary)]">
-                  Chat with Rahi
+                  Chat with Rahify
                 </h2>
               </div>
               <button
@@ -180,7 +180,7 @@ export default function ChatDrawer() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto momentum-scroll px-4 py-3 space-y-4">
+            <div className="flex-1 overflow-y-auto momentum-scroll px-4 py-3 space-y-4" aria-live="polite">
               {isDemo && (
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-secondary)]">
                   Demo mode: chat is disabled. Generate a real trip to start chatting.
@@ -244,7 +244,7 @@ export default function ChatDrawer() {
                 </button>
               </div>
               <p className="text-[10px] text-[var(--text-muted)] mt-1.5 text-center">
-                Rahi may adjust your itinerary as you chat (e.g. swap places, change flights).
+                Rahify may adjust your itinerary as you chat (e.g. swap places, change flights).
               </p>
             </div>
           </motion.div>
@@ -255,14 +255,14 @@ export default function ChatDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="hidden lg:flex fixed right-0 top-[var(--topbar-height)] bottom-0 z-50 w-[400px] bg-[var(--bg)] border-l border-[var(--border)] flex-col shadow-2xl"
+            className="hidden lg:flex fixed right-0 top-[var(--topbar-height)] bottom-0 z-[var(--z-drawer)] w-[400px] bg-[var(--bg)] border-l border-[var(--border)] flex-col shadow-2xl"
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-lg">✨</span>
                 <h2 className="font-semibold text-[var(--text-primary)]">
-                  Chat with Rahi
+                  Chat with Rahify
                 </h2>
               </div>
               <button
@@ -287,7 +287,7 @@ export default function ChatDrawer() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto momentum-scroll p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto momentum-scroll p-4 space-y-4" aria-live="polite">
               {isDemo && (
                 <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-secondary)]">
                   Demo mode: chat is disabled. Generate a real trip to start chatting.

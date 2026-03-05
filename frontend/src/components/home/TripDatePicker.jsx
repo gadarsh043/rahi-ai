@@ -72,7 +72,7 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
 
   return (
     <div className="mt-6 max-w-md">
-      <div className="bg-white dark:bg-[#1a2744] border border-[var(--border)] rounded-xl p-4">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4">
         <AnimatePresence initial={false} mode="wait">
           {!isFlexible ? (
             <motion.div

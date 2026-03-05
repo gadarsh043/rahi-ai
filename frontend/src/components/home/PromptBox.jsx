@@ -74,8 +74,8 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
   };
 
   return (
-    <div data-tour="prompt-box" className="sticky bottom-0 left-0 right-0 z-10 pt-4">
-      <div className="bg-white dark:glass-strong-dark border border-[var(--border)] rounded-2xl p-3 shadow-lg dark:border-transparent dark:shadow-none">
+    <div data-tour="prompt-box" className="sticky bottom-0 left-0 right-0 z-[var(--z-sticky)] pt-4">
+      <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-3 shadow-lg">
         <AnimatePresence mode="wait">
           {!expanded ? (
             <motion.div
@@ -91,7 +91,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
                 className="flex flex-1 min-w-0 items-center gap-2 text-left"
                 title={promptText || 'Your trip summary will appear here...'}
               >
-                <span className="text-[11px] font-bold uppercase tracking-wider text-brand-500 shrink-0">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-500 shrink-0">
                   Request:
                 </span>
                 <span className="text-sm text-[var(--text-secondary)] line-clamp-2 flex-1 text-left break-words">
@@ -113,7 +113,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
                 onClick={handleGenerate}
                 disabled={!canGenerate}
                 className={`
-                  bg-brand-500 hover:bg-brand-600 text-white w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors
+                  bg-brand-500 hover:bg-brand-600 text-white w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors
                   ${!canGenerate ? 'opacity-40 cursor-not-allowed' : ''}
                 `}
                 aria-label="Generate trip"
@@ -132,7 +132,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
             >
               {promptBase.trim() ? (
                 <>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-brand-500 block mb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-500 block mb-1">
                     Request:
                   </span>
                   <div

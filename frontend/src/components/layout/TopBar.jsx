@@ -42,7 +42,7 @@ export default function TopBar() {
         label: 'Give Feedback',
         action: () => {
           window.open(
-            'mailto:feedback@yourapp.com?subject=Rahi%20Feedback',
+            'mailto:g.adarsh043@gmail.com?subject=Rahify%20Feedback',
             '_blank',
           );
         },
@@ -108,7 +108,7 @@ export default function TopBar() {
         </span>
       </button>
       {menuOpen && (
-        <div className="absolute right-0 mt-2 w-[min(92vw,320px)] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl py-2 z-[1200] overflow-hidden">
+        <div className="absolute right-0 mt-2 w-[min(92vw,320px)] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl py-2 z-[var(--z-topbar)] overflow-hidden">
           {/* Header */}
           <div className="px-4 py-3 border-b border-[var(--border)]">
             <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
@@ -178,7 +178,7 @@ export default function TopBar() {
   ) : null;
 
   return (
-    <header className="shrink-0 sticky top-0 z-[1500] border-b border-[var(--border)] bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-md">
+    <header className="shrink-0 sticky top-0 z-[var(--z-topbar)] border-b border-[var(--border)] bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-md">
       {/* Mobile: slim topbar */}
       <div className="flex lg:hidden items-center justify-between w-full px-3 h-11">
         <div className="flex items-center gap-2">
@@ -194,7 +194,7 @@ export default function TopBar() {
             to="/"
             className="text-lg font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
           >
-            Rahi
+            Rahify
           </Link>
         </div>
         <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export default function TopBar() {
             to="/"
             className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
           >
-            Rahi
+            Rahify
           </Link>
         </div>
         <div className="flex items-center gap-3">

@@ -14,7 +14,7 @@ export default function PrivacyPage() {
 
       <div className="space-y-4 bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-6">
         <p className="text-sm text-[var(--text-secondary)]">
-          Rahi AI uses Supabase for authentication (Google OAuth) and stores your trips in
+          Rahify uses Supabase for authentication (Google OAuth) and stores your trips in
           a database so you can reopen them later.
         </p>
         <p className="text-sm text-[var(--text-secondary)]">

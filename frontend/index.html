@@ -4,18 +4,26 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI-powered travel planner. Real places, real flights, zero hallucination.">
+    <meta name="theme-color" content="#F97316">
+    <meta property="og:title" content="Rahify — Plan your perfect trip">
+    <meta property="og:description" content="AI-powered travel planner with real places and zero guessing.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Rahify — Plan your perfect trip">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet" />
-    <title>Rahi AI — Plan your perfect trip</title>
+    <title>Rahify — Plan your perfect trip</title>
   </head>
   <body>
     <script>
       (function() {
-        var t = localStorage.getItem('rahi-theme') || 'dark';
+        var t = localStorage.getItem('rahify-theme') || 'dark';
         document.documentElement.classList.add(t);
       })();
     </script>
+    <a href="#root" class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[10000] focus:bg-brand-500 focus:text-white focus:px-4 focus:py-2 focus:rounded-lg">Skip to content</a>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

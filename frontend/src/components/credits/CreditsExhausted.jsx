@@ -1,7 +1,7 @@
 export default function CreditsExhausted({ onClose }) {
   return (
     <div
-      className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-black/50"
       onClick={onClose}
     >
       <div
@@ -17,7 +17,7 @@ export default function CreditsExhausted({ onClose }) {
           payments.
         </p>
         <a
-          href="mailto:g.adarsh043@gmail.com?subject=Rahi AI — Request More Credits&body=Hi! I've used my 5 free trips on Rahi AI and would love more credits.%0A%0AMy email: %0AHow I'm using Rahi: "
+          href="mailto:g.adarsh043@gmail.com?subject=Rahify — Request More Credits&body=Hi! I've used my 5 free trips on Rahify and would love more credits.%0A%0AMy email: %0AHow I'm using Rahify: "
           className="block w-full py-3 px-6 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl transition-colors mb-3"
         >
           📧 Email for More Credits

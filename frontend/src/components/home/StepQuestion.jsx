@@ -9,7 +9,7 @@ export default function StepQuestion({ icon, question, subtitle }) {
       className="text-left"
     >
       {icon && <span className="text-5xl block mb-4">{icon}</span>}
-      <h1 className="text-2xl md:text-3xl font-extrabold bg-gradient-to-r from-brand-300 to-brand-500 bg-clip-text text-transparent">
+      <h1 className="text-2xl md:text-3xl font-extrabold text-[var(--text-primary)]">
         {question}
       </h1>
       {subtitle && (

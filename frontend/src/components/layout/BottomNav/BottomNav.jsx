@@ -38,7 +38,7 @@ export default function BottomNav() {
   return (
     <nav
       data-tour="nav"
-      className="fixed bottom-0 left-0 right-0 z-[100] flex items-center justify-around
+      className="fixed bottom-0 left-0 right-0 z-[var(--z-sticky)] flex items-center justify-around
                  bg-[var(--bg)] border-t border-[var(--border)]
                  h-14 pb-[env(safe-area-inset-bottom)]
                  lg:hidden"

@@ -17,7 +17,6 @@ const useTripStore = create((set, get) => ({
   chatOpen: false,
   chatMessages: [],
   isChatThinking: false,
-  chatThinking: false,
 
   // Streaming message (shown while bot is typing)
   streamingMessage: null,
@@ -62,7 +61,7 @@ const useTripStore = create((set, get) => ({
   setChatOpen: (open) => set({ chatOpen: open }),
   openChat: () => set({ chatOpen: true }),
   closeChat: () => set({ chatOpen: false }),
-  setChatThinking: (value) => set({ isChatThinking: value, chatThinking: value }),
+  setChatThinking: (value) => set({ isChatThinking: value }),
 
   addChatMessage: (msg) =>
     set((s) => {

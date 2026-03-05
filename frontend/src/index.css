@@ -34,6 +34,17 @@
   --sidebar-expanded: 280px;
   --topbar-height: 56px;
 
+  /* Z-index scale */
+  --z-dropdown: 50;
+  --z-sticky: 100;
+  --z-overlay-backdrop: 200;
+  --z-overlay: 300;
+  --z-drawer: 400;
+  --z-topbar: 500;
+  --z-modal-backdrop: 600;
+  --z-modal: 700;
+  --z-toast: 9999;
+
   /* Typography */
   --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;

@@ -118,14 +118,14 @@ export default function HomePage() {
   return (
     <div className="flex flex-1 min-h-0 min-w-0 bg-gradient-to-b from-brand-50 via-transparent to-transparent dark:from-brand-950/30">
       <WelcomeTour />
-      <div className="flex flex-1 flex-col items-center justify-center py-8 min-h-[calc(100vh-56px)] min-w-0">
+      <div className="flex flex-1 flex-col items-center justify-center py-8 min-h-[calc(100dvh-56px)] min-w-0">
         <form
           className="flex flex-col w-full max-w-2xl flex-1 min-h-0 pb-32"
           onSubmit={handleSubmit}
         >
           {/* Progress bar */}
           <div className="flex items-center gap-3 mb-6 w-full max-w-2xl mx-auto px-4">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-brand-500 shrink-0">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-brand-500 shrink-0">
               Step {currentStep + 1} of 10
             </span>
             <div className="flex-1 h-1.5 bg-[var(--border)] rounded-full overflow-hidden min-w-0">
@@ -137,7 +137,7 @@ export default function HomePage() {
           </div>
 
           {/* Content card */}
-          <div className="bg-white dark:bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-8 md:p-10 w-full max-w-2xl mx-auto shadow-sm dark:shadow-none">
+          <div className="bg-[var(--bg)] border border-[var(--border)] rounded-2xl p-8 md:p-10 w-full max-w-2xl mx-auto shadow-sm dark:shadow-none">
             <StepQuestion
               icon={config?.icon}
               question={config?.question}

@@ -58,12 +58,12 @@ export default function SuggestionsPanel({ tripId }) {
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 cursor-default"
+            className="fixed inset-0 z-[var(--z-dropdown)] cursor-default"
             onClick={() => setOpen(false)}
           >
             {/* backdrop */}
           </button>
-          <div className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-y-auto bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-50 p-4">
+          <div className="absolute right-0 top-full mt-2 w-[min(320px,calc(100vw-2rem))] max-h-96 overflow-y-auto bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-xl z-[var(--z-dropdown)] p-4">
             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">
               Suggestions ({pendingCount} pending)
             </h3>

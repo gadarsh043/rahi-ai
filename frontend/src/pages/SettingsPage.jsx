@@ -68,7 +68,7 @@ export default function SettingsPage() {
         <div className="mb-4">
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Settings</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
-            These preferences help Rahi personalize your trips.
+            These preferences help Rahify personalize your trips.
           </p>
         </div>
 

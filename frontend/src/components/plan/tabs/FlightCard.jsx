@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 
-export default function FlightCard({ flight, isCheapest, originCode, destCode, date }) {
+export default memo(function FlightCard({ flight, isCheapest, originCode, destCode, date }) {
   const [expanded, setExpanded] = useState(false);
 
   const toggle = () => setExpanded((v) => !v);
@@ -102,5 +102,5 @@ export default function FlightCard({ flight, isCheapest, originCode, destCode, d
       )}
     </div>
   );
-}
+});
 

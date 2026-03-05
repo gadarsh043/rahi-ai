@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
 import { apiGet, apiSSE } from '../../../services/apiClient';
@@ -28,6 +28,13 @@ export default function LetsPickPopup() {
 
   const [activeCategory, setActiveCategory] = useState('restaurant');
   const [selectedIds, setSelectedIds] = useState(initialSelected);
+
+  // Re-sync selection whenever the popup opens or places change
+  useEffect(() => {
+    if (letsPickOpen) {
+      setSelectedIds(initialSelected);
+    }
+  }, [letsPickOpen, initialSelected]);
   const [customPlace, setCustomPlace] = useState({
     url: '',
     name: '',
@@ -282,7 +289,7 @@ export default function LetsPickPopup() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-3"
+          className="fixed inset-0 z-[var(--z-modal)] bg-black/40 flex items-center justify-center px-3"
         >
           <div className="flex flex-col w-full h-full max-w-5xl lg:h-[80vh] bg-[var(--bg)] rounded-none lg:rounded-2xl shadow-xl overflow-hidden">
             {/* Header */}
@@ -433,6 +440,7 @@ export default function LetsPickPopup() {
                 </div>
               </div>
             </div>
+          </div>
           </div>
         </motion.div>
       )}

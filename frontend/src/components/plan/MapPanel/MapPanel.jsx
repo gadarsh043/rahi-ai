@@ -293,7 +293,8 @@ export default function MapPanel({ trip: tripProp, places: placesProp, activeTab
             mapCenter: { lat: trip.destinationLat, lng: trip.destinationLng },
           });
         }}
-        className="absolute top-4 right-4 z-[1000] px-3 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-hover)]"
+        className="absolute top-4 right-4 z-[var(--z-overlay)] px-3 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs text-[var(--text-secondary)] shadow-sm hover:bg-[var(--surface-hover)]"
+        aria-label="Center map on destination"
       >
         Center on destination
       </button>

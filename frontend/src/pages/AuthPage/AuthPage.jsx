@@ -7,7 +7,7 @@ export default function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-[var(--bg)] px-4">
       <div className="w-full max-w-sm text-center">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-brand-500 mb-2">Rahi AI</h1>
+          <h1 className="text-4xl font-bold text-brand-500 mb-2">Rahify</h1>
           <p className="text-sm text-[var(--text-muted)]">
             AI-powered travel planning. Real places, zero guessing.
           </p>

@@ -1,6 +1,7 @@
 import { toast } from '../components/common/Toast/Toast';
 import useUIStore from '../stores/uiStore';
 
+// Fallback for local dev; VITE_API_URL must be set in production
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/v1';
 
 function getAuthHeaders() {

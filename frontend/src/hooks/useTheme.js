@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-const STORAGE_KEY = 'rahi-theme';
+const STORAGE_KEY = 'rahify-theme';
 
 function getStoredTheme() {
   try {

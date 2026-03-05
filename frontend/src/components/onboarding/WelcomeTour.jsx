@@ -24,7 +24,7 @@ export default function WelcomeTour() {
       intro.setOptions({
         steps: [
           {
-            title: 'Welcome to Rahi',
+            title: 'Welcome to Rahify',
             intro:
               "Your AI travel planner. Real places, zero hallucination. Here's the 10-second tour.",
           },
