@@ -282,35 +282,36 @@ export default function LetsPickPopup() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-          className="fixed inset-0 z-50 bg-[var(--bg)] overflow-hidden flex flex-col"
+          className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-3"
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">✨</span>
-              <div>
-                <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
-                  Your Places
-                </h2>
-                <p className="text-xs text-[var(--text-muted)]">
-                  Pick what goes into your final itinerary.
-                </p>
+          <div className="flex flex-col w-full h-full max-w-5xl lg:h-[80vh] bg-[var(--bg)] rounded-none lg:rounded-2xl shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)]">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">✨</span>
+                <div>
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)] uppercase tracking-wide">
+                    Your Places
+                  </h2>
+                  <p className="text-xs text-[var(--text-muted)]">
+                    Pick what goes into your final itinerary.
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={handleDone}
+                disabled={loading}
+                className="px-3 py-1.5 rounded-full bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 active:scale-95 transition-transform disabled:opacity-60"
+              >
+                {loading ? 'Working…' : 'Done ✓'}
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleDone}
-              disabled={loading}
-              className="px-3 py-1.5 rounded-full bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 active:scale-95 transition-transform disabled:opacity-60"
-            >
-              {loading ? 'Working…' : 'Done ✓'}
-            </button>
-          </div>
 
-          {/* Body */}
-          <div className="flex flex-1 min-h-0">
-            {/* Left: categories */}
-            <aside className="w-40 border-r border-[var(--border)] bg-[var(--surface)] p-3 flex flex-col gap-1">
+            {/* Body */}
+            <div className="flex flex-1 min-h-0">
+              {/* Left: categories */}
+              <aside className="hidden md:flex w-40 border-r border-[var(--border)] bg-[var(--surface)] p-3 flex-col gap-1">
               {PICK_CATEGORIES.map((cat) => {
                 const count = selectedCountForCategory(cat.id);
                 const isActive = activeCategory === cat.id;
@@ -343,9 +344,36 @@ export default function LetsPickPopup() {
               })}
             </aside>
 
-            {/* Right: place list */}
-            <div className="flex-1 min-w-0 flex flex-col">
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              {/* Right: place list */}
+              <div className="flex-1 min-w-0 flex flex-col">
+                <div className="flex md:hidden border-b border-[var(--border)] px-4 py-2 gap-2 overflow-x-auto scrollbar-hide">
+                  {PICK_CATEGORIES.map((cat) => {
+                    const count = selectedCountForCategory(cat.id);
+                    const isActive = activeCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                          isActive
+                            ? 'bg-brand-500 text-white'
+                            : 'bg-[var(--surface)] text-[var(--text-secondary)]'
+                        }`}
+                      >
+                        <span className="mr-1">{cat.icon}</span>
+                        {cat.label}
+                        {count > 0 && (
+                          <span className="ml-1 text-[10px] opacity-80">
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex-1 min-h-0 overflow-y-auto momentum-scroll">
                 {placesForCategory.map((place) => renderPlaceRow(place))}
                 {customPlaces
                   .filter((p) => p.category === activeCategory)

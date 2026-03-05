@@ -5,27 +5,29 @@ export default function ActionBar() {
   const toggleLetsPick = useTripStore((s) => s.toggleLetsPick);
 
   return (
-    <div className="px-6 pb-4 pt-2 flex justify-end pointer-events-none">
-      <div className="inline-flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-2xl px-3 py-2 shadow-sm pointer-events-auto">
+    <div
+      className="fixed bottom-14 lg:bottom-0 left-0 right-0 z-[50]
+                 flex items-center gap-2 px-3 py-2
+                 bg-[var(--bg)] border-t border-[var(--border)]
+                 pb-[max(8px,env(safe-area-inset-bottom))]
+                 lg:static lg:border-t-0 lg:pb-0 lg:px-6 lg:pt-2 lg:pb-4 lg:justify-end"
+    >
+      <div className="flex w-full lg:w-auto lg:inline-flex items-center gap-2">
         <button
           type="button"
           onClick={openChat}
           data-tour="chat-input"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-[var(--surface-hover)] transition-colors"
+          className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[var(--surface)] text-sm font-medium text-[var(--text-primary)] active:scale-[0.98] transition-transform touch-target"
         >
-          <span className="text-[var(--text-muted)]">✨</span>
-          <span className="text-sm text-[var(--text-muted)]">
-            Chat with Rahi
-          </span>
+          💬 <span className="hidden sm:inline">Chat</span>
         </button>
-        <span className="w-px h-5 bg-[var(--border)]" />
         <button
           type="button"
           onClick={toggleLetsPick}
           data-tour="lets-pick"
-          className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap active:scale-[0.97]"
+          className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-brand-500 text-sm font-medium text-white active:scale-[0.98] transition-transform touch-target"
         >
-          Let&apos;s Pick
+          🎯 <span className="hidden sm:inline">Let&apos;s Pick</span>
         </button>
       </div>
     </div>

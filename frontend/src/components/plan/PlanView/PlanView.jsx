@@ -74,22 +74,22 @@ export default function PlanView() {
   return (
     <>
       <div
-        className={`flex h-[calc(100vh-56px)] ${
+        className={`flex flex-col lg:flex-row h-[calc(100dvh-var(--topbar-height))] ${
           chatOpen ? 'lg:mr-[400px]' : ''
         }`}
       >
-        {/* Content Panel */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative">
-          <div className="px-6 pt-6 pb-2">
+        {/* Content Panel — full width on mobile, left column on desktop */}
+        <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative lg:w-[55%]">
+          <div className="px-3 pt-3 pb-2 lg:px-6 lg:pt-6">
             {mode === 'shared' && (
               <SharedBanner ownerName={trip?.owner_name} />
             )}
             <PlanHeader />
-            <TabBar activeId={activeId} onTabClick={handleTabClick} />
           </div>
+          <TabBar activeId={activeId} onTabClick={handleTabClick} />
           <div
             ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto scroll-smooth"
+            className="flex-1 overflow-y-auto scroll-smooth overscroll-contain momentum-scroll pb-32 lg:pb-4"
           >
             {mode !== 'shared' && isRebuilding && (
               <div className="sticky top-0 z-20 bg-[var(--surface)]/90 backdrop-blur-sm border-b border-brand-500/20 px-4 py-3 flex items-center gap-3">
@@ -119,20 +119,20 @@ export default function PlanView() {
           {mode !== 'shared' && <ActionBar />}
         </div>
 
-        {/* Map Panel */}
+        {/* Map Panel — hidden on mobile, side panel on desktop */}
         {!letsPickOpen && !chatOpen && (
-          <div className="hidden lg:block w-[45%] bg-[var(--surface)] border-l border-[var(--border)]">
+          <div className="hidden lg:block lg:w-[45%] lg:h-full lg:sticky lg:top-0 bg-[var(--surface)] border-l border-[var(--border)]">
             <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
           </div>
         )}
       </div>
 
-      {/* Mobile map toggle button */}
+      {/* Mobile map toggle button (floating above action bar + bottom nav) */}
       {!letsPickOpen && !chatOpen && (
         <button
           type="button"
           onClick={toggleMap}
-          className="fixed bottom-24 right-4 lg:hidden z-50 w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform"
+          className="fixed bottom-32 right-4 lg:hidden z-50 w-14 h-14 rounded-full bg-brand-500 text-white shadow-lg flex items-center justify-center hover:bg-brand-600 active:scale-95 transition-transform"
         >
           🗺️
         </button>
@@ -140,17 +140,19 @@ export default function PlanView() {
 
       {/* Mobile full-screen map overlay */}
       {showMap && !letsPickOpen && !chatOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden bg-[var(--bg)]">
+        <div className="fixed inset-0 z-[200] lg:hidden bg-[var(--bg)] flex flex-col">
           <div className="absolute top-3 right-3 z-[1001]">
             <button
               type="button"
               onClick={toggleMap}
               className="px-3 py-1.5 rounded-full bg-[var(--surface)] border border-[var(--border)] text-xs text-[var(--text-secondary)] shadow-sm"
-            >
+              >
               Close map
             </button>
           </div>
-          <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
+          <div className="flex-1">
+            <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
+          </div>
         </div>
       )}
 

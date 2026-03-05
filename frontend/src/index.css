@@ -262,6 +262,51 @@ body {
   border: none !important;
 }
 
+/* Hide scrollbars but keep scroll (for horizontal tab bars) */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+
+/* Native-feeling taps */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Momentum scroll on iOS / modern mobile */
+.momentum-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Prevent iOS zoom on input focus */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+@media (min-width: 1024px) {
+  input,
+  textarea,
+  select {
+    font-size: 14px !important;
+  }
+}
+
+/* Ensure all interactive elements meet 44x44 minimum */
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

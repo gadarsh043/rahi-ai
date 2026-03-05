@@ -16,6 +16,7 @@ function getInitialSidebarExpanded() {
 const useUIStore = create((set) => ({
   sidebarExpanded: getInitialSidebarExpanded(),
   showCreditsExhausted: false,
+  showNearby: false,
 
   toggleSidebar: () =>
     set((state) => {
@@ -43,6 +44,7 @@ const useUIStore = create((set) => ({
     }),
 
   setShowCreditsExhausted: (value) => set({ showCreditsExhausted: value }),
+  setShowNearby: (value) => set({ showNearby: value }),
 }));
 
 export default useUIStore;

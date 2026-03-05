@@ -42,36 +42,27 @@ export default function FlightCard({ flight, isCheapest, originCode, destCode, d
   }, [originCode, destCode, date]);
 
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:shadow-md transition-shadow">
+    <div className="interactive-card rounded-xl border border-[var(--border)] bg-[var(--surface)] active:scale-[0.98] transition-transform cursor-pointer">
       <button
         type="button"
         onClick={toggle}
-        className="w-full flex items-center gap-3 p-4 text-left"
+        className="w-full flex items-center justify-between gap-3 p-3 text-left touch-target"
       >
-        <div className="w-10 h-10 rounded-full bg-[var(--surface-hover)] flex items-center justify-center text-sm font-semibold text-[var(--text-secondary)]">
-          {airlineInitial}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--text-primary)]">
-            <span className="font-semibold">{airline}</span>
-            {flightNumber && (
-              <span className="text-[var(--text-muted)]">· {flightNumber}</span>
-            )}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-10 h-10 rounded-full bg-[var(--surface-hover)] flex items-center justify-center text-sm font-semibold text-[var(--text-secondary)]">
+            {airlineInitial}
           </div>
-          <div className="mt-1 text-xs text-[var(--text-secondary)] flex flex-wrap gap-2">
-            <span>
-              {departureAirport} → {arrivalAirport}
-            </span>
-            {durationMinutes > 0 && (
-              <span>
-                · {hours}h {mins}m
-              </span>
-            )}
-            <span>· {stopsLabel}</span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-[var(--text-primary)] truncate">
+              {flightNumber && `${flightNumber} · `}{departureAirport} → {arrivalAirport}
+            </div>
+            <div className="text-xs text-[var(--text-muted)]">
+              {airline} · {durationMinutes > 0 && `${hours}h ${mins}m · `}{stopsLabel}
+            </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span className="text-sm font-semibold text-[var(--text-primary)]">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-sm font-bold text-[var(--text-primary)]">
             ${price.toLocaleString()}
           </span>
           {isCheapest && (
@@ -79,15 +70,15 @@ export default function FlightCard({ flight, isCheapest, originCode, destCode, d
               Cheapest
             </span>
           )}
+          <span className="text-xs text-[var(--text-muted)]">{expanded ? '▲' : '▼'}</span>
         </div>
-        <span className="ml-2 text-xs text-[var(--text-muted)]">{expanded ? '▲' : '▼'}</span>
       </button>
 
       {expanded && (
-        <div className="px-4 pb-4 pt-0 text-xs text-[var(--text-secondary)] space-y-1">
+        <div className="px-4 pb-4 pt-0 text-xs text-[var(--text-secondary)] space-y-2">
           {flight.stop_airports && flight.stop_airports.length > 0 && (
             <p>
-              <span className="font-semibold">Stops:</span>{' '}
+              <span className="font-semibold">Layovers:</span>{' '}
               {flight.stop_airports.join(' · ') || 'See airline site for details'}
             </p>
           )}
@@ -102,7 +93,7 @@ export default function FlightCard({ flight, isCheapest, originCode, destCode, d
               href={bookingUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex mt-2 px-3 py-1.5 rounded-full bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 transition-colors"
+              className="inline-flex items-center gap-1 text-sm font-medium text-brand-500 mt-2 min-h-[44px]"
             >
               Book on Skyscanner ↗
             </a>

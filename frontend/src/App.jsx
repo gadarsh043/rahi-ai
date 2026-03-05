@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TopBar from './components/layout/TopBar';
 import Sidebar from './components/layout/Sidebar';
+import BottomNav from './components/layout/BottomNav/BottomNav';
 import HomePage from './pages/HomePage';
 import PlanPage from './pages/PlanPage/PlanPage';
 import SettingsPage from './pages/SettingsPage';
@@ -43,7 +44,7 @@ export default function App() {
           <Sidebar />
           <main className="flex flex-col flex-1 min-w-0 min-h-0 overflow-x-hidden">
             <TopBar />
-            <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6 lg:px-8">
+            <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6 lg:px-8 pb-16 lg:pb-0">
               <Routes>
                 <Route path="/login" element={<AuthPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
@@ -106,6 +107,7 @@ export default function App() {
                 />
               </Routes>
             </div>
+            <BottomNav />
           </main>
         </div>
       </div>

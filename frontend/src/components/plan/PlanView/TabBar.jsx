@@ -3,8 +3,11 @@ import { PLAN_SECTIONS } from '../../../utils/mockTripData';
 export default function TabBar({ activeId, onTabClick }) {
 
   return (
-    <nav className="mt-2">
-      <div data-tour="tab-bar" className="flex gap-2 overflow-x-auto pb-1">
+    <nav className="border-b border-[var(--border)] bg-[var(--bg)] sticky top-0 z-20">
+      <div
+        data-tour="tab-bar"
+        className="flex overflow-x-auto scrollbar-hide gap-1.5 px-3 py-2"
+      >
         {PLAN_SECTIONS.map((tab) => {
           const isActive = tab.id === activeId;
           return (
@@ -12,10 +15,10 @@ export default function TabBar({ activeId, onTabClick }) {
               key={tab.id}
               type="button"
               onClick={() => onTabClick(tab.id)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-colors ${
+              className={`flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors touch-target ${
                 isActive
-                  ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white border-brand-500 shadow-brand'
-                  : 'bg-[var(--surface)] border-[var(--border)] text-[var(--text-secondary)] hover:border-brand-500/60 hover:text-brand-500'
+                  ? 'bg-brand-500 text-white'
+                  : 'bg-[var(--surface)] text-[var(--text-secondary)]'
               }`}
             >
               <span aria-hidden>{tab.icon}</span>

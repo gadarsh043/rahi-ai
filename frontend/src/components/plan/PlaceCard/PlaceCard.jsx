@@ -4,7 +4,7 @@ export default function PlaceCard({ place, variant = 'standard', showActions = t
 
   const Wrapper = ({ children }) => (
     <div
-      className={`flex gap-4 p-4 rounded-xl border border-[var(--border)] bg-[var(--surface)] hover:shadow-md transition-shadow ${
+      className={`interactive-card flex gap-3 p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] active:scale-[0.98] transition-transform cursor-pointer ${
         variant === 'compact' ? 'items-center' : ''
       }`}
     >
@@ -12,21 +12,29 @@ export default function PlaceCard({ place, variant = 'standard', showActions = t
     </div>
   );
 
-  const Photo = () => (
-    <div
-      className={`flex-shrink-0 rounded-lg overflow-hidden bg-[var(--surface-hover)] ${
-        variant === 'compact' ? 'w-[80px] h-[72px]' : 'w-[120px] h-[100px]'
-      }`}
-    >
-      {place.photoUrl ? (
-        <img
-          src={place.photoUrl}
-          alt={place.name}
-          className="w-full h-full object-cover"
-        />
-      ) : null}
-    </div>
-  );
+  const Photo = () => {
+    const categoryEmoji =
+      place.category === 'restaurant'
+        ? '🍽'
+        : place.category === 'hotel'
+        ? '🏨'
+        : '📍';
+
+    return (
+      <div className="flex-shrink-0 rounded-lg overflow-hidden bg-[var(--surface-hover)] w-16 h-16 lg:w-28 lg:h-24 flex items-center justify-center">
+        {place.photoUrl ? (
+          <img
+            src={place.photoUrl}
+            alt={place.name}
+            loading="lazy"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-2xl">{categoryEmoji}</span>
+        )}
+      </div>
+    );
+  };
 
   const MetaTags = () => (
     <div className="flex flex-wrap items-center gap-2 mt-2">
@@ -103,7 +111,7 @@ export default function PlaceCard({ place, variant = 'standard', showActions = t
             href={place.googleMapsUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-[var(--text-muted)] hover:text-brand-500 transition-colors"
+            className="text-xs text-[var(--text-muted)] hover:text-brand-500 transition-colors min-h-[44px] flex items-center"
           >
             Details →
           </a>
@@ -113,7 +121,7 @@ export default function PlaceCard({ place, variant = 'standard', showActions = t
             href={place.affiliateUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs font-medium text-brand-500 hover:text-brand-600 transition-colors"
+            className="text-xs font-medium text-brand-500 hover:text-brand-600 transition-colors min-h-[44px] flex items-center"
           >
             {place.category === 'hotel'
               ? 'Book Now ↗'

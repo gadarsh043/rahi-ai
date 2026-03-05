@@ -85,128 +85,153 @@ export default function TopBar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search, location.hash]);
 
-  return (
-    <header
-      className="h-[var(--topbar-height)] shrink-0 sticky top-0 z-[1500] flex items-center justify-between px-4 border-b border-[var(--border)] bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-md"
-    >
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          className="md:hidden w-9 h-9 rounded-full border border-[var(--border)] flex items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
-          aria-label="Open sidebar"
-        >
-          ☰
-        </button>
-        <Link
-          to="/"
-          className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
-        >
-          Rahi AI
-        </Link>
-      </div>
-      <div className="flex items-center gap-3" ref={menuRef}>
-        <button
-          type="button"
-          onClick={toggle}
-          className="w-9 h-9 rounded-full border border-[var(--border)] flex items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
-          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDark ? '☀️' : '🌙'}
-        </button>
-        {user && (
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((open) => !open)}
-              className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
-            >
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt=""
-                  className="w-8 h-8 rounded-full object-cover border border-[var(--border)]"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
-                  {name.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <span className="hidden sm:inline text-xs text-[var(--text-secondary)]">
-                {name}
-              </span>
-            </button>
-            {menuOpen && (
-              <div className="absolute right-0 mt-2 w-[min(92vw,320px)] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl py-2 z-[1200] overflow-hidden">
-                {/* Header */}
-                <div className="px-4 py-3 border-b border-[var(--border)]">
-                  <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
-                    👤 {name}
-                  </p>
-                  {email && (
-                    <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
-                      {email}
-                    </p>
-                  )}
-                </div>
-
-                {/* Credits (simple display) */}
-                <div className="px-4 py-2 border-b border-[var(--border)]">
-                  <span className="text-xs text-[var(--text-muted)]">
-                    {credits > 0
-                      ? `${credits} trip${credits !== 1 ? 's' : ''} remaining`
-                      : 'No trips remaining'}
-                  </span>
-                </div>
-
-                {/* Menu items */}
-                <div className="py-1">
-                  {menuItems.map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        item.action();
-                      }}
-                      className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[var(--surface-hover)] transition-colors cursor-pointer min-h-11"
-                    >
-                      <span className="flex items-center gap-3">
-                        <span className="w-5 text-base">{item.icon}</span>
-                        <span className="text-sm font-medium text-[var(--text-primary)]">
-                          {item.label}
-                        </span>
-                      </span>
-                      {item.badge && (
-                        <span className="text-xs font-semibold text-emerald-500">
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="border-t border-[var(--border)] pt-1">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setMenuOpen(false);
-                      await signOut();
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--surface-hover)] transition-colors cursor-pointer min-h-11"
-                  >
-                    <span className="w-5 text-base">🚪</span>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">
-                      Log Out
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
+  const avatarButton = user ? (
+    <div className="relative" ref={menuRef}>
+      <button
+        type="button"
+        onClick={() => setMenuOpen((open) => !open)}
+        className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+      >
+        {avatar ? (
+          <img
+            src={avatar}
+            alt=""
+            className="w-8 h-8 rounded-full object-cover border border-[var(--border)]"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-brand-400 to-brand-600 flex items-center justify-center text-white font-semibold text-sm">
+            {name.charAt(0).toUpperCase()}
           </div>
         )}
+        <span className="hidden sm:inline text-xs text-[var(--text-secondary)]">
+          {name}
+        </span>
+      </button>
+      {menuOpen && (
+        <div className="absolute right-0 mt-2 w-[min(92vw,320px)] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-xl py-2 z-[1200] overflow-hidden">
+          {/* Header */}
+          <div className="px-4 py-3 border-b border-[var(--border)]">
+            <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
+              👤 {name}
+            </p>
+            {email && (
+              <p className="text-xs text-[var(--text-muted)] truncate mt-0.5">
+                {email}
+              </p>
+            )}
+          </div>
+
+          {/* Credits (simple display) */}
+          <div className="px-4 py-2 border-b border-[var(--border)]">
+            <span className="text-xs text-[var(--text-muted)]">
+              {credits > 0
+                ? `${credits} trip${credits !== 1 ? 's' : ''} remaining`
+                : 'No trips remaining'}
+            </span>
+          </div>
+
+          {/* Menu items */}
+          <div className="py-1">
+            {menuItems.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  item.action();
+                }}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[var(--surface-hover)] transition-colors cursor-pointer min-h-11"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="w-5 text-base">{item.icon}</span>
+                  <span className="text-sm font-medium text-[var(--text-primary)]">
+                    {item.label}
+                  </span>
+                </span>
+                {item.badge && (
+                  <span className="text-xs font-semibold text-emerald-500">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          <div className="border-t border-[var(--border)] pt-1">
+            <button
+              type="button"
+              onClick={async () => {
+                setMenuOpen(false);
+                await signOut();
+              }}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[var(--surface-hover)] transition-colors cursor-pointer min-h-11"
+            >
+              <span className="w-5 text-base">🚪</span>
+              <span className="text-sm font-medium text-[var(--text-primary)]">
+                Log Out
+              </span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  return (
+    <header className="shrink-0 sticky top-0 z-[1500] border-b border-[var(--border)] bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-md">
+      {/* Mobile: slim topbar */}
+      <div className="flex lg:hidden items-center justify-between w-full px-3 h-11">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="w-11 h-11 rounded-full border border-[var(--border)] flex items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
+            aria-label="Open sidebar"
+          >
+            ☰
+          </button>
+          <Link
+            to="/"
+            className="text-lg font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
+          >
+            Rahi
+          </Link>
+        </div>
+        <div className="flex items-center gap-2">
+          {avatarButton}
+        </div>
       </div>
 
+      {/* Desktop: full topbar */}
+      <div className="hidden lg:flex items-center justify-between w-full px-4 h-[var(--topbar-height)]">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            className="w-9 h-9 rounded-full border border-[var(--border)] flex items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
+            aria-label="Toggle sidebar"
+          >
+            ☰
+          </button>
+          <Link
+            to="/"
+            className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
+          >
+            Rahi
+          </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={toggle}
+            className="hidden lg:flex w-9 h-9 rounded-full border border-[var(--border)] items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
+            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDark ? '☀️' : '🌙'}
+          </button>
+          {avatarButton}
+        </div>
+      </div>
     </header>
   );
 }
