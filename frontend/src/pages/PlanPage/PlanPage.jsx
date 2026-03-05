@@ -1,8 +1,11 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useTripStore from '../../stores/tripStore';
 import PlanView from '../../components/plan/PlanView/PlanView';
 import { generateTrip, fetchPlan } from '../../services/api';
+import PlanTour from '../../components/onboarding/PlanTour';
+import { useOnboardingStore } from '../../stores/onboardingStore';
+import { ONBOARDING_DEMO_TRIP, ONBOARDING_DEMO_PLACES } from '../../utils/mockTripData';
 
 function normalizeTrip(apiTrip, places = [], chatMessages = []) {
   if (!apiTrip) return null;
@@ -23,6 +26,7 @@ function normalizeTrip(apiTrip, places = [], chatMessages = []) {
     dayNumber: p.day_number,
     timeSlot: p.time_slot,
     isCustom: p.is_custom ?? false,
+    visit_duration_minutes: p.visit_duration_minutes ?? null,
   }));
 
   const itinerary = apiTrip.itinerary && apiTrip.itinerary.itinerary
@@ -72,17 +76,21 @@ export default function PlanPage() {
   const loadMockTrip = useTripStore((s) => s.loadMockTrip);
   const setTrip = useTripStore((s) => s.setTrip);
   const setMode = useTripStore((s) => s.setMode);
+  const setIsDemo = useTripStore((s) => s.setIsDemo);
   const trip = useTripStore((s) => s.trip);
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState('Loading your trip...');
   const [genError, setGenError] = useState(false);
   const [lastGenerateParams, setLastGenerateParams] = useState(null);
 
+  const planTourDone = useOnboardingStore((s) => s.planTourDone);
+
   const loadExistingTrip = useCallback(
     async (tripId, shareCode) => {
       try {
         setLoading(true);
         setLoadingMessage('Loading your trip...');
+        setIsDemo(false);
         const data = await fetchPlan(tripId, shareCode);
         if (data?.error) {
           setLoading(false);
@@ -111,7 +119,7 @@ export default function PlanPage() {
         setLoading(false);
       }
     },
-    [fetchPlan, setMode, setTrip]
+    [fetchPlan, setMode, setTrip, setIsDemo]
   );
 
   const startGeneration = useCallback(
@@ -120,6 +128,7 @@ export default function PlanPage() {
       setLoadingMessage('Finding the best places for your trip...');
        setGenError(false);
        setLastGenerateParams(params);
+      setIsDemo(false);
       try {
         await generateTrip(params, (event, data) => {
           if (event === 'status' && data?.message) {
@@ -150,6 +159,49 @@ export default function PlanPage() {
     const searchParams = new URLSearchParams(location.search);
     const shared = searchParams.get('shared') || null;
 
+    if (location.pathname === '/plan/demo') {
+      const normalizedPlaces = (ONBOARDING_DEMO_PLACES || []).map((p) => ({
+        id: p.google_place_id || p.googlePlaceId || p.id,
+        googlePlaceId: p.google_place_id || p.googlePlaceId || p.id,
+        name: p.name,
+        category:
+          p.category === 'tourist_attraction' || p.category === 'lodging'
+            ? p.category === 'lodging'
+              ? 'hotel'
+              : 'attraction'
+            : p.category,
+        lat: p.lat,
+        lng: p.lng,
+        rating: p.rating,
+        address: p.address,
+        photoUrl: null,
+        googleMapsUrl: null,
+        isInItinerary: Boolean(p.is_in_itinerary),
+      }));
+
+      const demoTrip = normalizeTrip(
+        {
+          ...ONBOARDING_DEMO_TRIP,
+          user_id: 'demo',
+          share_code: null,
+          created_at: new Date().toISOString(),
+          transport_mode: 'flight',
+          itinerary: { ...ONBOARDING_DEMO_TRIP.itinerary, narrative: ONBOARDING_DEMO_TRIP.narrative },
+          cost_estimate: ONBOARDING_DEMO_TRIP.cost_estimate,
+          visa_info: null,
+          travel_essentials: null,
+        },
+        normalizedPlaces,
+        []
+      );
+
+      setIsDemo(true);
+      setMode('editing');
+      setTrip(demoTrip);
+      setLoading(false);
+      return;
+    }
+
     if (generateParams) {
       startGeneration(generateParams);
       return;
@@ -157,6 +209,7 @@ export default function PlanPage() {
 
     if (id === 'mock') {
       loadMockTrip();
+      setIsDemo(false);
       setLoading(false);
       return;
     }
@@ -164,7 +217,26 @@ export default function PlanPage() {
     if (id) {
       loadExistingTrip(id, shared);
     }
-  }, [id, location.search, location.state, loadExistingTrip, loadMockTrip, startGeneration]);
+  }, [
+    id,
+    location.pathname,
+    location.search,
+    location.state,
+    loadExistingTrip,
+    loadMockTrip,
+    setIsDemo,
+    setMode,
+    setTrip,
+    startGeneration,
+  ]);
+
+  const shouldShowPlanTour = useMemo(() => {
+    if (!trip) return false;
+    if (location.pathname === '/plan/demo') return true;
+    if (planTourDone) return false;
+    if (!Array.isArray(trip.places) || trip.places.length === 0) return false;
+    return true;
+  }, [trip, planTourDone, location.pathname]);
 
   if (genError) {
     return (
@@ -205,6 +277,13 @@ export default function PlanPage() {
     );
   }
 
-  return <PlanView />;
+  return (
+    <>
+      {shouldShowPlanTour && (
+        <PlanTour isDemo={location.pathname === '/plan/demo'} />
+      )}
+      <PlanView />
+    </>
+  );
 }
 

@@ -4,7 +4,7 @@ export default function TabBar({ activeId, onTabClick }) {
 
   return (
     <nav className="mt-2">
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div data-tour="tab-bar" className="flex gap-2 overflow-x-auto pb-1">
         {PLAN_SECTIONS.map((tab) => {
           const isActive = tab.id === activeId;
           return (

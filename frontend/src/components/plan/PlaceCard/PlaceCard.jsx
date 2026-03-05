@@ -40,10 +40,16 @@ export default function PlaceCard({ place, variant = 'standard', showActions = t
           {'$'.repeat(place.priceLevel || 1)}
         </span>
       )}
-      {place.visitDuration && (
+      {place.visit_duration_minutes != null && (
         <span className="text-xs text-[var(--text-muted)]">
-          {place.visitDuration}
-          min
+          ⏱{' '}
+          {place.visit_duration_minutes >= 60
+            ? `${Math.floor(place.visit_duration_minutes / 60)}h${
+                place.visit_duration_minutes % 60
+                  ? ` ${place.visit_duration_minutes % 60}m`
+                  : ''
+              }`
+            : `${place.visit_duration_minutes}m`}
         </span>
       )}
       {isHotel && place.pricePerNight && (

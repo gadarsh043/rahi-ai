@@ -1,4 +1,5 @@
 import { toast } from '../components/common/Toast/Toast';
+import useUIStore from '../stores/uiStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/v1';
 
@@ -101,6 +102,29 @@ export async function apiSSE(path, body, onEvent, { context = '' } = {}) {
       headers: getAuthHeaders(),
       body: JSON.stringify(body),
     });
+
+    if (resp.status === 402) {
+      // Credits exhausted — show email CTA instead of paywall.
+      let detail;
+      try {
+        const data = await resp.json();
+        detail = data?.detail || data;
+      } catch {
+        detail = {};
+      }
+      const message =
+        (detail && (detail.message || detail.detail)) ||
+        "You've used all your free trips! Email us to request more credits.";
+      // Show a gentle toast and open the credits exhausted overlay.
+      toast.error(message);
+      try {
+        useUIStore.getState().setShowCreditsExhausted(true);
+      } catch {
+        // ignore if store not ready
+      }
+      onEvent?.('error', { type: detail?.type || 'credits_exhausted', message });
+      return;
+    }
 
     if (!resp.ok) {
       const msg = getFriendlyMessage(resp.status, context);

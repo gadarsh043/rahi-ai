@@ -1,6 +1,8 @@
 import useTripStore from '../../../stores/tripStore';
+import useAuthStore from '../../../stores/authStore';
 import ShareButton from '../ShareButton/ShareButton';
 import SuggestionsPanel from '../SuggestionsPanel/SuggestionsPanel';
+import CurrencySelector from '../../common/CurrencySelector/CurrencySelector';
 import { toast } from '../../common/Toast/Toast';
 import { savePlan } from '../../../services/api';
 
@@ -8,6 +10,9 @@ export default function PlanHeader() {
   const trip = useTripStore((s) => s.trip);
   const mode = useTripStore((s) => s.mode);
   const setMode = useTripStore((s) => s.setMode);
+  const setCurrency = useTripStore((s) => s.setCurrency);
+  const isDemo = useTripStore((s) => s.isDemo);
+  const profile = useAuthStore((s) => s.profile);
 
   if (!trip) return null;
 
@@ -41,6 +46,10 @@ export default function PlanHeader() {
   };
 
   const handleSaveTrip = async () => {
+    if (isDemo) {
+      toast.info('Demo mode: generate a real trip to save it.');
+      return;
+    }
     try {
       const result = await savePlan(trip.id);
       if (result?.error) {
@@ -53,20 +62,37 @@ export default function PlanHeader() {
     }
   };
 
+  const handleCurrencyChange = (code) => {
+    setCurrency(code);
+    // MVP: just update the label; real FX handled server-side later.
+  };
+
+  const headerCurrency =
+    trip?.currency || profile?.preferred_currency || 'USD';
+
   return (
     <header className="mb-3">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">
-            {trip.originCity} → {trip.destinationCity}
-          </h1>
-          <p className="text-sm text-[var(--text-secondary)] mt-1">
-            {trip.numDays} days · {trip.pace} · {trip.budgetVibe}
-          </p>
+        <div className="flex items-start gap-3">
+          <div>
+            <h1 className="text-2xl font-extrabold text-[var(--text-primary)]">
+              {trip.originCity} → {trip.destinationCity}
+            </h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
+              {trip.numDays} days · {trip.pace} · {trip.budgetVibe}
+            </p>
+          </div>
+          <div className="hidden sm:block mt-1">
+            <CurrencySelector
+              value={headerCurrency}
+              onChange={handleCurrencyChange}
+              compact
+            />
+          </div>
         </div>
         {mode !== 'shared' && (
           <div className="flex items-center gap-2">
-            <SuggestionsPanel tripId={trip.id} />
+            {!isDemo && <SuggestionsPanel tripId={trip.id} />}
             <ShareButton />
             {mode === 'saved' && (
               <button
@@ -81,6 +107,7 @@ export default function PlanHeader() {
               <button
                 type="button"
                 onClick={handleSaveTrip}
+                data-tour="save-button"
                 className="flex items-center gap-1.5 border border-[var(--border)] text-xs md:text-sm font-semibold px-3 md:px-4 py-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
               >
                 💾 Save Trip

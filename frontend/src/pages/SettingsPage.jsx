@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react';
 import CountryAutocomplete from '../components/home/CountryAutocomplete';
+import CurrencySelector from '../components/common/CurrencySelector/CurrencySelector';
 import { fetchProfile, updateProfile } from '../services/api';
+import FeatureTip from '../components/onboarding/FeatureTip';
 
 export default function SettingsPage() {
   const [passportCountry, setPassportCountry] = useState(null);
   const [visaStatus, setVisaStatus] = useState('');
+  const [currency, setCurrency] = useState('USD');
+  const [tripsRemaining, setTripsRemaining] = useState(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState('');
 
@@ -21,6 +25,12 @@ export default function SettingsPage() {
           });
         }
         setVisaStatus(p.visa_status || '');
+        if (p.preferred_currency) {
+          setCurrency(p.preferred_currency);
+        }
+        if (typeof p.trips_remaining === 'number') {
+          setTripsRemaining(p.trips_remaining);
+        }
       } catch {
         // ignore
       }
@@ -34,6 +44,7 @@ export default function SettingsPage() {
       await updateProfile({
         passport_country: passportCountry?.name || '',
         visa_status: visaStatus || null,
+        preferred_currency: currency || 'USD',
       });
       setStatus('Saved');
       setTimeout(() => setStatus(''), 1200);
@@ -45,7 +56,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex flex-1 min-h-0 p-4 md:p-6">
+    <div data-tour="settings-root" className="flex flex-1 min-h-0 p-4 md:p-6">
+      <FeatureTip
+        tipId="settings"
+        element='[data-tour="settings-root"]'
+        title="Settings"
+        intro="Set your passport and default currency so trip costs and visa guidance are more accurate."
+        position="bottom"
+      />
       <div className="w-full max-w-2xl mx-auto">
         <div className="mb-4">
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Settings</h1>
@@ -75,6 +93,34 @@ export default function SettingsPage() {
           </div>
 
           <div className="mt-5">
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                Preferred Currency
+                <span className="text-[var(--text-muted)] font-normal ml-1">
+                  (used for costs &amp; budgets)
+                </span>
+              </label>
+              <CurrencySelector value={currency} onChange={setCurrency} />
+              <p className="text-xs text-[var(--text-muted)] mt-1">
+                This is the default currency for new trips. You can still change it per
+                trip in the Costs tab.
+              </p>
+            </div>
+
+            {tripsRemaining != null && (
+              <p className="text-sm text-[var(--text-muted)] mb-6">
+                {tripsRemaining} trip
+                {tripsRemaining !== 1 ? 's' : ''} remaining. Need more?{' '}
+                <a
+                  href="mailto:g.adarsh043@gmail.com"
+                  className="text-brand-500 underline"
+                >
+                  Email us
+                </a>
+                .
+              </p>
+            )}
+
             <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
               Passport Country
               <span className="text-[var(--text-muted)] font-normal ml-1">

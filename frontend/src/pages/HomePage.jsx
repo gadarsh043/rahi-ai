@@ -7,6 +7,7 @@ import StepNavigation from '../components/home/StepNavigation';
 import StepContentPlaceholder from '../components/home/StepContentPlaceholder';
 import PromptBox from '../components/home/PromptBox';
 import JoinTrip from '../components/home/JoinTrip';
+import WelcomeTour from '../components/onboarding/WelcomeTour';
 
 const STEP_HELPERS = [
   { step: 0, prefix: 'Not sure? ', action: 'Use your current location →' },
@@ -116,6 +117,7 @@ export default function HomePage() {
 
   return (
     <div className="flex flex-1 min-h-0 min-w-0 bg-gradient-to-b from-brand-50 via-transparent to-transparent dark:from-brand-950/30">
+      <WelcomeTour />
       <div className="flex flex-1 flex-col items-center justify-center py-8 min-h-[calc(100vh-56px)] min-w-0">
         <form
           className="flex flex-col w-full max-w-2xl flex-1 min-h-0 pb-32"

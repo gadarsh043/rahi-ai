@@ -10,6 +10,7 @@ export default function ActionBar() {
         <button
           type="button"
           onClick={openChat}
+          data-tour="chat-input"
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-[var(--surface-hover)] transition-colors"
         >
           <span className="text-[var(--text-muted)]">✨</span>
@@ -21,6 +22,7 @@ export default function ActionBar() {
         <button
           type="button"
           onClick={toggleLetsPick}
+          data-tour="lets-pick"
           className="bg-brand-500 hover:bg-brand-600 text-white text-xs font-semibold px-3 py-1.5 rounded-xl transition-colors whitespace-nowrap active:scale-[0.97]"
         >
           Let&apos;s Pick

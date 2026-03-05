@@ -6,6 +6,7 @@ const useTripStore = create((set, get) => ({
   trip: null,
   activeSectionId: 'eat',
   mode: 'editing', // 'editing' | 'shared' | 'saved'
+  isDemo: false,
 
   // Map state
   mapCenter: null,
@@ -23,6 +24,10 @@ const useTripStore = create((set, get) => ({
 
   // Pending changes (for rebuild banner)
   pendingChanges: [],
+
+  // Global rebuilding state (e.g. Let's Pick)
+  isRebuilding: false,
+  rebuildStatus: '',
 
   // Let's Pick state
   letsPickOpen: false,
@@ -47,6 +52,7 @@ const useTripStore = create((set, get) => ({
         chatMessages: existingMessages,
       };
     }),
+  setIsDemo: (value) => set({ isDemo: Boolean(value) }),
   setActiveSectionId: (id) => set({ activeSectionId: id }),
   setMode: (mode) => set({ mode }),
   setSelectedMarker: (id) => set({ selectedMarkerId: id }),
@@ -87,6 +93,13 @@ const useTripStore = create((set, get) => ({
     })),
   clearPendingChanges: () => set({ pendingChanges: [] }),
 
+  setRebuilding: (value, status) =>
+    set((s) => ({
+      isRebuilding: value,
+      rebuildStatus: typeof status === 'string' ? status : s.rebuildStatus,
+    })),
+  setRebuildStatus: (status) => set({ rebuildStatus: status }),
+
   // Load mock data
   loadMockTrip: () => {
     set({
@@ -95,6 +108,7 @@ const useTripStore = create((set, get) => ({
       chatMessages: MOCK_TRIP.chatMessages,
       mode: 'editing',
       activeSectionId: 'eat',
+      isDemo: false,
     });
   },
 
@@ -157,6 +171,12 @@ const useTripStore = create((set, get) => ({
         isSelected: f.id === flightId,
       }));
       return { trip: { ...s.trip, flights } };
+    }),
+
+  setCurrency: (code) =>
+    set((s) => {
+      if (!s.trip) return s;
+      return { trip: { ...s.trip, currency: code } };
     }),
 }));
 

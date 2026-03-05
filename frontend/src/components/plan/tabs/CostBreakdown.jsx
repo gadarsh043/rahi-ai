@@ -1,4 +1,6 @@
-export default function CostBreakdown({ estimate, numTravelers }) {
+import { ALL_CURRENCIES } from '../../common/CurrencySelector/CurrencySelector';
+
+export default function CostBreakdown({ estimate, numTravelers, currencyCode }) {
   if (!estimate) return null;
 
   const safeNum = (v) => {
@@ -17,8 +19,12 @@ export default function CostBreakdown({ estimate, numTravelers }) {
     estimate.perPerson ?? estimate.per_person ?? (numTravelers ? total / numTravelers : total)
   );
   const dailyAvg = safeNum(estimate.dailyAvg ?? estimate.daily_avg);
-  const currency = estimate.currency || 'USD';
+  const currency = currencyCode || estimate.currency || 'USD';
   const label = estimate.label;
+
+  const currencyMeta =
+    ALL_CURRENCIES.find((c) => c.code === currency) || ALL_CURRENCIES[0];
+  const symbol = currencyMeta?.symbol || '$';
 
   const categories = [
     {
@@ -62,11 +68,14 @@ export default function CostBreakdown({ estimate, numTravelers }) {
               Total for {numTravelers} {numTravelers === 1 ? 'person' : 'people'}
             </p>
             <p className="text-2xl font-bold text-[var(--text-primary)]">
-              ${total.toLocaleString()}
+              {symbol}
+              {total.toLocaleString()}
             </p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
-              Per person: <span className="font-semibold text-[var(--text-secondary)]">
-                ${perPerson.toLocaleString()}
+              Per person:{' '}
+              <span className="font-semibold text-[var(--text-secondary)]">
+                {symbol}
+                {perPerson.toLocaleString()}
               </span>
             </p>
           </div>
@@ -87,7 +96,8 @@ export default function CostBreakdown({ estimate, numTravelers }) {
                 <span className="text-[var(--text-primary)]">{catLabel}</span>
               </span>
               <span className="font-semibold text-[var(--text-primary)]">
-                ${safeNum(amount).toLocaleString()}
+                {symbol}
+                {safeNum(amount).toLocaleString()}
               </span>
             </div>
             <div className="h-2 bg-[var(--surface-hover)] rounded-full overflow-hidden">
@@ -106,8 +116,10 @@ export default function CostBreakdown({ estimate, numTravelers }) {
 
       <div className="flex items-center justify-between text-xs text-[var(--text-muted)] pt-1">
         <span>
-          Daily average: <span className="font-semibold text-[var(--text-secondary)]">
-            ${dailyAvg.toLocaleString()}
+          Daily average:{' '}
+          <span className="font-semibold text-[var(--text-secondary)]">
+            {symbol}
+            {dailyAvg.toLocaleString()}
           </span>
         </span>
         <span>

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
 import { sendChatMessage } from '../../../services/api';
 import { renderChatMarkdown } from '../../../utils/formatChat';
+import { toast } from '../../common/Toast/Toast';
 
 function ChatMessage({ message }) {
   return (
@@ -56,6 +57,7 @@ export default function ChatDrawer() {
   const updateStreamingMessage = useTripStore((s) => s.updateStreamingMessage);
   const finalizeStreamingMessage = useTripStore((s) => s.finalizeStreamingMessage);
   const addPendingChange = useTripStore((s) => s.addPendingChange);
+  const isDemo = useTripStore((s) => s.isDemo);
 
   const [input, setInput] = useState('');
   const endRef = useRef(null);
@@ -73,6 +75,10 @@ export default function ChatDrawer() {
 
   const handleSend = async () => {
     if (!input.trim() || !trip) return;
+    if (isDemo) {
+      toast.info('Demo mode: chat is disabled. Generate a real trip to chat.');
+      return;
+    }
     const text = input.trim();
 
     addChatMessage({
@@ -150,7 +156,7 @@ export default function ChatDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[400px] bg-[var(--bg)] border-l border-[var(--border)] flex flex-col shadow-2xl"
+            className="fixed right-0 top-[var(--topbar-height)] bottom-0 z-50 w-full sm:w-[400px] bg-[var(--bg)] border-l border-[var(--border)] flex flex-col shadow-2xl"
           >
             {/* Header */}
             <div className="px-4 py-3 border-b border-[var(--border)] flex items-center justify-between flex-shrink-0">
@@ -183,6 +189,11 @@ export default function ChatDrawer() {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {isDemo && (
+                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-xs text-[var(--text-secondary)]">
+                  Demo mode: chat is disabled. Generate a real trip to start chatting.
+                </div>
+              )}
               {chatMessages.map((msg) => (
                 <ChatMessage key={msg.id ?? `${msg.role}-${Math.random()}`} message={msg} />
               ))}
@@ -223,13 +234,18 @@ export default function ChatDrawer() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Remove Terry Black's, add vegan spots..."
+                  placeholder={
+                    isDemo
+                      ? 'Demo mode: chat disabled'
+                      : "Remove Terry Black's, add vegan spots..."
+                  }
+                  disabled={isDemo}
                   className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
                 />
                 <button
                   type="button"
                   onClick={handleSend}
-                  disabled={!input.trim()}
+                  disabled={isDemo || !input.trim()}
                   className="text-brand-500 hover:text-brand-600 disabled:opacity-30 transition-colors"
                 >
                   <svg

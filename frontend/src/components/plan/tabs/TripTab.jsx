@@ -12,7 +12,16 @@ export default function TripTab() {
         Day-by-day itinerary for your Dallas honeymoon.
       </p>
 
-      {/* Future: narrative block from AI goes here */}
+      {trip?.narrative && (
+        <div className="mb-6 mt-4 p-4 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-2">
+            Trip Overview
+          </h3>
+          <p className="text-sm text-[var(--text-secondary)] leading-relaxed whitespace-pre-line">
+            {trip.narrative}
+          </p>
+        </div>
+      )}
 
       <Timeline itinerary={trip.itinerary} />
     </div>

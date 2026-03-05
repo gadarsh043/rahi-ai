@@ -91,11 +91,13 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 1:
       return (
-        <CityAutocomplete
-          placeholder="e.g. Tokyo, Bali"
-          value={formData.destination}
-          onChange={(city) => updateField('destination', city)}
-        />
+        <div data-tour="destination">
+          <CityAutocomplete
+            placeholder="e.g. Tokyo, Bali"
+            value={formData.destination}
+            onChange={(city) => updateField('destination', city)}
+          />
+        </div>
       );
     case 2:
       return (

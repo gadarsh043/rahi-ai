@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
+import { apiGet, apiSSE } from '../../../services/apiClient';
+import { toast } from '../../common/Toast/Toast';
 
 const PICK_CATEGORIES = [
   { id: 'restaurant', label: 'Restaurants', icon: '🍽' },
@@ -12,6 +14,10 @@ export default function LetsPickPopup() {
   const trip = useTripStore((s) => s.trip);
   const letsPickOpen = useTripStore((s) => s.letsPickOpen);
   const toggleLetsPick = useTripStore((s) => s.toggleLetsPick);
+  const setTrip = useTripStore((s) => s.setTrip);
+  const setRebuilding = useTripStore((s) => s.setRebuilding);
+  const setRebuildStatus = useTripStore((s) => s.setRebuildStatus);
+  const isDemo = useTripStore((s) => s.isDemo);
 
   const allPlaces = trip?.places || [];
 
@@ -28,6 +34,7 @@ export default function LetsPickPopup() {
     category: 'restaurant',
   });
   const [customPlaces, setCustomPlaces] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   if (!letsPickOpen || !trip) return null;
 
@@ -49,10 +56,143 @@ export default function LetsPickPopup() {
     setCustomPlace((prev) => ({ ...prev, name: '', url: '' }));
   };
 
-  const handleDone = () => {
-    console.log('LetsPick selected IDs:', Array.from(selectedIds));
-    console.log('LetsPick custom places:', customPlaces);
+  const handleDone = async () => {
+    if (!trip) return;
+    if (isDemo) {
+      toggleLetsPick();
+      toast.info('Demo mode: generate a real trip to rebuild your itinerary.');
+      return;
+    }
+    const tripId = trip.id;
+    setLoading(true);
+
+    // Build payload from current selection vs original itinerary flags
+    const selectedPlaceIds = allPlaces
+      .filter((p) => selectedIds.has(p.id))
+      .map((p) => p.googlePlaceId || p.google_place_id)
+      .filter(Boolean);
+
+    const removedPlaceIds = allPlaces
+      .filter((p) => p.isInItinerary && !selectedIds.has(p.id))
+      .map((p) => p.googlePlaceId || p.google_place_id)
+      .filter(Boolean);
+
+    const custom = customPlaces.map((p) => ({
+      url: p.url,
+      label: p.category,
+      name: p.name,
+    }));
+
+    // Close popup and show rebuilding state
     toggleLetsPick();
+    setRebuilding(true, 'Rebuilding your itinerary...');
+
+    try {
+      await apiSSE(
+        `/plans/${tripId}/pick`,
+        {
+          trip_id: tripId,
+          selected_place_ids: selectedPlaceIds,
+          removed_place_ids: removedPlaceIds,
+          custom_additions: custom,
+        },
+        (event, data) => {
+          if (event === 'status') {
+            setRebuildStatus(data?.message || 'Rebuilding your itinerary...');
+          }
+          if (event === 'itinerary') {
+            const days = data?.days || [];
+            setTrip({
+              ...trip,
+              itinerary: days,
+            });
+          }
+          if (event === 'done') {
+            (async () => {
+              // Refresh full trip from API to sync places + itinerary
+              const fresh = await apiGet(`/plans/${tripId}`, {
+                context: 'plan',
+                silent: true,
+              });
+              if (!fresh?.error && fresh.trip) {
+                const apiTrip = fresh.trip;
+                const places = fresh.places || [];
+                const chatMessages =
+                  fresh.chat_messages || fresh.chatMessages || [];
+
+                const normalizedPlaces = places.map((p) => ({
+                  id: p.id,
+                  googlePlaceId: p.google_place_id,
+                  name: p.name,
+                  category: p.category,
+                  lat: p.lat,
+                  lng: p.lng,
+                  rating: p.rating,
+                  priceLevel: p.price_level,
+                  address: p.address,
+                  photoUrl: p.photo_url,
+                  googleMapsUrl: p.google_maps_url,
+                  isInItinerary: p.is_in_itinerary,
+                  dayNumber: p.day_number,
+                  timeSlot: p.time_slot,
+                  isCustom: p.is_custom ?? false,
+                }));
+
+                const itinerary =
+                  apiTrip.itinerary && apiTrip.itinerary.itinerary
+                    ? apiTrip.itinerary.itinerary
+                    : apiTrip.itinerary || [];
+
+                setTrip({
+                  id: apiTrip.id,
+                  userId: apiTrip.user_id,
+                  originCity: apiTrip.origin_city,
+                  originCountry: apiTrip.origin_country,
+                  originLat: apiTrip.origin_lat,
+                  originLng: apiTrip.origin_lng,
+                  destinationCity: apiTrip.destination_city,
+                  destinationCountry: apiTrip.destination_country,
+                  destinationLat: apiTrip.destination_lat,
+                  destinationLng: apiTrip.destination_lng,
+                  startDate: apiTrip.start_date,
+                  endDate: apiTrip.end_date,
+                  numDays: apiTrip.num_days,
+                  pace: apiTrip.pace,
+                  budgetVibe: apiTrip.budget_vibe,
+                  accommodationType: apiTrip.accommodation_type,
+                  preferences: apiTrip.travel_preferences || [],
+                  instructions: apiTrip.instructions || '',
+                  numTravelers: apiTrip.num_travelers || 1,
+                  passportCountry: apiTrip.passport_country || '',
+                  currency: apiTrip.currency || 'USD',
+                  status: apiTrip.status,
+                  shareCode: apiTrip.share_code,
+                  createdAt: apiTrip.created_at,
+                  itinerary,
+                  narrative: apiTrip.itinerary?.narrative || '',
+                  costEstimate: apiTrip.cost_estimate || null,
+                  visaInfo: apiTrip.visa_info || null,
+                  travelEssentials: apiTrip.travel_essentials || null,
+                  places: normalizedPlaces,
+                  chatMessages,
+                });
+              }
+              setRebuilding(false, '');
+              setRebuildStatus('');
+              toast.success('Itinerary updated with your picks!');
+            })();
+          }
+          if (event === 'error') {
+            setRebuilding(false);
+            setRebuildStatus('');
+            toast.error("Couldn't update your picks. Try again.");
+          }
+        },
+        { context: 'pick' },
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   const placesForCategory = allPlaces.filter((p) => p.category === activeCategory);
@@ -160,9 +300,10 @@ export default function LetsPickPopup() {
             <button
               type="button"
               onClick={handleDone}
-              className="px-3 py-1.5 rounded-full bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 active:scale-95 transition-transform"
+              disabled={loading}
+              className="px-3 py-1.5 rounded-full bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 active:scale-95 transition-transform disabled:opacity-60"
             >
-              Done ✓
+              {loading ? 'Working…' : 'Done ✓'}
             </button>
           </div>
 

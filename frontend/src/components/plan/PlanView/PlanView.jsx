@@ -37,6 +37,8 @@ export default function PlanView() {
   const setActiveSectionId = useTripStore((s) => s.setActiveSectionId);
   const mode = useTripStore((s) => s.mode);
   const trip = useTripStore((s) => s.trip);
+  const isRebuilding = useTripStore((s) => s.isRebuilding);
+  const rebuildStatus = useTripStore((s) => s.rebuildStatus);
 
   const sectionIds = PLAN_SECTIONS.map((s) => s.id);
   const { activeId, scrollToSection, scrollContainerRef } = useScrollSpy(
@@ -71,7 +73,11 @@ export default function PlanView() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-56px)]">
+      <div
+        className={`flex h-[calc(100vh-56px)] ${
+          chatOpen ? 'lg:mr-[400px]' : ''
+        }`}
+      >
         {/* Content Panel */}
         <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative">
           <div className="px-6 pt-6 pb-2">
@@ -85,6 +91,14 @@ export default function PlanView() {
             ref={scrollContainerRef}
             className="flex-1 overflow-y-auto scroll-smooth"
           >
+            {mode !== 'shared' && isRebuilding && (
+              <div className="sticky top-0 z-20 bg-[var(--surface)]/90 backdrop-blur-sm border-b border-brand-500/20 px-4 py-3 flex items-center gap-3">
+                <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm text-[var(--text-primary)]">
+                  {rebuildStatus || 'Rebuilding your itinerary...'}
+                </span>
+              </div>
+            )}
             {mode !== 'shared' && <RebuildBanner />}
             {PLAN_SECTIONS.map((section) => {
               const SectionComponent = sectionComponents[section.id];
@@ -108,7 +122,7 @@ export default function PlanView() {
         {/* Map Panel */}
         {!letsPickOpen && !chatOpen && (
           <div className="hidden lg:block w-[45%] bg-[var(--surface)] border-l border-[var(--border)]">
-            <MapPanel />
+            <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
           </div>
         )}
       </div>
@@ -136,7 +150,7 @@ export default function PlanView() {
               Close map
             </button>
           </div>
-          <MapPanel />
+          <MapPanel trip={trip} places={trip?.places} activeTab={activeId} />
         </div>
       )}
 

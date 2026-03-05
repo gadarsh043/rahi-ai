@@ -6,6 +6,7 @@ import useTripStore from '../../../stores/tripStore';
 export default function ShareButton() {
   const trip = useTripStore((s) => s.trip);
   const setTrip = useTripStore((s) => s.setTrip);
+  const isDemo = useTripStore((s) => s.isDemo);
   const [showPopup, setShowPopup] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -18,6 +19,10 @@ export default function ShareButton() {
 
   const handleGenerateCode = async () => {
     if (!trip) return;
+    if (isDemo) {
+      toast.info('Demo mode: generate a real trip to share it.');
+      return;
+    }
     setLoading(true);
     const result = await apiPost(
       `/plans/${trip.id}/share`,
@@ -51,7 +56,14 @@ export default function ShareButton() {
     <div className="relative">
       <button
         type="button"
-        onClick={() => setShowPopup((open) => !open)}
+        data-tour="share-button"
+        onClick={() => {
+          if (isDemo) {
+            toast.info('Demo mode: generate a real trip to share it.');
+            return;
+          }
+          setShowPopup((open) => !open);
+        }}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
       >
         🔗 Share
