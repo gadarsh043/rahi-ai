@@ -1,17 +1,58 @@
-# CLAUDE.md — Rahi AI
+# CLAUDE.md — Rahify (formerly Rahi AI)
 
 ## What Is This
-AI-powered travel planner. Users enter trip details → get itineraries with real places (Google Places fetched FIRST, then AI builds from verified data). Zero hallucination.
+AI-powered travel planner at **rahify.com**. Users enter trip details → get itineraries with real places (Google Places fetched FIRST, then AI builds from verified data). Zero hallucination.
 
 ## Tech Stack
 - **Frontend:** React 18 + Vite + Tailwind CSS v4 + Zustand + React Router v6
-- **Backend:** Python 3.12 + FastAPI (separate — don't touch until asked)
-- **DB/Auth:** Supabase (PostgreSQL + Google OAuth)
-- **AI:** Groq (Llama 3 70B) → Claude (later)
-- **Maps:** Google Maps JS API + Google Places API
+- **Backend:** Python 3.12 + FastAPI (separate repo/folder)
+- **DB/Auth:** Supabase (PostgreSQL + Google OAuth only)
+- **AI:** Groq (Llama 3 70B) → Claude (later, model-agnostic wrapper)
+- **Map Rendering:** Leaflet + OpenStreetMap (free, no API key)
+- **Place Data:** Google Places API (New) for real place data, photos, ratings
+- **Flights:** SerpAPI (Google Flights) with 10-min cache + IATA resolver
+- **Geocoding:** Photon (Komoot) — free, worldwide
 - **Font:** DM Sans (Google Fonts)
 - **Dates:** react-day-picker
 - **Animations:** framer-motion
+- **Onboarding:** intro.js
+- **PDF:** ReportLab (server-side, enhanced with Maps links, phrases, packing)
+- **Payments:** LemonSqueezy (planned). Currently email-based credit requests.
+
+## Current State (Post-MVP Build)
+
+### Implemented ✅
+- Auth (Google OAuth via Supabase)
+- 10-step home page trip input flow
+- AI itinerary generation (/generate SSE, Approach A: places first)
+- Plan View with tab-based navigation (7 tabs)
+- All tabs: Eat, Stay, Go, Trip (timeline), Flight, Costs, Next
+- Interactive map (Leaflet + OSM, color-coded markers, route polylines)
+- AI Chatbot (context-aware, mutations, bottom sheet mobile / drawer desktop)
+- Let's Pick popup → /pick SSE wiring
+- Collapsible sidebar + mobile drawer + My Plans + Recent Chats
+- Bottom nav bar (mobile: Home, Right Now, New Trip, My Plans)
+- Share system (6-char codes, mandatory login, suggest, fork)
+- Enhanced PDF (quick ref, Maps links, packing list, phrases, visa)
+- Right Now modal (geolocation → nearby places, 3 tabs)
+- Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner fallback)
+- Map route polylines (flight arc + day routes)
+- Currency selector (reusable, searchable, common pinned)
+- Onboarding (WelcomeTour on home, PlanTour on /plan/demo with mock data)
+- Dark/Light mode (Tailwind + CSS variables)
+- mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
+- Profile dropdown (Settings, Tour, Feedback, Credits, Logout)
+- Credits: 5 free trips, email g.adarsh043@gmail.com for more (no payment platform yet)
+
+### Not Yet Implemented
+- LemonSqueezy payment integration (domain + setup needed)
+- Travel Quiz
+- Credit card reference in NextTab
+- Service worker / offline mode
+- SEO meta tags + OG images
+- Production deploy (Railway + Vercel)
+
+---
 
 ## Styling: Tailwind CSS v4
 
@@ -97,20 +138,18 @@ export default defineConfig({
   --text-muted: #64748B;
 }
 
-/* Base styles */
 body {
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text-primary);
 }
 
-/* Dark mode background with subtle radial gradient (anti-slop) */
 .dark body {
   background: #0F172A;
   background-image: radial-gradient(ellipse at 15% 0%, rgba(67, 20, 7, 0.4) 0%, transparent 50%);
 }
 
-/* Glassmorphism utility classes */
+/* Glassmorphism utilities */
 @utility glass {
   background: rgba(249, 250, 251, 0.7);
   backdrop-filter: blur(16px) saturate(180%);
@@ -139,43 +178,33 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Brand glow shadow */
 @utility shadow-brand {
   box-shadow: 0 4px 16px rgba(249, 115, 22, 0.25);
 }
 ```
 
 ### How to Use Dark Mode
-Theme class `.dark` / `.light` on `<html>`. Use Tailwind `dark:` prefix:
+Theme class `.dark` / `.light` on `<html>`. Use CSS variables:
 
 ```jsx
 // ✅ CORRECT
-<div className="bg-[var(--surface)] dark:bg-[var(--surface)] border border-[var(--border)]">
+<div className="bg-[var(--surface)] border border-[var(--border)]">
   <p className="text-[var(--text-primary)]">Hello</p>
 </div>
 
-// ✅ ALSO CORRECT — using glass utilities
+// ✅ Glass utilities (selective use — 30% of elevated elements max)
 <div className="glass dark:glass-dark rounded-2xl p-4">
-  <p className="text-[var(--text-primary)]">Hello</p>
-</div>
 
-// ✅ Using brand colors
-<button className="bg-gradient-to-r from-brand-400 to-brand-600 text-white rounded-xl px-6 py-3 font-semibold shadow-brand hover:from-brand-500 hover:to-brand-700 transition-all">
-  Next →
-</button>
+// ✅ Brand colors
+<button className="bg-gradient-to-r from-brand-400 to-brand-600 text-white rounded-xl px-6 py-3 font-semibold shadow-brand">
 
 // ❌ WRONG — no inline styles
 <div style={{ background: '#1E293B' }}>
 ```
 
-### Tailwind Patterns for Common Elements
+### Tailwind Patterns
 
-**Glass card:**
-```jsx
-<div className="glass dark:glass-dark rounded-2xl p-4">
-```
-
-**Solid card (most cards — don't overuse glass):**
+**Solid card (default — most cards):**
 ```jsx
 <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4 hover:shadow-md transition-shadow">
 ```
@@ -190,399 +219,262 @@ Theme class `.dark` / `.light` on `<html>`. Use Tailwind `dark:` prefix:
 <button className="border border-[var(--border)] text-[var(--text-secondary)] rounded-xl px-5 py-2.5 font-medium hover:bg-[var(--surface-hover)] transition-colors">
 ```
 
-**Pill toggle (inactive):**
+**Pill (inactive / active):**
 ```jsx
-<button className="border border-[var(--border)] text-[var(--text-secondary)] rounded-full px-4 py-2 text-sm font-medium hover:border-brand-400 transition-colors">
-```
-
-**Pill toggle (active):**
-```jsx
+<button className="border border-[var(--border)] text-[var(--text-secondary)] rounded-full px-4 py-2 text-sm font-medium">
 <button className="bg-brand-500 text-white border border-brand-500 rounded-full px-4 py-2 text-sm font-semibold">
 ```
 
-**Text hierarchy:**
-```jsx
-<h1 className="text-3xl font-extrabold text-[var(--text-primary)]">
-<h2 className="text-xl font-bold text-[var(--text-primary)]">
-<p className="text-sm text-[var(--text-secondary)]">
-<span className="text-xs text-[var(--text-muted)]">
-<label className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+**Typography:**
+```
+Hero:      text-3xl font-extrabold text-[var(--text-primary)]
+Section:   text-xl font-bold text-[var(--text-primary)]
+Card:      text-[15px] font-semibold text-[var(--text-primary)]
+Body:      text-sm text-[var(--text-secondary)]
+Caption:   text-xs text-[var(--text-muted)]
+Label:     text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]
 ```
 
 ---
 
 ## Repo Structure
 ```
-rahi-ai/
-├── .cursorrules
-├── .gitignore
+rahify/
 ├── CLAUDE.md
 ├── PROJECT_SPEC.md
 ├── MWEB_UI_SPEC.md
-├── HOME_PAGE_PROMPTS.md
-├── NEXT_STEPS.md
 │
 ├── frontend/
 │   ├── public/
-│   │   └── favicon.svg
+│   │   ├── favicon.svg
+│   │   ├── manifest.json          ← PWA config
+│   │   └── icons/                 ← PWA icons
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/        ← Button, Modal, Toast, Dropdown, Badge, Loader
-│   │   │   ├── layout/        ← TopBar, Sidebar, ThemeToggle, ProfileDropdown
-│   │   │   ├── auth/          ← GoogleLoginButton, ProtectedRoute
-│   │   │   ├── home/          ← CityAutocomplete, DatePicker, PaceSelector, etc.
-│   │   │   ├── plan/          ← PlanView, tabs, ChatInput, MapPanel, etc.
-│   │   │   ├── nearby/        ← NearbyModal, NearbyCard
-│   │   │   ├── credits/       ← CreditsModal, PlanCard
-│   │   │   └── profile/       ← ProfileForm, QuizView, PurchaseHistory
+│   │   │   ├── common/            ← Button, Modal, Toast, Dropdown, Badge, Loader, CurrencySelector
+│   │   │   ├── layout/            ← TopBar, Sidebar, BottomNav, ThemeToggle, ProfileDropdown
+│   │   │   ├── auth/              ← GoogleLoginButton, ProtectedRoute
+│   │   │   ├── onboarding/        ← WelcomeTour, PlanTour
+│   │   │   ├── home/              ← CityAutocomplete, DatePicker, PaceSelector, PromptBox, StepperDots, etc.
+│   │   │   ├── plan/              ← PlanView, PlanHeader, TabBar, ActionBar, MapPanel, ChatDrawer,
+│   │   │   │                         LetsPickPopup, PlaceCard, FlightCard, SharedBanner, SuggestionsBadge
+│   │   │   │   └── sections/      ← EatSection, StaySection, PlacesSection, TripSection, FlightSection, CostsSection, NextSection
+│   │   │   ├── nearby/            ← NearbyModal
+│   │   │   ├── credits/           ← CreditsExhausted (email CTA, not paywall)
+│   │   │   └── profile/           ← ProfileForm
 │   │   ├── pages/
 │   │   │   ├── HomePage.jsx
-│   │   │   ├── PlanPage.jsx
+│   │   │   ├── PlanPage.jsx       ← handles /plan/:id, /plan/demo, /trip/:id
 │   │   │   ├── SettingsPage.jsx
 │   │   │   └── AuthPage.jsx
 │   │   ├── hooks/
 │   │   ├── stores/
+│   │   │   ├── authStore.js
+│   │   │   ├── tripStore.js
+│   │   │   ├── uiStore.js
+│   │   │   └── onboardingStore.js
 │   │   ├── services/
+│   │   │   ├── api.js             ← apiGet, apiPost, apiSSE with error handling
+│   │   │   └── supabase.js
 │   │   ├── utils/
-│   │   ├── index.css          ← Tailwind imports + theme + glass utilities
+│   │   │   ├── constants.js
+│   │   │   ├── formatCurrency.js
+│   │   │   ├── countries.js
+│   │   │   ├── affiliateLinks.js
+│   │   │   └── mockTripData.js    ← demo trip for onboarding
+│   │   ├── index.css              ← Tailwind imports + theme + glass utilities
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── index.html
+│   ├── vercel.json                ← SPA rewrites
 │   ├── vite.config.js
-│   ├── package.json
-│   └── README.md
+│   └── package.json
 │
 ├── backend/
 │   ├── app/
 │   │   ├── main.py
+│   │   ├── config.py
+│   │   ├── dependencies.py        ← auth middleware (dev bypass in ENV=development only)
 │   │   ├── routes/
+│   │   │   ├── generate.py        ← /generate SSE (places first → AI)
+│   │   │   ├── chat.py            ← /chat SSE (context-aware, mutations)
+│   │   │   ├── plans.py           ← CRUD + share + suggest + fork + refresh-flights
+│   │   │   ├── pick.py            ← /pick SSE (rebuild from selections)
+│   │   │   ├── nearby.py          ← /nearby (geolocation → Google Places)
+│   │   │   ├── user.py            ← profile CRUD
+│   │   │   └── webhooks.py        ← future payment webhooks
 │   │   ├── services/
-│   │   ├── models/
+│   │   │   ├── llm_service.py     ← model-agnostic (Groq ↔ Claude)
+│   │   │   ├── places_service.py  ← Google Places Nearby Search
+│   │   │   ├── flight_service.py  ← SerpAPI + cache + IATA resolution
+│   │   │   ├── geocode_service.py ← Photon
+│   │   │   ├── pdf_service.py     ← Enhanced ReportLab PDF
+│   │   │   ├── cost_service.py    ← Formula-based cost estimation
+│   │   │   ├── visa_service.py    ← Static visa/essentials data
+│   │   │   └── essentials_service.py
 │   │   ├── prompts/
+│   │   │   ├── itinerary.py       ← generation prompt (no duplicate places rule)
+│   │   │   ├── chat.py            ← chat prompt (trip-context-aware, concise rules)
+│   │   │   └── essentials.py
 │   │   └── utils/
+│   │       ├── supabase_client.py
+│   │       ├── iata_codes.py      ← 200+ city → IATA airport code lookup
+│   │       ├── distance.py        ← haversine
+│   │       └── cache.py
 │   ├── requirements.txt
-│   └── README.md
+│   └── Dockerfile
 │
 └── supabase/
     └── migrations/
-```
-
-**Note on pages:** With Tailwind, no need for separate page folders with .module.scss. Pages are just single `.jsx` files. Components still get their own folders when they have multiple files (e.g., custom hooks), but most are just single `.jsx` files too.
-
----
-
-## Component Pattern
-
-```jsx
-// components/home/PaceSelector.jsx
-// No separate CSS file needed — Tailwind classes in JSX
-
-export default function PaceSelector({ value, onChange }) {
-  const paces = [
-    { id: 'relaxed', emoji: '😎', label: 'Relaxed', desc: 'Take it slow, savor every moment' },
-    { id: 'moderate', emoji: '🌿', label: 'Moderate', desc: 'Balance of rest and exploration' },
-    { id: 'active', emoji: '🤸', label: 'Active', desc: 'See as much as you can' },
-    { id: 'intense', emoji: '🔥', label: 'Intense', desc: 'Non-stop, packed schedule' },
-  ];
-
-  return (
-    <div className="grid grid-cols-2 gap-3 w-full max-w-md">
-      {paces.map(pace => (
-        <button
-          key={pace.id}
-          onClick={() => onChange(pace.id)}
-          className={`
-            glass dark:glass-dark rounded-2xl p-5 text-center cursor-pointer
-            border-2 transition-all duration-150
-            hover:-translate-y-0.5 hover:shadow-lg
-            active:scale-[0.97]
-            ${value === pace.id
-              ? 'border-brand-500 bg-brand-500/8 dark:bg-brand-500/12 shadow-brand'
-              : 'border-transparent'
-            }
-          `}
-        >
-          <span className="text-3xl block mb-2">{pace.emoji}</span>
-          <span className="text-base font-bold text-[var(--text-primary)] block">{pace.label}</span>
-          <span className="text-xs text-[var(--text-muted)] mt-1 block">{pace.desc}</span>
-        </button>
-      ))}
-    </div>
-  );
-}
+        └── 001_initial_schema.sql
 ```
 
 ---
 
-## Libraries
+## Plan View Architecture
 
-| Library | Purpose | Why |
-|---------|---------|-----|
-| `tailwindcss` + `@tailwindcss/vite` | Styling | Better AI output, faster dev, dark mode built-in |
-| `react-day-picker` | Date selection | Dark-mode friendly, customizable, 8KB |
-| `framer-motion` | Animations | Spring physics, layout animations, gesture support |
-| `zustand` | State | Minimal boilerplate |
-| `react-router-dom` | Routing | Standard |
+### Pattern: Tab-Based Navigation
+7 sections accessible via horizontally scrollable tab pills. Click tab → shows that section's content. Map panel on desktop right side, floating toggle on mobile.
 
-### Date Picker Styling
-```jsx
-import { DayPicker } from 'react-day-picker';
-import 'react-day-picker/style.css';
-
-// Wrap in a themed container:
-<div className="glass dark:glass-dark rounded-2xl p-4">
-  <DayPicker
-    mode="range"
-    disabled={{ before: new Date() }}  // No past dates!
-    classNames={{
-      root: 'text-[var(--text-primary)]',
-      day: 'rounded-lg hover:bg-brand-500/10',
-      selected: 'bg-brand-500 text-white',
-      range_middle: 'bg-brand-500/15',
-      today: 'font-bold text-brand-500',
-    }}
-  />
-</div>
+### Layout — Desktop
+```
+┌──────┬──────────────────────────┬──────────────────────┐
+│      │ PlanHeader               │                      │
+│ Side │ TabBar (scrollable pills)│                      │
+│ bar  ├──────────────────────────┤   MapPanel            │
+│      │                          │   (Leaflet + OSM)    │
+│      │   Active Tab Content     │   Color-coded markers │
+│      │   (scrollable)           │   Route polylines     │
+│      │                          │   Click → popup       │
+│      ├──────────────────────────┤                      │
+│      │ ActionBar                │                      │
+│      │ [💬 Chat] [🎯 Let's Pick]│                      │
+└──────┴──────────────────────────┴──────────────────────┘
 ```
 
-### Framer Motion Patterns
-```jsx
-import { motion, AnimatePresence } from 'framer-motion';
-
-// Step transitions
-<AnimatePresence mode="wait">
-  <motion.div
-    key={currentStep}
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    exit={{ opacity: 0, x: -20 }}
-    transition={{ duration: 0.2 }}
-  >
-    {stepContent}
-  </motion.div>
-</AnimatePresence>
-
-// Card press effect
-<motion.button
-  whileTap={{ scale: 0.97 }}
-  whileHover={{ y: -2 }}
-  transition={{ type: "spring", stiffness: 400, damping: 25 }}
->
-
-// Staggered list
-<motion.div
-  initial={{ opacity: 0, y: 8 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ delay: index * 0.05 }}
->
+### Layout — Mobile
 ```
+┌────────────────────────────┐
+│ ← Origin→Dest 7D    💱 🔗 │  compact header
+├────────────────────────────┤
+│ [Eat][Stay][Go][✈️][💰]→   │  scrollable tabs
+├────────────────────────────┤
+│                            │
+│   Full-width tab content   │
+│   (scrollable)             │
+│                            │
+├────────────────────────────┤
+│ [💬 Chat] [🎯 Let's Pick]  │  sticky action bar
+├────────────────────────────┤
+│ 🏠  🔍  📍  📋             │  bottom nav
+└────────────────────────────┘
+[🗺️] floating map button (bottom-right)
+```
+
+### Chat
+- **Desktop:** Right drawer (400px, slides from right, overlays map)
+- **Mobile:** Bottom sheet (slides up, 85vh, scrim behind)
+- Chat MUTATES trip state (remove/add places, select flights)
+- Context-aware: system prompt includes live itinerary snapshot + trip dates
+- Triggered by ActionBar button
+
+### Map
+- Leaflet + OpenStreetMap (free)
+- Color-coded markers: eat=#EF4444, stay=#3B82F6, go=#10B981, activity=#8B5CF6, cafe=#F59E0B, outdoor=#14B8A6
+- Flight tab: dashed orange arc (origin → destination)
+- Trip tab: colored day-route polylines connecting activities
+- Mobile: full-screen overlay toggled by floating 🗺️ button
+
+### Three Modes (one PlanView component)
+- `editing`: owner, chat + Let's Pick, all interactions
+- `shared`: viewer via ?shared=CODE (must be logged in), read-only, suggest + fork
+- `saved`: frozen "My Trip" at /trip/:id, PDF download + booking links
+
+### Data Flow
+- All trip data in Zustand tripStore
+- Sections read from trip.places filtered by category
+- Map reads from trip.places + highlights based on active tab
+- Chat messages in tripStore.chatMessages
+- Chat responses trigger removePlace() / addPlaceToItinerary() / selectFlight()
+- After any mutation: refresh trip from API → store updates → UI re-renders
 
 ---
 
-## 🚫 UI Anti-Slop Rules (CRITICAL)
+## Navigation Architecture
 
-### Banned Patterns — NEVER Do These
+### Desktop
+- TopBar: Logo + Right Now + Theme Toggle + Profile Dropdown
+- Left Sidebar: collapsible (60px rail ↔ 280px expanded), New Trip, Recent Chats, Saved Trips
 
-**Layout slop:**
-- Perfectly symmetrical everything — real design has intentional asymmetry
-- Equal padding on all sides of every element — vary it, create hierarchy
-- Every card identical height/width/style — vary visual weight
-- Icon + heading + 3 bullets + CTA — the AI landing page formula
-- Centered everything — left-align body text, center only for heroes
-
-**Color slop:**
-- Purple/blue gradient on white — the #1 AI tell
-- Gradient text on everything — once per page max, hero heading only
-- Brand orange flooding the page — it's an ACCENT (10-15% of UI)
-- Every button is primary color — use ghost, outline, subtle variants
-- Rainbow of colors — brand + neutrals + semantic for status only
-
-**Typography slop:**
-- Everything 16px — create contrast (30px heading + 13px body)
-- Inter or Roboto font — we use DM Sans, period
-- Bold on everything — 700+ only for headings and key labels
-- ALL CAPS headers everywhere — sparingly if at all
-
-**Component slop:**
-- Drop shadow on every card — most cards need only border
-- `rounded-full` on containers — full radius for pills/badges only, cards use `rounded-xl`/`rounded-2xl`
-- Glassmorphism on EVERY element — 30% of elevated elements max, rest solid
-- Hover effects on non-interactive elements
-- Plain circle loading spinner — use skeleton loaders
-
-**Interaction slop:**
-- Linear easing — use `ease-out` or framer-motion springs
-- 300ms on everything — button press 100-150ms, layout 200-250ms
-- Only fade animations — combine with translateY for depth
-
-### Enforced Patterns — ALWAYS Do These
-
-**Visual hierarchy per section:**
-- ONE dominant element (largest, boldest, or most colorful)
-- Supporting elements visually quieter
-- Clear reading path for the eye
-
-**Whitespace:**
-- More space between sections (`py-8`, `py-12`) than within (`gap-3`, `gap-4`)
-- Content should breathe — don't fill every pixel
-- `max-w-md` or `max-w-lg` on content, centered — never edge-to-edge text
-
-**Typography rhythm:**
-```
-Hero heading:    text-3xl font-extrabold
-Section heading: text-xl font-bold
-Card title:      text-[15px] font-semibold
-Body text:       text-sm text-[var(--text-secondary)]
-Caption:         text-xs text-[var(--text-muted)]
-Tiny label:      text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]
-```
-
-**Color usage:**
-- Backgrounds: `var(--bg)`, `var(--surface)` — neutral
-- Text: primary → secondary → muted hierarchy
-- Brand orange: CTAs, active states, selected items, key accents only
-- Semantic: success/warning/error for status only
-
-**Glassmorphism — selective use:**
-- ✅ Use glass on: autocomplete dropdowns, prompt box, floating bars, modals, map overlays
-- ❌ Use solid on: regular cards, list items, sidebar, topbar, form containers
-
-**The Screenshot Test:**
-Before finishing any component, ask: "Could someone tell this was AI-generated?" If yes, fix it. Real design has restraint, hierarchy, and one strong decision per screen.
+### Mobile
+- Slim TopBar: ☰ hamburger + "Rahi" logo + avatar (44px)
+- Bottom Nav: 🏠 Home · 🔍 Right Now · 📍 New Trip · 📋 My Plans
+- Sidebar: overlay drawer (85vw max 320px) with trips + settings + dark mode + logout
 
 ---
 
-## Home Page Architecture
+## Key Decisions Log
+- Domain: rahify.com
+- Auth: Google OAuth only (no email/password)
+- Styling: Tailwind v4 only (no SCSS, no CSS Modules)
+- Map: Leaflet + OSM (free) — Google Places for data only
+- Payments: LemonSqueezy (planned). Currently email-based credits.
+- Credits: 5 free, email developer for more (no paywall modal)
+- Share: 6-char invite code + mandatory login (viral loop)
+- Chat: context-aware with live itinerary in system prompt
+- IATA: 200+ city lookup (not city[:3].upper())
+- PDF: Enhanced with maps links, packing, phrases, visa banner
+- Onboarding: WelcomeTour (home) + PlanTour (/plan/demo) + replay from profile
+- Brand color: Sunset Orange #F97316
+- Dark bg: #0F172A with subtle radial gradient
 
-### Flow
-Sequential stepper. One step visible at a time. framer-motion AnimatePresence for transitions.
+---
 
-### 10 Steps
-| # | Question | Component | Type |
-|---|----------|-----------|------|
-| 1 | Where from? | CityAutocomplete | Autocomplete + dropdown |
-| 2 | Where to? | CityAutocomplete | Autocomplete + dropdown |
-| 3 | When? | DatePicker (react-day-picker) | Calendar range + flexible toggle |
-| 4 | How long? | DurationSlider | Slider + quick picks (if flexible) |
-| 5 | Pace? | PaceSelector | 2×2 emoji cards |
-| 6 | Budget vibe? | BudgetVibeSelector | 4 cards in row |
-| 7 | Into? | PreferencePills | 15 multi-select pills |
-| 8 | Stay? | AccommodationSelector | 3 cards |
-| 9 | Passport? | CountryAutocomplete | Autocomplete + grouped dropdown |
-| 10 | Anything else? | InstructionsInput | Textarea + quick-add chips |
+## 🚫 UI Anti-Slop Rules
 
-### Layout
+### NEVER
+- Purple/blue gradients — our brand is sunset orange
+- Glassmorphism on everything — 30% of elevated elements max
+- Equal padding everywhere — create hierarchy
+- Every button primary — use ghost, outline, subtle variants
+- Drop shadow on every card — most need only border
+- Inter/Roboto/Arial fonts — DM Sans only
+- Linear easing — use ease-out or framer-motion springs
+- Centered body text — left-align, center only for heroes
+- 300ms on everything — button press 100ms, layout 200ms
+
+### ALWAYS
+- ONE dominant element per section (largest, boldest, or most colorful)
+- More space between sections than within
+- Content max-w-md or max-w-lg, centered
+- Brand orange as accent (10-15% of UI), not flooding
+- 44×44px minimum touch targets on mobile
+- Active/pressed states on mobile (not hover)
+- Skeleton loaders instead of spinners
+- 100dvh not 100vh for mobile layouts
+
+### Typography Rhythm
 ```
-┌──────────────────────────────────────────────────────────┐
-│  TopBar (56px)                                            │
-├────┬─────────────────────────────────────────────────────┤
-│    │                                                      │
-│ S  │           [Emoji icon — large]                       │
-│ i  │           [Question — heading]                       │
-│ d  │           [Subtitle — muted]                         │
-│ e  │                                                      │
-│ b  │           [Selector Component — max-w-md]            │
-│ a  │                                                      │
-│ r  │           [● ● ● ○ ○ ○ ○ ○ ○ ○]                    │
-│    │           [← Back]  [Next →]                         │
-│    │                                                      │
-│    ├─────────────────────────────────────────────────────┤
-│    │  PromptBox — glass, sticky bottom                    │
-│    │  "✨ Relaxed $$$ trip from HYD → DAL..." [Send ➤]   │
-│    │  "Have an invite code? Join a trip →"               │
-└────┴─────────────────────────────────────────────────────┘
+Hero:      text-3xl font-extrabold
+Section:   text-xl font-bold
+Card:      text-[15px] font-semibold
+Body:      text-sm text-[var(--text-secondary)]
+Caption:   text-xs text-[var(--text-muted)]
+Label:     text-[11px] font-semibold uppercase tracking-wider text-[var(--text-muted)]
 ```
+
+### Glassmorphism — Selective
+- ✅ glass: autocomplete dropdowns, prompt box, floating bars, modals, map overlays
+- ❌ solid: regular cards, list items, sidebar, topbar, form containers
 
 ---
 
 ## What NOT To Do
-- ❌ No SCSS, no CSS Modules, no `.module.scss` files
-- ❌ No `style={{}}` inline props (rare exceptions for truly dynamic values like calculated positions)
+- ❌ No SCSS, no CSS Modules, no .module.scss
+- ❌ No style={{}} inline props
 - ❌ No CSS-in-JS (styled-components, emotion)
-- ❌ No UI component libraries (MUI, Chakra, Ant, shadcn)
+- ❌ No UI libraries (MUI, Chakra, shadcn)
 - ❌ No external placeholder images — use emoji or colored divs
 - ❌ No backend work until asked
-- ❌ No Inter, Roboto, Arial, system fonts
 - ❌ No purple gradients, no generic blue/white themes
 - ❌ Don't modify PROJECT_SPEC.md or MWEB_UI_SPEC.md
-
-
-Plan View Architecture
-Pattern: Scroll-Spy (Uber Eats / Airbnb)
-All 7 sections stacked in one scrollable page. Sticky tabs auto-highlight as you scroll past each section. Click tab = smooth-scroll to section. NOT separate tab views.
-Layout
-┌──────┬──────────────────────────┬──────────────────────┐
-│      │ PlanHeader               │                      │
-│ Side │ StickyTabBar (scroll-spy)│                      │
-│ bar  ├──────────────────────────┤   MapPanel            │
-│      │ 🍽 Where to Eat          │   (Leaflet + OSM)    │
-│      │ 🏠 Where to Stay         │   Color-coded markers │
-│      │ 📍 Places to Go          │   Filtered by scroll  │
-│      │ 📋 Your Itinerary        │   position            │
-│      │ ✈️ Flights               │                      │
-│      │ 💰 Costs                 │                      │
-│      │ ➡️ What's Next           │                      │
-│      ├──────────────────────────┤                      │
-│      │ ActionBar                │                      │
-│      │ [✨ Ask Rahi...] [Pick]  │                      │
-└──────┴──────────────────────────┴──────────────────────┘
-Chat: Right Drawer (not bottom panel)
-
-Desktop: 400px drawer slides from right, overlays map
-Mobile: full-screen overlay with backdrop
-Chat MUTATES trip state (removes places, selects flights)
-Triggered by ActionBar button, NOT an inline input
-
-Progressive Loading
-LazySection wraps each section with IntersectionObserver.
-Sections render skeleton placeholders until 200px from viewport.
-Once visible, stays rendered (no unmounting).
-Three Modes (one PlanView component)
-
-editing: owner, chat + Let's Pick, all interactions
-shared: viewer via ?shared=CODE, read-only, suggest + fork
-saved: frozen "My Trip" at /trip/:id, PDF + booking links
-
-Data Flow
-
-All trip data in Zustand tripStore
-Sections read from trip.places filtered by category
-Map reads from trip.places filtered by activeSectionId
-Chat messages in tripStore.chatMessages
-Chat responses trigger removePlace() / addPlaceToItinerary() / selectFlight()
-
-Section IDs (scroll-spy targets)
-eat | stay | go | trip | flight | costs | next
-Map: Leaflet + OpenStreetMap (free, no API key)
-
-react-leaflet for React integration
-Custom L.divIcon markers with category colors
-Swap to Google Maps later by replacing MapPanel internals
-
-Marker Colors
-
-restaurant: #EF4444 (red)
-hotel: #3B82F6 (blue)
-attraction: #10B981 (green)
-cafe: #F59E0B (amber)
-outdoor: #14B8A6 (teal)
-
-Component Tree
-PlanView/
-├── PlanHeader.jsx         — back, title, currency, share
-├── StickyTabBar.jsx       — scroll-spy tab pills
-├── LazySection.jsx        — IntersectionObserver wrapper
-├── ActionBar.jsx          — chat trigger + Let's Pick button
-├── MapPanel.jsx           — Leaflet map with filtered markers
-├── ChatDrawer.jsx         — right drawer (desktop) / overlay (mobile)
-├── LetsPickPopup.jsx      — full-screen place curation
-├── PlaceCard.jsx          — shared card (eat/stay/go)
-├── FlightCard.jsx         — collapsible flight card
-└── sections/
-    ├── EatSection.jsx
-    ├── StaySection.jsx
-    ├── PlacesSection.jsx
-    ├── TripSection.jsx     — day-by-day timeline
-    ├── FlightSection.jsx
-    ├── CostsSection.jsx
-    └── NextSection.jsx     — visa + checklist + essentials

@@ -74,7 +74,7 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
   };
 
   return (
-    <div data-tour="prompt-box" className="sticky bottom-0 left-0 right-0 z-[var(--z-sticky)] pt-4">
+    <div data-tour="prompt-box" className="sticky bottom-14 lg:bottom-0 left-0 right-0 z-[var(--z-sticky)] pt-4">
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-3 shadow-lg">
         <AnimatePresence mode="wait">
           {!expanded ? (

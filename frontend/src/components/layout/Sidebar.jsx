@@ -127,9 +127,22 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
     onNavigate?.();
   };
 
+  const handleGoHome = () => {
+    navigate('/');
+    onNavigate?.();
+  };
+
   return (
     <div className="flex flex-col h-full">
-      <div className="px-4 pt-4 pb-3 border-b border-[var(--border)]">
+      <div className="px-4 pt-4 pb-3 border-b border-[var(--border)] space-y-3">
+        <button
+          type="button"
+          onClick={handleGoHome}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+        >
+          <span className="text-base">🏠</span>
+          <span>Home</span>
+        </button>
         <button
           type="button"
           onClick={handleNewTrip}
@@ -185,45 +198,27 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
       </div>
 
       <div className="border-t border-[var(--border)] px-3 py-3 space-y-2">
-        <div className="flex items-center justify-between text-xs text-[var(--text-secondary)]">
-          <button
-            type="button"
-            onClick={handleGoSettings}
-            className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
-          >
-            Settings
-          </button>
-          <button
-            type="button"
-            onClick={toggle}
-            className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-sm hover:bg-[var(--surface-hover)] cursor-pointer"
-            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDark ? '☀️' : '🌙'}
-          </button>
-        </div>
-        <div className="px-0 py-1 text-[11px] text-[var(--text-muted)] flex items-center justify-between">
-          <span>
+        <div className="flex items-center justify-between">
+          <div className="px-0 text-[11px] text-[var(--text-muted)] flex items-center gap-1">
             💳 {tripsRemaining ?? 0} trips left
-          </span>
-          {user && (
+          </div>
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={handleSignOut}
-              className="text-[11px] text-[var(--text-secondary)] hover:text-red-500 cursor-pointer"
+              onClick={toggle}
+              className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-sm hover:bg-[var(--surface-hover)] cursor-pointer"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
-              Log out
+              {isDark ? '☀️' : '🌙'}
             </button>
-          )}
-        </div>
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={onCollapse}
-            className="w-7 h-7 rounded-full border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] cursor-pointer"
-          >
-            ◀
-          </button>
+            <button
+              type="button"
+              onClick={onCollapse}
+              className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] cursor-pointer"
+            >
+              ◀
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -291,6 +286,7 @@ export default function Sidebar() {
               </button>
               <button
                 type="button"
+                onClick={() => setSidebarExpanded(true)}
                 className="w-10 h-10 rounded-full flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                 title="Recent Chats"
               >
@@ -298,20 +294,14 @@ export default function Sidebar() {
               </button>
               <button
                 type="button"
+                onClick={() => setSidebarExpanded(true)}
                 className="w-10 h-10 rounded-full flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
                 title="My Plans"
               >
                 📋
               </button>
             </div>
-            {/* Dev shortcut + expand button */}
             <div className="mt-4 flex flex-col items-center gap-3">
-              <a
-                href="/plan/mock"
-                className="text-[10px] text-[var(--text-muted)] hover:text-brand-500"
-              >
-                [Mock Trip]
-              </a>
               <button
                 type="button"
                 onClick={() => setSidebarExpanded(true)}

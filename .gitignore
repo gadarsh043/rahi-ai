@@ -46,6 +46,8 @@ frontend/public/icons/
 frontend/public/splash/
 
 # Project Documentation
+stitch_rahi_ai/*
+stitch_rahi_ai
 PROJECT_SPEC.md
 NEXT_STEPS.md
 MWEB_UI_SPEC.md
