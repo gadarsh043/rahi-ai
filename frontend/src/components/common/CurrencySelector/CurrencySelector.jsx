@@ -136,7 +136,7 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
           <div className="max-h-72 overflow-y-auto py-2">
             {pinned.length > 0 && (
               <div className="pb-2 border-b border-[var(--border)]">
-                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                <p className="px-3 pb-1 text-[10px] font-medium text-[var(--text-muted)]">
                   Common
                 </p>
                 {pinned.map((c) => (
@@ -160,7 +160,7 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
             )}
             {rest.length > 0 && (
               <div className="pt-1">
-                <p className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                <p className="px-3 pb-1 text-[10px] font-medium text-[var(--text-muted)]">
                   All
                 </p>
                 {rest.map((c) => (
@@ -222,7 +222,7 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
               <div className="max-h-72 overflow-y-auto pb-3">
                 {pinned.length > 0 && (
                   <div className="pb-1 border-b border-[var(--border)]">
-                    <p className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                    <p className="px-4 pb-1 text-[10px] font-medium text-[var(--text-muted)]">
                       Common
                     </p>
                     {pinned.map((c) => (
@@ -246,7 +246,7 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
                 )}
                 {rest.length > 0 && (
                   <div className="pt-1">
-                    <p className="px-4 pb-1 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+                    <p className="px-4 pb-1 text-[10px] font-medium text-[var(--text-muted)]">
                       All
                     </p>
                     {rest.map((c) => (

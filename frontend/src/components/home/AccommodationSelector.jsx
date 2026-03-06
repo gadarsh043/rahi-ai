@@ -8,7 +8,7 @@ const ACCOMMODATION_OPTIONS = [
 
 export default function AccommodationSelector({ value, onChange }) {
   return (
-    <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg">
+    <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg mx-auto">
       {ACCOMMODATION_OPTIONS.map((option) => {
         const isSelected = value === option.id;
         return (
@@ -22,7 +22,7 @@ export default function AccommodationSelector({ value, onChange }) {
             className={`
               bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-5 text-center border-2 cursor-pointer transition-all duration-150
               ${isSelected
-                ? 'border-brand-500 bg-brand-500/8 dark:bg-brand-500/12 shadow-brand'
+                ? 'border-brand-500 bg-brand-500/8 dark:bg-brand-500/12'
                 : 'border-transparent hover:border-brand-500/30'
               }
             `}

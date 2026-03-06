@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TopBar from './components/layout/TopBar';
 import Sidebar from './components/layout/Sidebar';
 import BottomNav from './components/layout/BottomNav/BottomNav';
 import HomePage from './pages/HomePage';
+import TripFormPage from './pages/TripFormPage';
 import PlanPage from './pages/PlanPage/PlanPage';
 import SettingsPage from './pages/SettingsPage';
 import ToastContainer from './components/common/Toast/Toast';
@@ -39,31 +40,35 @@ export default function App() {
       {showCreditsExhausted && (
         <CreditsExhausted onClose={() => setShowCreditsExhausted(false)} />
       )}
-      <div className="flex flex-col h-screen bg-[var(--bg)]">
+      <div className="flex flex-col h-[100dvh] bg-[var(--bg)]">
         <div className="flex flex-1 min-h-0 min-w-0">
           <Sidebar />
           <main className="flex flex-col flex-1 min-w-0 min-h-0 overflow-x-hidden">
             <TopBar />
-            <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6 lg:px-8 pb-16 lg:pb-0">
+            <div className="flex-1 min-h-0 overflow-auto pb-16 lg:pb-0">
               <Routes>
+                {/* Home page — full-width (no side padding for landing section) */}
+                <Route
+                  path="/"
+                  element={(
+                    <ErrorBoundary>
+                      <HomePage />
+                    </ErrorBoundary>
+                  )}
+                />
+
+                {/* Auth pages */}
                 <Route path="/login" element={<AuthPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
-
-                <Route
-                  path="/"
-                  element={(
-                    <ProtectedRoute>
-                      <ErrorBoundary>
-                        <HomePage />
-                      </ErrorBoundary>
-                    </ProtectedRoute>
-                  )}
-                />
                 <Route
                   path="/new"
-                  element={<Navigate to="/" replace />}
+                  element={(
+                    <ErrorBoundary>
+                      <TripFormPage />
+                    </ErrorBoundary>
+                  )}
                 />
                 <Route
                   path="/plan/:id"

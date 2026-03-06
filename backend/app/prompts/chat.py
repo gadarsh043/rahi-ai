@@ -1,62 +1,71 @@
-CHAT_SYSTEM = """You are Rahi, an AI travel planning assistant. You are helping the user modify their trip itinerary.
+CHAT_SYSTEM = """You're Rahi — you've been to {destination_city} and know the best spots. You're chatting with a friend about their upcoming trip there, helping them figure out what to do.
 
 {trip_context}
 
-RULES:
-1. You can see the CURRENT ITINERARY above. ALWAYS check it before answering.
-2. If the user asks about a place, check if it's actually in the itinerary before saying "it's not there."
-3. If the user asks about weather, dates, or timing — USE THE TRIP DATES shown above. Don't ask them to provide dates.
-4. When removing a place, suggest a DIFFERENT replacement (not something already in the itinerary).
-5. When the user asks something trip-related, give SHORT, confident answers. No long generic ones.
-6. Never suggest a place that's already in the itinerary for the same purpose.
-7. If you need clarification, ask ONE short question — not a multi-paragraph response.
-
-RESPONSE STYLE:
-- Be concise. 2-4 sentences for info questions.
-- For modifications, state what you did clearly: "Removed X from Day 2, added Y at 10:00 AM."
-- Use the trip's destination knowledge. You know about {destination_city}.
-- Never say "I'll need to know your dates" — you already have them.
+YOUR VIBE:
+- You're that friend who's already been there and has all the insider tips.
+- Keep it casual and short. 1-3 sentences. Like texting, not writing an essay.
+- Be specific: "their garlic noodles are unreal, get the window seat" not "enjoy wonderful cuisine."
+- Be honest: if a place is overrated or touristy, say so. Suggest the better alternative.
+- If they ask about a place, give your take — is it worth it? What's the move?
+- If they want to change something, just do it: "Done, swapped X for Y on Day 3."
+- Suggest nearby day trips, hidden gems, local neighborhoods — stuff you'd actually tell a friend.
+- Don't repeat what they can already see on their screen.
+- If you genuinely don't know, say "not sure about that one" — don't BS.
 
 {mutation_instructions}
 """
 
 
 def build_chat_context(trip: dict, places: list[dict]) -> str:
-    """Build a compact but complete context string for chat."""
-
-    meta = f"""TRIP DETAILS:
-- Route: {trip.get('origin_city', '?')} to {trip.get('destination_city', '?')}
-- Dates: {trip.get('start_date', 'flexible')} to {trip.get('end_date', 'flexible')}
-- Duration: {trip.get('num_days', '?')} days
-- Travelers: {trip.get('num_travelers', 1)}
-- Pace: {trip.get('pace', 'moderate')}
-- Budget: {trip.get('budget_vibe', '$$')}
-"""
+    """Build a compact, readable trip context for the chat LLM."""
 
     itinerary = trip.get("itinerary", {})
-    days = itinerary.get("itinerary", []) if isinstance(itinerary, dict) else itinerary or []
+    days = (
+        itinerary.get("itinerary", [])
+        if isinstance(itinerary, dict)
+        else itinerary or []
+    )
+    actual_days = len(days) if days else trip.get("num_days", "?")
 
-    itin_lines: list[str] = ["CURRENT ITINERARY:"]
+    # Compact trip header
+    lines = [
+        f"TRIP: {trip.get('origin_city', '?')} -> {trip.get('destination_city', '?')}, "
+        f"{actual_days} days, {trip.get('pace', 'moderate')} pace, "
+        f"{trip.get('budget_vibe', '$$')} budget, "
+        f"{trip.get('num_travelers', 1)} traveler(s)",
+    ]
+    if trip.get("start_date") and trip.get("end_date"):
+        lines[0] += f", {trip['start_date']} to {trip['end_date']}"
+
+    # Compact day-by-day (one line per day)
+    lines.append("\nSCHEDULE:")
     for day in days:
         day_num = day.get("day_number", "?")
         title = day.get("title", "")
-        itin_lines.append(f"\nDay {day_num}: {title}")
-        for act in day.get("activities", []) or []:
-            time = act.get("time", "")
-            name = act.get("title", "")
-            act_type = act.get("type", "")
-            place_id = act.get("place_id", "")
-            itin_lines.append(f"  {time} | {name} [{act_type}] (id:{place_id})")
+        activities = day.get("activities", []) or []
+        acts = []
+        for a in activities:
+            name = a.get("title", "")
+            time = a.get("time", "")
+            pid = a.get("place_id", "")
+            if name:
+                entry = f"{time} {name}" if time else name
+                if pid:
+                    entry += f" [id:{pid}]"
+                acts.append(entry)
+        acts_str = " | ".join(acts) if acts else "(empty)"
+        lines.append(f"  Day {day_num} — {title}: {acts_str}")
 
-    itin_text = "\n".join(itin_lines)
-
-    available = [p["name"] for p in places if not p.get("is_in_itinerary")]
-    available_text = ""
+    # Available alternatives (compact, with ratings)
+    available = [p for p in places if not p.get("is_in_itinerary")]
     if available:
-        available_text = (
-            "\nAVAILABLE PLACES (not in itinerary, can suggest): "
-            + ", ".join(available[:20])
-        )
+        lines.append("\nALSO NEARBY (not scheduled, can suggest):")
+        for p in available[:15]:
+            rating = p.get("rating", "")
+            cat = p.get("category", "")
+            r = f" {rating}" if rating else ""
+            c = f", {cat}" if cat else ""
+            lines.append(f"  - {p['name']}{r}{c} [id:{p.get('google_place_id', '')}]")
 
-    return meta + "\n" + itin_text + available_text
-
+    return "\n".join(lines)

@@ -1,14 +1,29 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
+import useAuthStore from '../../stores/authStore';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const setUser = useAuthStore((s) => s.initialize);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        navigate('/', { replace: true });
+        // Ensure the auth store has the user before navigating,
+        // so ProtectedRoute won't redirect away
+        const store = useAuthStore.getState();
+        if (!store.user) {
+          store.user = session.user;
+          localStorage.setItem('supabase_token', session.access_token);
+          useAuthStore.setState({ user: session.user, loading: false, initialized: true });
+          // Fetch profile in background
+          useAuthStore.getState().fetchProfile();
+        }
+
+        const returnTo = sessionStorage.getItem('rahify-redirect') || '/';
+        sessionStorage.removeItem('rahify-redirect');
+        navigate(returnTo, { replace: true });
       } else {
         navigate('/login', { replace: true });
       }

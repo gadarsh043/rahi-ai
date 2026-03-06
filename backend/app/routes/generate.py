@@ -329,11 +329,29 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                 }
             ).execute()
 
+            # Build a map of place_ids used in the itinerary (with day/time)
+            itin_place_map: dict[str, dict] = {}
+            itin_days = []
+            if itinerary_data and isinstance(itinerary_data, dict):
+                itin_days = itinerary_data.get("itinerary", [])
+            for day in itin_days:
+                day_num = day.get("day_number")
+                for act in day.get("activities", []) or []:
+                    pid = act.get("place_id")
+                    if pid:
+                        itin_place_map[pid] = {
+                            "day_number": day_num,
+                            "time_slot": act.get("time"),
+                        }
+
             for p in flat_places:
+                gpid = p["google_place_id"]
+                in_itin = gpid in itin_place_map
+                itin_info = itin_place_map.get(gpid, {})
                 supabase.table("trip_places").insert(
                     {
                         "trip_id": trip_id,
-                        "google_place_id": p["google_place_id"],
+                        "google_place_id": gpid,
                         "name": p["name"],
                         "category": p["category"],
                         "lat": p.get("lat"),
@@ -343,7 +361,9 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                         "address": p.get("address"),
                         "photo_url": p.get("photo_url"),
                         "google_maps_url": p.get("google_maps_url"),
-                        "is_in_itinerary": False,
+                        "is_in_itinerary": in_itin,
+                        "day_number": itin_info.get("day_number"),
+                        "time_slot": itin_info.get("time_slot"),
                     }
                 ).execute()
         except Exception as e:

@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUIStore from '../../stores/uiStore';
-import { fetchPlans } from '../../services/api';
 import useAuthStore from '../../stores/authStore';
-import { useTheme } from '../../hooks/useTheme';
+import { fetchPlans } from '../../services/api';
 
 function timeAgo(dateStr) {
   if (!dateStr) return '';
@@ -73,13 +72,6 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // IMPORTANT: keep selectors stable (no new object each render),
-  // otherwise Zustand/React can warn about getSnapshot and trigger rerender loops.
-  const user = useAuthStore((s) => s.user);
-  const profile = useAuthStore((s) => s.profile);
-  const signOut = useAuthStore((s) => s.signOut);
-  const { isDark, toggle } = useTheme();
-
   const { recentChats, savedTrips } = useMemo(() => {
     const all = Array.isArray(plans) ? plans : [];
     const planning = all
@@ -101,16 +93,8 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
     return { recentChats: planning, savedTrips: saved };
   }, [plans]);
 
-  const tripsRemaining =
-    profile?.trips_remaining ?? profile?.tripsRemaining ?? null;
-
   const handleNewTrip = () => {
     navigate('/new');
-    onNavigate?.();
-  };
-
-  const handleGoSettings = () => {
-    navigate('/settings');
     onNavigate?.();
   };
 
@@ -119,11 +103,6 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
     if (location.pathname !== path) {
       navigate(path);
     }
-    onNavigate?.();
-  };
-
-  const handleSignOut = async () => {
-    await signOut();
     onNavigate?.();
   };
 
@@ -197,29 +176,14 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
         </section>
       </div>
 
-      <div className="border-t border-[var(--border)] px-3 py-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="px-0 text-[11px] text-[var(--text-muted)] flex items-center gap-1">
-            💳 {tripsRemaining ?? 0} trips left
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={toggle}
-              className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-sm hover:bg-[var(--surface-hover)] cursor-pointer"
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {isDark ? '☀️' : '🌙'}
-            </button>
-            <button
-              type="button"
-              onClick={onCollapse}
-              className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] cursor-pointer"
-            >
-              ◀
-            </button>
-          </div>
-        </div>
+      <div className="border-t border-[var(--border)] px-3 py-3 flex justify-end">
+        <button
+          type="button"
+          onClick={onCollapse}
+          className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] cursor-pointer"
+        >
+          ◀
+        </button>
       </div>
     </div>
   );
@@ -227,13 +191,15 @@ function ExpandedSidebarContent({ plans, onNavigate, onCollapse }) {
 
 export default function Sidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
   const sidebarExpanded = useUIStore((s) => s.sidebarExpanded);
   const setSidebarExpanded = useUIStore((s) => s.setSidebarExpanded);
 
   const [plans, setPlans] = useState([]);
 
+  // Re-fetch plans when sidebar opens or route changes so the list stays in sync
   useEffect(() => {
+    if (!sidebarExpanded) return;
     let cancelled = false;
     const loadPlans = async () => {
       try {
@@ -249,91 +215,36 @@ export default function Sidebar() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [sidebarExpanded, location.pathname]);
 
-  const isCollapsed = !sidebarExpanded;
-
-  const handleNav = (to) => {
-    if (!to) return;
-    if (location.pathname !== to) {
-      navigate(to);
-    }
-  };
+  // Hide entire sidebar for logged-out users
+  if (!user) return null;
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col shrink-0 border-r border-[var(--border)] bg-white dark:bg-[var(--surface)]">
-        {isCollapsed ? (
-          <div className="flex flex-col items-center py-4 w-[var(--sidebar-collapsed)]">
-            {/* Collapsed rail icons */}
-            <div className="flex-1 flex flex-col items-center gap-2">
-              <button
-                type="button"
-                onClick={() => handleNav('/')}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
-                title="Home"
-              >
-                🏠
-              </button>
-              <button
-                type="button"
-                onClick={() => handleNav('/new')}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
-                title="New Trip"
-              >
-                ➕
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarExpanded(true)}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
-                title="Recent Chats"
-              >
-                💬
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarExpanded(true)}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-xl text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer"
-                title="My Plans"
-              >
-                📋
-              </button>
-            </div>
-            <div className="mt-4 flex flex-col items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSidebarExpanded(true)}
-                className="w-8 h-8 rounded-full border border-[var(--border)] flex items-center justify-center text-xs text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] cursor-pointer"
-                title="Expand"
-              >
-                ▶
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="w-[var(--sidebar-expanded)] h-full">
-            <ExpandedSidebarContent
-              plans={plans}
-              onNavigate={() => {}}
-              onCollapse={() => setSidebarExpanded(false)}
-            />
-          </div>
-        )}
-      </aside>
+      {/* Floating toggle — visible when sidebar is closed */}
+      {!sidebarExpanded && (
+        <button
+          type="button"
+          onClick={() => setSidebarExpanded(true)}
+          className="fixed left-3 top-1/2 -translate-y-1/2 z-[var(--z-topbar)] w-10 h-10 rounded-full bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-lg text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)] shadow-md transition-all duration-150 ease-out cursor-pointer"
+          aria-label="Open sidebar"
+        >
+          ☰
+        </button>
+      )}
 
-      {/* Mobile drawer */}
+      {/* Sidebar drawer — same on mobile & desktop */}
       {sidebarExpanded && (
         <>
           <button
             type="button"
-            className="fixed inset-0 z-[var(--z-overlay-backdrop)] bg-black/40 md:hidden"
+            className="fixed inset-0 z-[var(--z-overlay-backdrop)] bg-black/40"
             onClick={() => setSidebarExpanded(false)}
           >
             {/* scrim */}
           </button>
-          <div className="fixed top-0 left-0 bottom-0 z-[var(--z-overlay)] w-[85vw] max-w-[320px] md:hidden transform translate-x-0 transition-transform duration-250 ease-out bg-white dark:bg-[var(--surface)] border-r border-[var(--border)] shadow-xl">
+          <div className="fixed top-0 left-0 bottom-0 z-[var(--z-overlay)] w-[85vw] max-w-[320px] transform translate-x-0 transition-transform duration-250 ease-out bg-white dark:bg-[var(--surface)] border-r border-[var(--border)] shadow-xl">
             <ExpandedSidebarContent
               plans={plans}
               onNavigate={() => setSidebarExpanded(false)}

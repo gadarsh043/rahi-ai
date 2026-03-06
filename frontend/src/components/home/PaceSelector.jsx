@@ -9,7 +9,7 @@ const PACE_OPTIONS = [
 
 export default function PaceSelector({ value, onChange }) {
   return (
-    <div className="mt-6 grid grid-cols-4 gap-3 max-w-2xl">
+    <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
       {PACE_OPTIONS.map((option) => {
         const isSelected = value === option.id;
         return (
@@ -23,7 +23,7 @@ export default function PaceSelector({ value, onChange }) {
             className={`
               relative bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4 text-center border-2 cursor-pointer transition-all duration-150
               ${isSelected
-                ? 'border-brand-500 bg-brand-500/8 dark:bg-brand-500/12 shadow-brand'
+                ? 'border-brand-500 bg-brand-500/8 dark:bg-brand-500/12'
                 : 'border-transparent hover:border-brand-500/30'
               }
             `}

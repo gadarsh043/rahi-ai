@@ -23,14 +23,29 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 
 ### Implemented ✅
 - Auth (Google OAuth via Supabase)
-- 10-step home page trip input flow
+- 10-step home page trip input flow (public — no login required to explore)
+  - Step 3: "Who's coming along?" (Solo/Couple/Friends/Family/Work) — shapes AI vibe
+  - Step 2: Flexible dates now includes DurationSlider inline (no more skipped step)
+  - All 10 steps always shown, no skip logic
+  - Flying pill animation: selection flies from input to prompt box on Next click
+  - Prompt preview only updates when pill "lands", not live while typing
+  - IATA airport code support in city autocomplete (DFW → Dallas, LAX → Los Angeles)
 - AI itinerary generation (/generate SSE, Approach A: places first)
+  - Prompt enforces packed days: relaxed=5-6, moderate=6-7, active=8-9 activities (not counting food)
+  - Food = pit stops, not main activities. Max 1 lunch + 1 dinner per day
+  - Day trips mandatory for 4+ day trips (scaled: 4-5d=1, 6-7d=1-2, 8+d=2-3)
+  - Evenings go past 9pm. Nightlife/bars included for friend groups
+  - Self-check in prompt: LLM verifies each day before responding
+  - travel_group (Solo/Couple/Friends/Family/Work) shapes recommendations
 - Plan View with tab-based navigation (7 tabs)
 - All tabs: Eat, Stay, Go, Trip (timeline), Flight, Costs, Next
+- Timeline hover tooltips: place photo, rating, category, price, address on hover (smart positioning)
 - Interactive map (Leaflet + OSM, color-coded markers, route polylines)
 - AI Chatbot (context-aware, mutations, bottom sheet mobile / drawer desktop)
+  - Friend-like tone, short responses, multi-turn history
+  - Syncs is_in_itinerary between trips table and trip_places table
 - Let's Pick popup → /pick SSE wiring
-- Collapsible sidebar + mobile drawer + My Plans + Recent Chats
+- Sidebar: overlay drawer (floating ☰ button, logged-in users only)
 - Bottom nav bar (mobile: Home, Right Now, New Trip, My Plans)
 - Share system (6-char codes, mandatory login, suggest, fork)
 - Enhanced PDF (quick ref, Maps links, packing list, phrases, visa)
@@ -38,11 +53,14 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner fallback)
 - Map route polylines (flight arc + day routes)
 - Currency selector (reusable, searchable, common pinned)
-- Onboarding (WelcomeTour on home, PlanTour on /plan/demo with mock data)
-- Dark/Light mode (Tailwind + CSS variables)
+- Onboarding (WelcomeTour + PlanTour, localStorage-persisted, one-time, replay from profile)
+- Light mode default (Tailwind + CSS variables, theme persisted to localStorage)
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
-- Profile dropdown (Settings, Tour, Feedback, Credits, Logout)
+- Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
 - Credits: 5 free trips, email g.adarsh043@gmail.com for more (no payment platform yet)
+- Public home page: new users see full trip form, login required only on Generate
+- Login page: minimal, no AI slop, terms/privacy as inline modals (not separate pages)
+- Auth redirect flow: form data survives OAuth via sessionStorage (rahify-pending-trip)
 
 ### Not Yet Implemented
 - LemonSqueezy payment integration (domain + setup needed)
@@ -117,15 +135,15 @@ export default defineConfig({
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Dark mode colors — using CSS custom properties for theme switching */
+/* Theme colors — light mode default */
 :root {
-  --bg: #FFFFFF;
-  --surface: #F9FAFB;
-  --surface-hover: #F3F4F6;
-  --border: #E5E7EB;
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
-  --text-muted: #9CA3AF;
+  --bg: #FDF8F4;
+  --surface: #FFFFFF;
+  --surface-hover: #FFF7ED;
+  --border: #EDE3D7;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-muted: #94A3B8;
 }
 
 .dark {
@@ -142,6 +160,12 @@ body {
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text-primary);
+}
+
+/* Light mode: warm cream with subtle orange radial */
+:root body, .light body {
+  background: #FDF8F4;
+  background-image: radial-gradient(ellipse at 50% -20%, rgba(249, 115, 22, 0.08) 0%, transparent 60%);
 }
 
 .dark body {
@@ -294,7 +318,7 @@ rahify/
 │   ├── app/
 │   │   ├── main.py
 │   │   ├── config.py
-│   │   ├── dependencies.py        ← auth middleware (dev bypass in ENV=development only)
+│   │   ├── dependencies.py        ← auth middleware (real token first, dev fallback only if no token)
 │   │   ├── routes/
 │   │   │   ├── generate.py        ← /generate SSE (places first → AI)
 │   │   │   ├── chat.py            ← /chat SSE (context-aware, mutations)
@@ -338,18 +362,19 @@ rahify/
 
 ### Layout — Desktop
 ```
-┌──────┬──────────────────────────┬──────────────────────┐
-│      │ PlanHeader               │                      │
-│ Side │ TabBar (scrollable pills)│                      │
-│ bar  ├──────────────────────────┤   MapPanel            │
-│      │                          │   (Leaflet + OSM)    │
-│      │   Active Tab Content     │   Color-coded markers │
-│      │   (scrollable)           │   Route polylines     │
-│      │                          │   Click → popup       │
-│      ├──────────────────────────┤                      │
-│      │ ActionBar                │                      │
-│      │ [💬 Chat] [🎯 Let's Pick]│                      │
-└──────┴──────────────────────────┴──────────────────────┘
+[☰]  ┌──────────────────────────┬──────────────────────┐
+     │ PlanHeader               │                      │
+     │ TabBar (scrollable pills)│                      │
+     ├──────────────────────────┤   MapPanel            │
+     │                          │   (Leaflet + OSM)    │
+     │   Active Tab Content     │   Color-coded markers │
+     │   (scrollable)           │   Route polylines     │
+     │                          │   Click → popup       │
+     ├──────────────────────────┤                      │
+     │ ActionBar                │                      │
+     │ [💬 Chat] [🎯 Let's Pick]│                      │
+     └──────────────────────────┴──────────────────────┘
+Floating ☰ opens overlay sidebar drawer (not inline)
 ```
 
 ### Layout — Mobile
@@ -403,19 +428,21 @@ rahify/
 ## Navigation Architecture
 
 ### Desktop
-- TopBar: Logo + Right Now + Theme Toggle + Profile Dropdown
-- Left Sidebar: collapsible (60px rail ↔ 280px expanded), New Trip, Recent Chats, Saved Trips
+- TopBar: Logo + Theme Toggle + Profile Dropdown (or "Sign In" for logged-out users)
+- Sidebar: floating ☰ button (left, vertically centered) → overlay drawer (280px) with Home, New Trip, Recent Chats, Saved Trips
+- Sidebar only visible for logged-in users
+- No collapsed rail — just the floating button
 
 ### Mobile
-- Slim TopBar: ☰ hamburger + "Rahi" logo + avatar (44px)
+- Slim TopBar: "Rahify" logo + avatar (or "Sign In") (44px)
 - Bottom Nav: 🏠 Home · 🔍 Right Now · 📍 New Trip · 📋 My Plans
-- Sidebar: overlay drawer (85vw max 320px) with trips + settings + dark mode + logout
+- Sidebar: same overlay drawer as desktop (85vw max 320px), triggered by floating ☰ button
 
 ---
 
 ## Key Decisions Log
 - Domain: rahify.com
-- Auth: Google OAuth only (no email/password)
+- Auth: Google OAuth only (no email/password). Login deferred — home page is public.
 - Styling: Tailwind v4 only (no SCSS, no CSS Modules)
 - Map: Leaflet + OSM (free) — Google Places for data only
 - Payments: LemonSqueezy (planned). Currently email-based credits.
@@ -424,34 +451,84 @@ rahify/
 - Chat: context-aware with live itinerary in system prompt
 - IATA: 200+ city lookup (not city[:3].upper())
 - PDF: Enhanced with maps links, packing, phrases, visa banner
-- Onboarding: WelcomeTour (home) + PlanTour (/plan/demo) + replay from profile
+- Onboarding: WelcomeTour + PlanTour, persisted to localStorage, one-time only, replay from profile dropdown
+- Sidebar: overlay drawer only (no inline sidebar, no collapsed rail). Floating ☰ button. Logged-in users only.
+- Sidebar redundancy: no settings/credits/theme in sidebar — all in profile dropdown or topbar
+- Sidebar sync: re-fetches plans on open + route change
+- Backend auth: real token used first even in dev mode (no hardcoded dev_user_id bypass when token present)
 - Brand color: Sunset Orange #F97316
+- Light bg: warm cream #FDF8F4 with subtle orange radial (default)
 - Dark bg: #0F172A with subtle radial gradient
+- Theme default: light mode (one-time localStorage migration from dark→light via `rahify-theme-v2` flag)
+- TripFormPage: floating white card on warm background, centered content, warm gradient wash on left
+- TripFormPage: flying pill animation on Next (value flies from input to prompt box)
+- TripFormPage: prompt preview updates only on pill land, not live
+- Form step 3: "Who's coming along?" (travelGroup: solo/couple/friends/family/work)
+- City autocomplete: Photon API layers=city,locality,district,county + IATA code lookup (100+ airports)
+- Auth flow for non-logged-in users: generateParams saved to sessionStorage before OAuth redirect → restored on /plan/new after login
+- AuthCallback: sets user in authStore BEFORE navigating to prevent ProtectedRoute race condition
+- ProtectedRoute: shows spinner (not redirect) when rahify-pending-trip exists in sessionStorage
+- Login page: terms/privacy open as modals on same page (no navigation away)
+- Itinerary prompt: friend tone, packed days, food as filler, day trips mandatory, self-check before responding
+- Chat prompt: friend who's been there, 1-3 sentences, specific tips, multi-turn history
 
 ---
 
 ## 🚫 UI Anti-Slop Rules
 
-### NEVER
+The #1 goal is a **human-feeling** website. Every pixel should feel like a real designer made it, not an AI template. If something looks like it came from a chatbot prompt → it's wrong.
+
+### NEVER — Visual
 - Purple/blue gradients — our brand is sunset orange
 - Glassmorphism on everything — 30% of elevated elements max
-- Equal padding everywhere — create hierarchy
-- Every button primary — use ghost, outline, subtle variants
-- Drop shadow on every card — most need only border
+- Equal padding everywhere — create hierarchy with uneven whitespace
+- Every button primary — use ghost, outline, subtle variants; most buttons should be secondary
+- Drop shadow on every card — most need only a subtle border or nothing
 - Inter/Roboto/Arial fonts — DM Sans only
 - Linear easing — use ease-out or framer-motion springs
-- Centered body text — left-align, center only for heroes
-- 300ms on everything — button press 100ms, layout 200ms
+- 300ms on everything — button press 100ms, layout 200ms, page transitions 200ms
 
-### ALWAYS
-- ONE dominant element per section (largest, boldest, or most colorful)
-- More space between sections than within
-- Content max-w-md or max-w-lg, centered
-- Brand orange as accent (10-15% of UI), not flooding
+### NEVER — AI Slop Patterns (these instantly look fake)
+- Gradient text on everything — reserve gradient text for ONE hero element per page max
+- Rounded-full pill buttons everywhere — mix rounded-xl and rounded-full contextually
+- Emoji before every label — emojis are accents, not mandatory prefixes; skip them when text is clear enough
+- "✨ Generate ✨" / sparkle emoji spam — one sparkle max, never wrap text in emoji brackets
+- Shadow-brand on non-primary elements — the orange glow is for CTA buttons only
+- Uniform card grids with identical styling — vary card sizes, layouts, and emphasis
+- "bg-gradient-to-r from-brand-400 to-brand-600" on more than 2 elements per page — gradients lose impact when overused
+- Perfect symmetry everywhere — real designs have intentional asymmetry and visual weight shifts
+- All text centered — center only heroes, step questions, and CTAs. Body text, card content, list items → left-aligned
+- Every section having a heading + subtitle + cards in a grid — vary layouts (some sections are just text, some are a single callout, some are horizontal scrolls)
+- Decorative elements that serve no purpose — no floating dots, no random shapes, no "pattern overlays"
+- Overusing uppercase tracking-wider labels — one or two per page max, not on every sub-section
+- Generic placeholder copy ("Get started today!", "Your journey begins here") — write specific, useful copy or leave it empty
+- Wrapping every action in a card with border + rounded-xl + shadow — some actions are just inline links or plain text buttons
+- Using brand-50/brand-100 as background on more than 2 elements per page — the warm tint loses meaning when everything has it
+- Nesting rounded corners inside rounded corners (pill inside card inside card) — one level of rounding max per visual block
+
+### NEVER — Interaction Slop
+- Hover effects on mobile — use active:scale-[0.97] or active:opacity-80 instead
+- Spinners for < 2s loads — use skeleton shimmer or nothing
+- Loading states that block the whole page — load content incrementally
+- Tooltips on mobile — no hover, no tooltips. Use inline hints or bottom sheets
+- Modals for simple choices — use inline expansion or bottom sheets on mobile
+
+### ALWAYS — Human Feel
+- ONE dominant element per section (largest, boldest, or most colorful) — everything else defers
+- More space between sections than within them
+- Uneven rhythm — not every section has the same structure. Some are tight, some breathe
+- Content max-w-md or max-w-lg for readability
+- Brand orange as accent (10-15% of UI surface area) — it should feel special, not wallpaper
 - 44×44px minimum touch targets on mobile
 - Active/pressed states on mobile (not hover)
-- Skeleton loaders instead of spinners
+- Skeleton loaders instead of spinners for data fetches
 - 100dvh not 100vh for mobile layouts
+- Real visual hierarchy — squint at the page: can you tell what matters in 2 seconds?
+- Subtle borders over shadows — shadows are expensive visually; use them only on elevated/floating things
+- White space is a feature — if it feels cramped, add space. If it feels empty, that's often correct
+- Button labels should be verbs or clear actions ("Save Trip", "Next", "Change") not vague ("Submit", "OK", "Continue")
+- Empty states should feel helpful, not sad — guide the user to the next action
+- Transitions should be fast and purposeful — if you can't explain why something animates, remove the animation
 
 ### Typography Rhythm
 ```
@@ -464,8 +541,15 @@ Label:     text-[11px] font-semibold uppercase tracking-wider text-[var(--text-m
 ```
 
 ### Glassmorphism — Selective
-- ✅ glass: autocomplete dropdowns, prompt box, floating bars, modals, map overlays
-- ❌ solid: regular cards, list items, sidebar, topbar, form containers
+- ✅ glass: autocomplete dropdowns, floating bars, modals, map overlays
+- ❌ solid: regular cards, list items, sidebar, topbar, form containers, settings pages
+
+### Color Budget Per Page (light mode)
+- Background: warm cream `#FDF8F4` — 70%+ of visible area
+- White `#FFFFFF` — cards, inputs, surfaces — 20%
+- Brand orange — buttons, active states, accents — 5-10%
+- Text grays — the remaining contrast
+- If a page looks "very orange" → you've overshot. Pull back.
 
 ---
 
@@ -477,4 +561,22 @@ Label:     text-[11px] font-semibold uppercase tracking-wider text-[var(--text-m
 - ❌ No external placeholder images — use emoji or colored divs
 - ❌ No backend work until asked
 - ❌ No purple gradients, no generic blue/white themes
-- ❌ Don't modify PROJECT_SPEC.md or MWEB_UI_SPEC.md
+
+---
+
+## Iteration Learning Protocol
+
+After every set of changes, Claude MUST:
+
+1. **Update CLAUDE.md** — Reflect new architecture, decisions, and patterns in the relevant sections (Current State, Navigation Architecture, Key Decisions Log, etc.)
+2. **Update PROJECT_SPEC.md** — Keep the project spec in sync with actual implementation (auth flow, sidebar behavior, onboarding, navigation patterns)
+3. **Update MWEB_UI_SPEC.md** — Keep the mobile spec in sync (navigation changes, sidebar drawer behavior, topbar changes)
+3. **Update .cursorrules** — Keep the rules in sync with the ongoing project
+4. **Learn from bugs** — When a bug is found and fixed, document the root cause pattern so it's not repeated:
+   - State persistence issues → always persist critical UI state to localStorage
+   - Auth leaks → always use real token first, dev fallback only as last resort
+   - Redundant UI → single source of truth for each action (settings, theme, credits, logout)
+   - Stale data → re-fetch when component becomes visible, not just on mount
+5. **Update memory** — Write patterns and fixes to auto-memory so future sessions benefit
+
+This is mandatory. Specs that drift from implementation cause confusion and regressions.

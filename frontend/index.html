@@ -19,7 +19,11 @@
   <body>
     <script>
       (function() {
-        var t = localStorage.getItem('rahify-theme') || 'dark';
+        if (!localStorage.getItem('rahify-theme-v2')) {
+          localStorage.removeItem('rahify-theme');
+          localStorage.setItem('rahify-theme-v2', '1');
+        }
+        var t = localStorage.getItem('rahify-theme') || 'light';
         document.documentElement.classList.add(t);
       })();
     </script>

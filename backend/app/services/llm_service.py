@@ -51,6 +51,25 @@ class LLMService:
             return resp.choices[0].message.content
         return ""
 
+    async def chat_completion(
+        self, system_prompt: str, messages: list[dict], user_prompt: str
+    ) -> str:
+        """Completion with chat history. messages = [{role, content}, ...]."""
+        if self.provider == "groq" and self.client:
+            msgs = [{"role": "system", "content": system_prompt}]
+            # Include recent history (keep it tight — last 6 turns max)
+            for m in messages[-6:]:
+                msgs.append({"role": m["role"], "content": m["content"]})
+            msgs.append({"role": "user", "content": user_prompt})
+            resp = await self.client.chat.completions.create(
+                model=self.model,
+                messages=msgs,
+                temperature=0.75,
+                max_tokens=1000,
+            )
+            return resp.choices[0].message.content
+        return ""
+
     async def json_completion(self, system_prompt: str, user_prompt: str) -> str:
         """Completion with JSON mode."""
         if self.provider == "groq" and self.client:

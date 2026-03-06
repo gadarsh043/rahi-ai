@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import CityAutocomplete from './CityAutocomplete';
 import TripDatePicker from './TripDatePicker';
-import DurationSlider from './DurationSlider';
+import TravelGroupSelector from './TravelGroupSelector';
 import PaceSelector from './PaceSelector';
 import BudgetVibeSelector from './BudgetVibeSelector';
 import PreferencePills from './PreferencePills';
@@ -116,18 +116,10 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 3:
       return (
-        formData.isFlexible ? (
-          <DurationSlider
-            value={formData.numDays ?? 7}
-            onChange={(days) => updateField('numDays', days)}
-          />
-        ) : (
-          <div className="mt-6 max-w-md">
-            <p className="text-sm text-[var(--text-muted)]">
-              Turn on &quot;I&apos;m flexible&quot; in the previous step to adjust trip length here.
-            </p>
-          </div>
-        )
+        <TravelGroupSelector
+          value={formData.travelGroup}
+          onChange={(group) => updateField('travelGroup', group)}
+        />
       );
     case 4:
       return (
@@ -138,7 +130,7 @@ export default function StepContentPlaceholder({ step, formData, updateField }) 
       );
     case 5:
       return (
-        <div className="mt-6">
+        <div className="mt-6 text-center">
           <BudgetVibeSelector
             value={formData.budgetVibe}
             onChange={(budgetVibe) => updateField('budgetVibe', budgetVibe)}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import useAuthStore from '../../stores/authStore';
 
 function getHighlightSegments(text, formData) {
   const highlights = [
@@ -37,6 +39,8 @@ function getHighlightSegments(text, formData) {
 }
 
 export default function PromptBox({ promptText = '', promptBase = '', instructions = '', isComplete, formData, onGenerate }) {
+  const user = useAuthStore((s) => s.user);
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [editInstructions, setEditInstructions] = useState(instructions);
 
@@ -64,13 +68,19 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
   };
 
   const handleGenerate = () => {
-    if (canGenerate && typeof onGenerate === 'function') {
-      const instructionsTrimmed = (expanded ? editInstructions : instructions)?.trim() || '';
-      const promptToUse = promptBase.trim()
-        ? (promptBase.trim() + (instructionsTrimmed ? ' ' + instructionsTrimmed : '')).trim()
-        : instructionsTrimmed || promptText;
-      onGenerate(formData, promptToUse);
+    if (!canGenerate || typeof onGenerate !== 'function') return;
+
+    // Not logged in — redirect to login, come back after auth
+    if (!user) {
+      navigate('/login?redirect=/');
+      return;
     }
+
+    const instructionsTrimmed = (expanded ? editInstructions : instructions)?.trim() || '';
+    const promptToUse = promptBase.trim()
+      ? (promptBase.trim() + (instructionsTrimmed ? ' ' + instructionsTrimmed : '')).trim()
+      : instructionsTrimmed || promptText;
+    onGenerate(formData, promptToUse);
   };
 
   return (

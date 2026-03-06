@@ -33,8 +33,8 @@ export default function InstructionsInput({ value = '', onChange }) {
   );
 
   return (
-    <div className="mt-6 max-w-md">
-      <div className="glass dark:glass-dark rounded-2xl p-4">
+    <div className="mt-6 max-w-md mx-auto">
+      <div className="bg-white dark:bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4">
         <textarea
           placeholder="E.g., honeymoon trip, vegetarian food only, wheelchair accessible, avoid crowded places..."
           value={text}

@@ -55,7 +55,7 @@
   --bg: #FDF8F4;
   --surface: #FFFFFF;
   --surface-hover: #FFF7ED;
-  --border: #F0E6DA;
+  --border: #EDE3D7;
   --text-primary: #1E293B;
   --text-secondary: #64748B;
   --text-muted: #94A3B8;
@@ -336,75 +336,225 @@ select {
 /* ================================
    Onboarding Tours (intro.js)
    ================================ */
+
+/* Tooltip container */
 .introjs-tooltip {
-  max-width: 360px;
-  border-radius: 16px;
-  padding: 20px 24px;
+  max-width: 380px;
+  min-width: 280px;
+  border-radius: 20px;
+  padding: 0;
   font-family: var(--font-sans);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.12),
+    0 8px 24px rgba(0, 0, 0, 0.08),
+    0 0 0 1px rgba(249, 115, 22, 0.08);
+  overflow: hidden;
 }
 
+/* Brand accent stripe at top */
+.introjs-tooltip::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-brand-400), var(--color-brand-600));
+  border-radius: 20px 20px 0 0;
+}
+
+/* Title */
 .introjs-tooltip-title {
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
-  margin-bottom: 6px;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
+  padding: 20px 24px 0;
+  margin-bottom: 0;
 }
 
+/* Body text */
 .introjs-tooltiptext {
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 13.5px;
+  line-height: 1.65;
   color: var(--text-secondary);
+  padding: 8px 24px 16px;
 }
 
+/* Button row */
+.introjs-tooltipbuttons {
+  padding: 0 20px 16px;
+  border-top: none;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* All buttons — reset intro.js defaults */
 .introjs-button {
+  font-family: var(--font-sans);
   font-size: 13px;
-  font-weight: 700;
-  padding: 8px 18px;
+  font-weight: 600;
+  padding: 8px 20px;
   border-radius: 10px;
   border: none;
   text-shadow: none;
+  box-shadow: none;
   cursor: pointer;
+  transition: all 0.15s ease-out;
+  outline: none;
 }
 
+.introjs-button:focus,
+.introjs-button:active {
+  box-shadow: none;
+  outline: none;
+}
+
+/* Primary: Next & Done */
 .introjs-nextbutton,
 .introjs-donebutton {
-  background: var(--color-brand-500);
+  background: linear-gradient(135deg, var(--color-brand-400), var(--color-brand-600));
   color: white;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
 .introjs-nextbutton:hover,
-.introjs-donebutton:hover {
-  background: var(--color-brand-600);
+.introjs-donebutton:hover,
+.introjs-nextbutton:focus,
+.introjs-donebutton:focus {
+  background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-700));
   color: white;
+  box-shadow: 0 4px 16px rgba(249, 115, 22, 0.35);
+  transform: translateY(-1px);
 }
 
+.introjs-nextbutton:active,
+.introjs-donebutton:active {
+  transform: scale(0.97);
+  box-shadow: 0 1px 4px rgba(249, 115, 22, 0.25);
+}
+
+/* Secondary: Back */
 .introjs-prevbutton {
   background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+}
+
+.introjs-prevbutton:hover,
+.introjs-prevbutton:focus {
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+/* Skip button */
+.introjs-skipbutton {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+.introjs-skipbutton:hover,
+.introjs-skipbutton:focus {
   color: var(--text-secondary);
 }
 
+/* Progress bar */
+.introjs-progress {
+  margin: 0 24px 4px;
+  height: 3px;
+  border-radius: 4px;
+  background: var(--border);
+  overflow: hidden;
+}
+
 .introjs-progressbar {
-  background: var(--color-brand-500);
+  background: linear-gradient(90deg, var(--color-brand-400), var(--color-brand-600));
+  border-radius: 4px;
+  height: 100%;
 }
 
+/* Highlight layer around target element */
 .introjs-helperLayer {
-  border-radius: 12px;
+  border-radius: 14px;
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.55);
+  border: 2px solid rgba(249, 115, 22, 0.4);
 }
 
-/* Dark mode */
+/* Arrow */
+.introjs-arrow {
+  border: 8px solid transparent;
+}
+.introjs-arrow.top {
+  border-bottom-color: rgba(255, 255, 255, 0.92);
+}
+.introjs-arrow.bottom {
+  border-top-color: rgba(255, 255, 255, 0.92);
+}
+.introjs-arrow.left {
+  border-right-color: rgba(255, 255, 255, 0.92);
+}
+.introjs-arrow.right {
+  border-left-color: rgba(255, 255, 255, 0.92);
+}
+
+/* Disable ugly default hover background on overlay */
+.introjs-overlay {
+  transition: opacity 0.3s ease-out;
+}
+
+/* ——— Dark mode ——— */
 .dark .introjs-tooltip {
-  background: #1E293B;
-  color: var(--text-primary);
-  border: 1px solid #334155;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  background: rgba(30, 41, 59, 0.88);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.4),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(249, 115, 22, 0.1);
 }
 
 .dark .introjs-tooltiptext {
   color: var(--text-secondary);
 }
 
+.dark .introjs-prevbutton {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .introjs-prevbutton:hover,
+.dark .introjs-prevbutton:focus {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark .introjs-progress {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .dark .introjs-helperLayer {
-  box-shadow: 0 0 0 5000px rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0 4000px rgba(0, 0, 0, 0.72);
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+.dark .introjs-arrow.top {
+  border-bottom-color: rgba(30, 41, 59, 0.88);
+}
+.dark .introjs-arrow.bottom {
+  border-top-color: rgba(30, 41, 59, 0.88);
+}
+.dark .introjs-arrow.left {
+  border-right-color: rgba(30, 41, 59, 0.88);
+}
+.dark .introjs-arrow.right {
+  border-left-color: rgba(30, 41, 59, 0.88);
 }
 

@@ -13,8 +13,8 @@ export default function DurationSlider({ value, onChange }) {
   const quickPicks = [3, 5, 7, 10, 14, 21, 30];
 
   return (
-    <div className="mt-6 max-w-md">
-      <div className="flex items-baseline gap-2 mb-4">
+    <div className="mt-6 max-w-md mx-auto text-center">
+      <div className="flex items-baseline gap-2 mb-4 justify-center">
         <span className="text-4xl font-extrabold text-[var(--text-primary)]">
           {safeValue}
         </span>
@@ -38,7 +38,7 @@ export default function DurationSlider({ value, onChange }) {
         />
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-4">
+      <div className="flex flex-wrap gap-2 mt-4 justify-center">
         {quickPicks.map((d) => {
           const isActive = safeValue === d;
           return (

@@ -62,7 +62,7 @@ export default function JoinTrip() {
             onChange={(e) => setCode(e.target.value.slice(0, 6).toUpperCase())}
             maxLength={6}
             placeholder="ABC123"
-            className="glass dark:glass-dark rounded-xl px-3 py-2 w-24 text-center text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none border border-transparent focus:border-brand-500/50"
+            className="bg-white dark:bg-[var(--surface)] border border-[var(--border)] rounded-xl px-3 py-2 w-24 text-center text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none focus:border-brand-500/50"
           />
           <button
             type="submit"

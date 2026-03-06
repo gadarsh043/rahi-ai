@@ -72,7 +72,7 @@ export default function CountryAutocomplete({ placeholder, value, onChange }) {
 
   if (isSelected) {
     return (
-      <div className="mt-6 max-w-md">
+      <div className="mt-6 max-w-md mx-auto">
         <div className="bg-brand-500/5 dark:bg-brand-500/10 border border-brand-500/30 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center text-white shrink-0" aria-hidden>
             ✓
@@ -94,8 +94,8 @@ export default function CountryAutocomplete({ placeholder, value, onChange }) {
 
   let flatIndex = 0;
   return (
-    <div className="mt-6 max-w-md">
-      <div className="glass dark:glass-dark rounded-2xl p-4">
+    <div className="mt-6 max-w-md mx-auto">
+      <div className="bg-white dark:bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-4">
         <div className="flex flex-row items-center gap-2">
           <span className="text-lg shrink-0" aria-hidden>🔍</span>
           <input
@@ -145,7 +145,7 @@ export default function CountryAutocomplete({ placeholder, value, onChange }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="glass dark:glass-dark rounded-xl mt-2 overflow-hidden max-h-[280px] overflow-y-auto relative z-50"
+            className="bg-white dark:bg-[var(--surface)] border border-[var(--border)] rounded-xl mt-2 overflow-hidden max-h-[280px] overflow-y-auto relative z-50 shadow-lg"
           >
             {!hasResults ? (
               <div className="text-center text-sm text-[var(--text-muted)] py-6">

@@ -155,7 +155,7 @@ export default function PlanPage() {
   );
 
   useEffect(() => {
-    const generateParams = location.state?.generateParams;
+    let generateParams = location.state?.generateParams;
     const searchParams = new URLSearchParams(location.search);
     const shared = searchParams.get('shared') || null;
 
@@ -200,6 +200,19 @@ export default function PlanPage() {
       setTrip(demoTrip);
       setLoading(false);
       return;
+    }
+
+    // Check sessionStorage for params saved before OAuth redirect
+    if (!generateParams) {
+      const pending = sessionStorage.getItem('rahify-pending-trip');
+      if (pending && location.pathname === '/plan/new') {
+        sessionStorage.removeItem('rahify-pending-trip');
+        try {
+          generateParams = JSON.parse(pending);
+        } catch {
+          // ignore bad JSON
+        }
+      }
     }
 
     if (generateParams) {

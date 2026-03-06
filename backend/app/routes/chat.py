@@ -1,3 +1,6 @@
+import copy
+import json
+
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from app.dependencies import get_current_user
@@ -10,7 +13,6 @@ from app.services.chat_engine import (
 )
 from app.utils.supabase_client import get_supabase
 from app.prompts.chat import CHAT_SYSTEM, build_chat_context
-import json
 
 router = APIRouter()
 
@@ -52,6 +54,104 @@ Here's a more [vibe] Day [N]:
 🔄 [time] → Swap **[old]** for **[new]** ([why it fits])
 
 Want me to make these changes?"""
+
+
+def get_actual_days(trip: dict) -> int:
+    """Get the real day count from the itinerary JSON, falling back to num_days."""
+    itinerary = trip.get("itinerary", {})
+    days = (
+        itinerary.get("itinerary", [])
+        if isinstance(itinerary, dict)
+        else itinerary or []
+    )
+    return len(days) if days else (trip.get("num_days") or 7)
+
+
+def sync_places_with_itinerary(places: list, trip: dict, supabase, trip_id: str) -> list:
+    """Ensure trip_places.is_in_itinerary matches the actual itinerary JSON.
+
+    The itinerary JSON is the source of truth for what's currently scheduled.
+    If a place appears in the JSON but trip_places says is_in_itinerary=False,
+    fix it (both in-memory and in the DB).
+    """
+    itinerary = trip.get("itinerary", {})
+    days = (
+        itinerary.get("itinerary", [])
+        if isinstance(itinerary, dict)
+        else itinerary or []
+    )
+
+    # Build map: google_place_id -> {day_number, time_slot} from itinerary JSON
+    itin_map: dict[str, dict] = {}
+    for day in days:
+        day_num = day.get("day_number")
+        for act in day.get("activities", []) or []:
+            pid = act.get("place_id")
+            if pid:
+                itin_map[pid] = {"day_number": day_num, "time_slot": act.get("time")}
+
+    for p in places:
+        gpid = p.get("google_place_id")
+        if not gpid:
+            continue
+        in_json = gpid in itin_map
+        was_marked = p.get("is_in_itinerary", False)
+
+        if in_json and not was_marked:
+            # Place is in itinerary JSON but not marked — fix it
+            info = itin_map[gpid]
+            p["is_in_itinerary"] = True
+            p["day_number"] = info["day_number"]
+            p["time_slot"] = info["time_slot"]
+            try:
+                (
+                    supabase.table("trip_places")
+                    .update(
+                        {
+                            "is_in_itinerary": True,
+                            "day_number": info["day_number"],
+                            "time_slot": info["time_slot"],
+                        }
+                    )
+                    .eq("trip_id", trip_id)
+                    .eq("google_place_id", gpid)
+                    .execute()
+                )
+            except Exception:
+                pass
+
+    return places
+
+
+def remove_from_itinerary_json(trip: dict, place_id: str, supabase, trip_id: str):
+    """Remove a place from the trips.itinerary JSON so it stays in sync."""
+    itinerary = trip.get("itinerary")
+    if not itinerary or not isinstance(itinerary, dict):
+        return
+    days = itinerary.get("itinerary", [])
+    if not days:
+        return
+
+    updated = copy.deepcopy(itinerary)
+    changed = False
+    for day in updated.get("itinerary", []):
+        activities = day.get("activities", [])
+        filtered = [a for a in activities if a.get("place_id") != place_id]
+        if len(filtered) != len(activities):
+            day["activities"] = filtered
+            changed = True
+
+    if changed:
+        try:
+            (
+                supabase.table("trips")
+                .update({"itinerary": updated})
+                .eq("id", trip_id)
+                .execute()
+            )
+            trip["itinerary"] = updated
+        except Exception:
+            pass
 
 
 @router.post("/chat")
@@ -96,16 +196,25 @@ async def chat_stream(req: ChatRequest, user: dict):
     )
     places = places_resp.data or []
 
+    # Sync trip_places with itinerary JSON to fix any mismatches
+    places = sync_places_with_itinerary(places, trip, supabase, req.trip_id)
+
+    # Fetch recent chat history (for LLM context + pending action)
     history_resp = (
         supabase.table("chat_messages")
         .select("*")
         .eq("trip_id", req.trip_id)
-        .eq("role", "assistant")
         .order("created_at", desc=True)
-        .limit(1)
+        .limit(10)
         .execute()
     )
-    last_assistant = history_resp.data[0] if history_resp.data else None
+    recent_messages = list(reversed(history_resp.data or []))
+
+    last_assistant = None
+    for m in reversed(recent_messages):
+        if m.get("role") == "assistant":
+            last_assistant = m
+            break
     pending_action = None
     if last_assistant and last_assistant.get("itinerary_diff"):
         pending_action = last_assistant["itinerary_diff"].get("pending_action")
@@ -121,7 +230,7 @@ async def chat_stream(req: ChatRequest, user: dict):
     result = classify_message(req.message, places, pending_action, trip)
 
     if result["type"] == "need_llm":
-        result = await handle_llm_fallback(req.message, trip, places)
+        result = await handle_llm_fallback(req.message, trip, places, recent_messages)
 
     if result["type"] == "ask" and result["response"] is None:
         result["response"] = build_schedule_response(result, trip, places)
@@ -149,6 +258,10 @@ async def chat_stream(req: ChatRequest, user: dict):
                     .eq("trip_id", req.trip_id)
                     .eq("google_place_id", change["place_id"])
                     .execute()
+                )
+                # Also remove from itinerary JSON to keep in sync
+                remove_from_itinerary_json(
+                    trip, change["place_id"], supabase, req.trip_id
                 )
             elif change["action"] == "add":
                 (
@@ -213,25 +326,39 @@ def build_schedule_response(result: dict, trip: dict, places: list) -> str:
     return "Could you tell me more about what you'd like to change?"
 
 
-async def handle_llm_fallback(message: str, trip: dict, places: list) -> dict:
+async def handle_llm_fallback(
+    message: str, trip: dict, places: list, chat_history: list = None
+) -> dict:
     """Fallback when rule-based classifier can't handle the message.
 
-    Build a concise, trip-aware context and let the LLM answer directly.
+    Sends trip context + recent chat history to the LLM for a natural response.
     """
     llm = get_llm()
 
     trip_context = build_chat_context(trip, places)
+    dest = trip.get("destination_city", "the destination")
 
     system_prompt = CHAT_SYSTEM.format(
         trip_context=trip_context,
-        destination_city=trip.get("destination_city", "the destination"),
+        destination_city=dest,
         mutation_instructions=(
-            "If you decide specific itinerary changes are needed, describe them "
-            "in your message but DO NOT output JSON. The backend will handle applying changes."
+            "You're chatting — answer naturally. Share opinions, tips, honest takes.\n"
+            "If they want actual changes (add/remove/swap), describe what you'd do "
+            "but don't output JSON — the backend handles that.\n"
+            "Most messages are just conversation. Respond like a friend, not a tool."
         ),
     )
 
-    response_text = await llm.completion(system_prompt, message)
+    # Build history for multi-turn context
+    history = []
+    if chat_history:
+        for m in chat_history:
+            role = m.get("role")
+            content = m.get("content", "")
+            if role in ("user", "assistant") and content.strip():
+                history.append({"role": role, "content": content})
+
+    response_text = await llm.chat_completion(system_prompt, history, message)
 
     return {
         "type": "answer",
@@ -321,7 +448,7 @@ async def handle_question(message: str, trip: dict, places: list) -> dict:
     places_brief = ", ".join([p["name"] for p in in_itinerary])
 
     prompt = (
-        f"Trip: {trip.get('origin_city', '?')} → {trip.get('destination_city', '?')}, {trip.get('num_days', '?')} days.\n"
+        f"Trip: {trip.get('origin_city', '?')} → {trip.get('destination_city', '?')}, {get_actual_days(trip)} days.\n"
         f"Places in itinerary: {places_brief}\n\n"
         f"User question: {message}\n\n"
         "Answer helpfully and concisely. Use line breaks for readability. Use **bold** for emphasis."
@@ -366,7 +493,7 @@ async def handle_general_chat(message: str, trip: dict, places: list) -> dict:
     from app.prompts.chat import CHAT_SYSTEM
 
     context = (
-        f"Trip: {trip['origin_city']} → {trip['destination_city']}, {trip['num_days']} days.\n\n"
+        f"Trip: {trip['origin_city']} → {trip['destination_city']}, {get_actual_days(trip)} days.\n\n"
         f"{places_text}\n\n"
         f"User: {message}"
     )

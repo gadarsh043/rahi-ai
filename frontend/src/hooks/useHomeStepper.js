@@ -8,6 +8,7 @@ const INITIAL_FORM_DATA = {
   isFlexible: false,
   numDays: 7,
   numTravelers: 1,
+  travelGroup: null,
   pace: null,
   budgetVibe: null,
   preferences: [],
@@ -19,14 +20,12 @@ const INITIAL_FORM_DATA = {
 
 const STEP_COUNT = 10;
 
-function getNextStep(current, formData) {
-  if (current === 2 && formData.isFlexible === false) return 4;
+function getNextStep(current) {
   if (current >= STEP_COUNT - 1) return current;
   return current + 1;
 }
 
-function getPrevStep(current, formData) {
-  if (current === 4 && formData.isFlexible === false) return 2;
+function getPrevStep(current) {
   if (current <= 0) return current;
   return current - 1;
 }
@@ -38,7 +37,7 @@ function canProceedForStep(step, formData) {
     case 1:
       return formData.destination != null && (typeof formData.destination === 'object' ? formData.destination?.city : String(formData.destination).trim() !== '');
     case 2:
-      if (formData.isFlexible) return true;
+      if (formData.isFlexible) return formData.numDays != null && formData.numDays >= 1;
       if (!formData.startDate || !formData.endDate) return false;
       {
         const start = new Date(formData.startDate);
@@ -52,7 +51,7 @@ function canProceedForStep(step, formData) {
         return startDay >= today && endDay > startDay;
       }
     case 3:
-      return formData.isFlexible && formData.numDays != null && formData.numDays >= 1;
+      return formData.travelGroup != null;
     case 4:
       return formData.pace != null;
     case 5:
@@ -102,8 +101,13 @@ function buildPromptText(formData) {
     parts.push(`for about ${data.numDays} days`);
   }
 
+  if (data.travelGroup) {
+    const groupLabels = { solo: 'solo', couple: 'as a couple', friends: 'with friends', family: 'with family', work: 'for work' };
+    parts.push(groupLabels[data.travelGroup] || data.travelGroup);
+  }
+
   if (data.numTravelers && Number(data.numTravelers) > 1) {
-    parts.push(`for ${Number(data.numTravelers)} travelers`);
+    parts.push(`(${Number(data.numTravelers)} people)`);
   }
 
   const prefs = Array.isArray(data.preferences) ? data.preferences : [];
@@ -132,13 +136,13 @@ export function useHomeStepper() {
 
   const goNext = useCallback(() => {
     setDirection('forward');
-    setCurrentStep((s) => getNextStep(s, formData));
-  }, [formData]);
+    setCurrentStep((s) => getNextStep(s));
+  }, []);
 
   const goBack = useCallback(() => {
     setDirection('backward');
-    setCurrentStep((s) => getPrevStep(s, formData));
-  }, [formData]);
+    setCurrentStep((s) => getPrevStep(s));
+  }, []);
 
   const updateField = useCallback((key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));

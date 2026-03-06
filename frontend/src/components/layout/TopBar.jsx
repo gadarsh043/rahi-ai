@@ -2,14 +2,14 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import useAuthStore from '../../stores/authStore';
-import useUIStore from '../../stores/uiStore';
+import { useOnboardingStore } from '../../stores/onboardingStore';
 
 export default function TopBar() {
   const { isDark, toggle } = useTheme();
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
-  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const replayTour = useOnboardingStore((s) => s.replayTour);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export default function TopBar() {
 
   const menuItems = useMemo(
     () => [
-      { icon: '🎓', label: 'Take a Tour', action: () => navigate('/plan/demo') },
+      { icon: '🎓', label: 'Replay Tour', action: () => { replayTour('welcome'); replayTour('plan'); navigate('/'); } },
       { icon: '⚙️', label: 'Settings', action: () => navigate('/settings') },
       {
         icon: '🎯',
@@ -53,7 +53,7 @@ export default function TopBar() {
         action: () => navigate('/privacy'),
       },
     ],
-    [navigate, quizCompleted],
+    [navigate, quizCompleted, replayTour],
   );
 
   useEffect(() => {
@@ -175,28 +175,25 @@ export default function TopBar() {
         </div>
       )}
     </div>
-  ) : null;
+  ) : (
+    <Link
+      to="/login"
+      className="text-sm font-semibold text-brand-500 hover:text-brand-600 px-3 py-1.5 rounded-lg hover:bg-brand-50 dark:hover:bg-brand-950/30 transition-colors"
+    >
+      Sign In
+    </Link>
+  );
 
   return (
-    <header className="shrink-0 sticky top-0 z-[var(--z-topbar)] border-b border-[var(--border)] bg-white/80 dark:bg-[var(--bg)]/80 backdrop-blur-md">
+    <header className="shrink-0 sticky top-0 z-[var(--z-topbar)] border-b border-[var(--border)] bg-white dark:bg-[var(--bg)] dark:bg-opacity-80 dark:backdrop-blur-md">
       {/* Mobile: slim topbar */}
       <div className="flex lg:hidden items-center justify-between w-full px-3 h-11">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="w-11 h-11 rounded-full border border-[var(--border)] flex items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
-            aria-label="Open sidebar"
-          >
-            ☰
-          </button>
-          <Link
-            to="/"
-            className="text-lg font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
-          >
-            Rahify
-          </Link>
-        </div>
+        <Link
+          to="/"
+          className="text-lg font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
+        >
+          Rahify
+        </Link>
         <div className="flex items-center gap-2">
           {avatarButton}
         </div>
@@ -204,22 +201,12 @@ export default function TopBar() {
 
       {/* Desktop: full topbar */}
       <div className="hidden lg:flex items-center justify-between w-full px-4 h-[var(--topbar-height)]">
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={toggleSidebar}
-            className="w-9 h-9 rounded-full border border-[var(--border)] flex items-center justify-center text-lg hover:bg-[var(--surface-hover)] transition-colors duration-150 ease-out cursor-pointer"
-            aria-label="Toggle sidebar"
-          >
-            ☰
-          </button>
-          <Link
-            to="/"
-            className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
-          >
-            Rahify
-          </Link>
-        </div>
+        <Link
+          to="/"
+          className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
+        >
+          Rahify
+        </Link>
         <div className="flex items-center gap-3">
           <button
             type="button"
