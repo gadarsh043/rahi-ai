@@ -16,6 +16,7 @@ const PREFERENCE_OPTIONS = [
   { id: 'adventure', emoji: '⛰', label: 'Adventure' },
   { id: 'photography', emoji: '📷', label: 'Photography' },
   { id: 'local_markets', emoji: '🏪', label: 'Local Markets' },
+  { id: 'tourist_spots', emoji: '🗺', label: 'Tourist Spots' },
 ];
 
 export default function PreferencePills({ value = [], onChange }) {

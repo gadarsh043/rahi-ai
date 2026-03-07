@@ -54,9 +54,11 @@ async def fetch_places_nearby(
         "X-Goog-Api-Key": settings.google_places_api_key,
         "X-Goog-FieldMask": (
             "places.id,places.displayName,places.formattedAddress,"
-            "places.location,places.rating,places.priceLevel,places.photos,"
+            "places.location,places.rating,places.userRatingCount,"
+            "places.priceLevel,places.photos,"
             "places.types,places.regularOpeningHours,places.websiteUri,"
-            "places.googleMapsUri"
+            "places.googleMapsUri,places.editorialSummary,"
+            "places.primaryTypeDisplayName"
         ),
     }
 
@@ -86,6 +88,15 @@ async def fetch_places_nearby(
             "PRICE_LEVEL_VERY_EXPENSIVE": 4,
         }
 
+        raw_hours = p.get("regularOpeningHours", {})
+        hours_display = summarize_hours(raw_hours) if raw_hours else ""
+
+        editorial = p.get("editorialSummary", {})
+        description = editorial.get("text", "") if isinstance(editorial, dict) else ""
+
+        primary_type = p.get("primaryTypeDisplayName", {})
+        type_display = primary_type.get("text", "") if isinstance(primary_type, dict) else ""
+
         places.append(
             {
                 "google_place_id": p.get("id", ""),
@@ -94,13 +105,17 @@ async def fetch_places_nearby(
                 "lat": p.get("location", {}).get("latitude"),
                 "lng": p.get("location", {}).get("longitude"),
                 "rating": p.get("rating"),
+                "user_rating_count": p.get("userRatingCount"),
                 "price_level": price_level_map.get(p.get("priceLevel", ""), None),
                 "address": p.get("formattedAddress", ""),
                 "photo_url": photo_url,
                 "google_maps_url": p.get("googleMapsUri", ""),
                 "website": p.get("websiteUri", ""),
                 "types": p.get("types", []),
-                "opening_hours": p.get("regularOpeningHours", {}),
+                "opening_hours": raw_hours,
+                "opening_hours_display": hours_display,
+                "description": description,
+                "type_display": type_display,
             }
         )
 

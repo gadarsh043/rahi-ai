@@ -48,7 +48,10 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
       to.setDate(to.getDate() + 1);
     }
 
-    onChange({ startDate: from, endDate: to, isFlexible, numDays });
+    const calculatedDays = to
+      ? Math.ceil((to - from) / (1000 * 60 * 60 * 24)) + 1
+      : numDays;
+    onChange({ startDate: from, endDate: to, isFlexible, numDays: calculatedDays });
   };
 
   const handleToggleFlexible = () => {
@@ -72,7 +75,8 @@ export default function TripDatePicker({ startDate, endDate, isFlexible, numDays
       to = new Date(today.getFullYear(), today.getMonth() + 1, 7);
     }
 
-    onChange({ startDate: from, endDate: to, isFlexible, numDays });
+    const calculatedDays = Math.ceil((to - from) / (1000 * 60 * 60 * 24)) + 1;
+    onChange({ startDate: from, endDate: to, isFlexible, numDays: calculatedDays });
   };
 
   return (

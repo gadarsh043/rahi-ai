@@ -9,10 +9,10 @@ const INITIAL_FORM_DATA = {
   numDays: 7,
   numTravelers: 1,
   travelGroup: null,
-  pace: null,
+  pace: [],
   budgetVibe: null,
   preferences: [],
-  accommodationType: null,
+  accommodationType: [],
   passportCountry: null,
   livesInDestination: null,
   instructions: '',
@@ -53,13 +53,13 @@ function canProceedForStep(step, formData) {
     case 3:
       return formData.travelGroup != null;
     case 4:
-      return formData.pace != null;
+      return Array.isArray(formData.pace) && formData.pace.length > 0;
     case 5:
       return formData.budgetVibe != null;
     case 6:
       return Array.isArray(formData.preferences) && formData.preferences.length >= 2;
     case 7:
-      return formData.accommodationType != null;
+      return Array.isArray(formData.accommodationType) && formData.accommodationType.length > 0;
     case 8:
       return formData.passportCountry != null && (typeof formData.passportCountry === 'object' ? formData.passportCountry?.name : String(formData.passportCountry).trim() !== '');
     case 9:
@@ -73,8 +73,9 @@ function buildPromptText(formData) {
   const data = formData;
   const parts = [];
 
-  if (data.pace || data.budgetVibe) {
-    const paceText = data.pace ? `${data.pace}` : '';
+  const paceArr = Array.isArray(data.pace) ? data.pace : (data.pace ? [data.pace] : []);
+  if (paceArr.length > 0 || data.budgetVibe) {
+    const paceText = paceArr.length > 0 ? paceArr.join(' + ') : '';
     const budgetText = data.budgetVibe || '';
     if (paceText && budgetText) {
       parts.push(`I want a ${paceText} ${budgetText} trip`);
@@ -95,8 +96,8 @@ function buildPromptText(formData) {
   if (data.startDate && data.endDate) {
     const start = new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     const end = new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const days = Math.ceil((new Date(data.endDate) - new Date(data.startDate)) / (1000 * 60 * 60 * 24));
-    parts.push(`for ${days} days (${start} – ${end})`);
+    const days = Math.ceil((new Date(data.endDate) - new Date(data.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+    parts.push(`for ${days} day${days > 1 ? 's' : ''} (${start} – ${end})`);
   } else if (data.isFlexible && data.numDays) {
     parts.push(`for about ${data.numDays} days`);
   }
@@ -117,8 +118,10 @@ function buildPromptText(formData) {
     parts.push(`focused on ${top}${extra}`);
   }
 
-  if (data.accommodationType) {
-    parts.push(`staying in ${data.accommodationType}s`);
+  const accomArr = Array.isArray(data.accommodationType) ? data.accommodationType : (data.accommodationType ? [data.accommodationType] : []);
+  if (accomArr.length > 0) {
+    const accomText = accomArr.map((a) => `${a}s`).join(' & ');
+    parts.push(`staying in ${accomText}`);
   }
 
   if (data.instructions && String(data.instructions).trim()) {
@@ -168,6 +171,30 @@ export function useHomeStepper() {
   );
   const isLastStep = currentStep === STEP_COUNT - 1;
 
+  // Build a partial prompt including only fields from steps 0..upToStep
+  const promptForStep = useCallback((upToStep) => {
+    const masked = { ...INITIAL_FORM_DATA };
+    if (upToStep >= 0) masked.origin = formData.origin;
+    if (upToStep >= 1) masked.destination = formData.destination;
+    if (upToStep >= 2) {
+      masked.startDate = formData.startDate;
+      masked.endDate = formData.endDate;
+      masked.isFlexible = formData.isFlexible;
+      masked.numDays = formData.numDays;
+    }
+    if (upToStep >= 3) {
+      masked.travelGroup = formData.travelGroup;
+      masked.numTravelers = formData.numTravelers;
+    }
+    if (upToStep >= 4) masked.pace = formData.pace;
+    if (upToStep >= 5) masked.budgetVibe = formData.budgetVibe;
+    if (upToStep >= 6) masked.preferences = formData.preferences;
+    if (upToStep >= 7) masked.accommodationType = formData.accommodationType;
+    if (upToStep >= 8) masked.passportCountry = formData.passportCountry;
+    if (upToStep >= 9) masked.instructions = formData.instructions;
+    return buildPromptText(masked);
+  }, [formData]);
+
   return {
     currentStep,
     formData,
@@ -175,6 +202,7 @@ export function useHomeStepper() {
     canProceed,
     promptText,
     promptBase,
+    promptForStep,
     isLastStep,
     goNext,
     goBack,

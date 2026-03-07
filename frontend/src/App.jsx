@@ -45,7 +45,7 @@ export default function App() {
           <Sidebar />
           <main className="flex flex-col flex-1 min-w-0 min-h-0 overflow-x-hidden">
             <TopBar />
-            <div className="flex-1 min-h-0 overflow-auto pb-16 lg:pb-0">
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pb-16 lg:pb-0">
               <Routes>
                 {/* Home page — full-width (no side padding for landing section) */}
                 <Route

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import Response
 
 from app.dependencies import get_current_user
@@ -115,12 +115,20 @@ async def save_plan(trip_id: str, user=Depends(get_current_user)):
 
 
 @router.post("/plans/{trip_id}/refresh-flights")
-async def refresh_flights(trip_id: str, user=Depends(get_current_user)):
+async def refresh_flights(trip_id: str, request: Request, user=Depends(get_current_user)):
     """
     Force-refresh flight search for a trip, respecting the FlightService cache.
+    Accepts optional JSON body: { departure_date, return_date }
     """
     from app.services.flight_service import FlightService
     from app.utils.iata_codes import resolve_iata
+
+    # Parse optional body for custom dates
+    body = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
 
     supabase = get_supabase()
 
@@ -141,8 +149,10 @@ async def refresh_flights(trip_id: str, user=Depends(get_current_user)):
     resolved_dest = resolve_iata(trip.get("destination_city", ""))
     origin_code = resolved_origin or transport_data_existing.get("origin_code")
     dest_code = resolved_dest or transport_data_existing.get("destination_code")
-    departure_date = str(trip.get("start_date") or "") or ""
-    return_date = str(trip.get("end_date") or "") or None
+
+    # Use custom dates from request body, fall back to trip dates
+    departure_date = body.get("departure_date") or str(trip.get("start_date") or "") or ""
+    return_date = body.get("return_date") or str(trip.get("end_date") or "") or None
     adults = trip.get("num_travelers") or 1
 
     if not origin_code or not dest_code or not departure_date:

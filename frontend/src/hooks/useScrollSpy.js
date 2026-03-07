@@ -9,11 +9,17 @@ export default function useScrollSpy(sectionIds, options = {}) {
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    const getOffsetInContainer = (el) => {
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      return elRect.top - containerRect.top + container.scrollTop;
+    };
+
     const handleScroll = () => {
       const scrollTop = container.scrollTop + offset;
       for (let i = sectionIds.length - 1; i >= 0; i -= 1) {
         const el = document.getElementById(`section-${sectionIds[i]}`);
-        if (el && el.offsetTop <= scrollTop) {
+        if (el && getOffsetInContainer(el) <= scrollTop) {
           setActiveId(sectionIds[i]);
           return;
         }
@@ -32,8 +38,11 @@ export default function useScrollSpy(sectionIds, options = {}) {
     const el = document.getElementById(`section-${id}`);
     const container = scrollContainerRef.current;
     if (el && container) {
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const elOffset = elRect.top - containerRect.top + container.scrollTop;
       container.scrollTo({
-        top: el.offsetTop - offset + 1,
+        top: elOffset - offset + 1,
         behavior: 'smooth',
       });
     }

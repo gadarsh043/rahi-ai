@@ -88,59 +88,58 @@ export default function PlanView() {
 
   return (
     <>
+      {/* Content Panel — full width on mobile, left side on desktop */}
       <div
-        className={`flex flex-col lg:flex-row h-[calc(100dvh-var(--topbar-height))] ${
-          chatOpen ? 'lg:mr-[400px]' : ''
+        className={`flex flex-col h-[calc(100dvh-var(--topbar-height))] overflow-hidden ${
+          chatOpen ? 'lg:mr-[400px]' : !letsPickOpen ? 'lg:mr-[45%]' : ''
         }`}
       >
-        {/* Content Panel — full width on mobile, left column on desktop */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative lg:w-[55%]">
-          <div className="px-3 pt-3 pb-2 lg:px-6 lg:pt-6">
-            {mode === 'shared' && (
-              <SharedBanner ownerName={trip?.owner_name} />
-            )}
-            <PlanHeader />
-          </div>
-          <TabBar activeId={activeId} onTabClick={handleTabClick} />
-          <div
-            ref={scrollContainerRef}
-            className="flex-1 overflow-y-auto scroll-smooth overscroll-contain momentum-scroll pb-32 lg:pb-4"
-          >
-            {mode !== 'shared' && isRebuilding && (
-              <div className="sticky top-0 z-20 bg-[var(--surface)]/90 backdrop-blur-sm border-b border-brand-500/20 px-4 py-3 flex items-center gap-3">
-                <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm text-[var(--text-primary)]">
-                  {rebuildStatus || 'Rebuilding your itinerary...'}
-                </span>
-              </div>
-            )}
-            {mode !== 'shared' && <RebuildBanner />}
-            {PLAN_SECTIONS.map((section) => {
-              const SectionComponent = sectionComponents[section.id];
-              return (
-                <LazySection
-                  key={section.id}
-                  id={section.id}
-                  title={section.label}
-                  icon={section.icon}
-                  forceVisible={forcedVisibleLookup.has(section.id)}
-                >
-                  <SectionComponent />
-                </LazySection>
-              );
-            })}
-            <div className="h-[50vh]" />
-          </div>
-          {mode !== 'shared' && <ActionBar />}
+        <div className="px-3 pt-3 pb-2 lg:px-6 lg:pt-6">
+          {mode === 'shared' && (
+            <SharedBanner ownerName={trip?.owner_name} />
+          )}
+          <PlanHeader />
         </div>
-
-        {/* Map Panel — hidden on mobile, side panel on desktop */}
-        {!letsPickOpen && !chatOpen && (
-          <div className="hidden lg:block lg:w-[45%] lg:h-full lg:sticky lg:top-0 bg-[var(--surface)] border-l border-[var(--border)]">
-            <MapErrorBoundary><MapPanel trip={trip} places={trip?.places} activeTab={activeId} /></MapErrorBoundary>
-          </div>
-        )}
+        <TabBar activeId={activeId} onTabClick={handleTabClick} />
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto scroll-smooth overscroll-contain momentum-scroll pb-32 lg:pb-4"
+        >
+          {mode !== 'shared' && isRebuilding && (
+            <div className="sticky top-0 z-20 bg-[var(--surface)]/90 backdrop-blur-sm border-b border-brand-500/20 px-4 py-3 flex items-center gap-3">
+              <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm text-[var(--text-primary)]">
+                {rebuildStatus || 'Rebuilding your itinerary...'}
+              </span>
+            </div>
+          )}
+          {mode !== 'shared' && <RebuildBanner />}
+          {PLAN_SECTIONS.map((section) => {
+            const SectionComponent = sectionComponents[section.id];
+            return (
+              <LazySection
+                key={section.id}
+                id={section.id}
+                title={section.label}
+                icon={section.icon}
+                forceVisible={forcedVisibleLookup.has(section.id)}
+                hideHeader={section.id === 'flight'}
+              >
+                <SectionComponent />
+              </LazySection>
+            );
+          })}
+          <div className="h-[50vh]" />
+        </div>
+        {mode !== 'shared' && <ActionBar />}
       </div>
+
+      {/* Map Panel — fixed to right side on desktop */}
+      {!letsPickOpen && !chatOpen && (
+        <div className="hidden lg:block fixed top-[var(--topbar-height)] right-0 w-[45%] h-[calc(100dvh-var(--topbar-height))] bg-[var(--surface)] border-l border-[var(--border)] z-10">
+          <MapErrorBoundary><MapPanel trip={trip} places={trip?.places} activeTab={activeId} /></MapErrorBoundary>
+        </div>
+      )}
 
       {/* Mobile map toggle button (floating above action bar + bottom nav) */}
       {!letsPickOpen && !chatOpen && (

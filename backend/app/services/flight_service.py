@@ -113,11 +113,17 @@ class FlightService:
                 data = resp.json()
 
             flights: List[Dict[str, Any]] = []
-            options: List[Dict[str, Any]] = (
-                (data.get("best_flights") or []) + (data.get("other_flights") or [])
-            )[:8]
+            best_flights_raw = data.get("best_flights") or []
+            other_flights_raw = data.get("other_flights") or []
+            # Tag source, then merge (best first)
+            tagged: List[Tuple[Dict[str, Any], str]] = [
+                (o, "best") for o in best_flights_raw
+            ] + [
+                (o, "other") for o in other_flights_raw
+            ]
+            tagged = tagged[:8]
 
-            for option in options:
+            for option, source_tag in tagged:
                 flight_legs = option.get("flights") or []
                 if not flight_legs:
                     continue
@@ -159,6 +165,7 @@ class FlightService:
                                 "this_flight", 0
                             )
                         ),
+                        "tag": source_tag,
                     }
                 )
 

@@ -47,7 +47,7 @@ function PassportStep({ formData, updateField }) {
         !sameCountry && (
           <div className="mt-6">
             <p className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-              Do you currently live in {destinationCity || destinationCountry}?
+              Do you currently live in {destinationCountry || destinationCity}?
             </p>
             <div className="flex gap-3">
               <button

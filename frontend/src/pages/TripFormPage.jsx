@@ -24,13 +24,19 @@ function getStepLabel(step, data) {
       const labels = { solo: 'Solo', couple: 'Couple', friends: 'Friends', family: 'Family', work: 'Work Trip' };
       return data.travelGroup ? labels[data.travelGroup] : null;
     }
-    case 4: return data.pace || null;
+    case 4: {
+      const p = Array.isArray(data.pace) ? data.pace : (data.pace ? [data.pace] : []);
+      return p.length > 0 ? p.join(' + ') : null;
+    }
     case 5: return data.budgetVibe || null;
     case 6: {
       const p = data.preferences || [];
       return p.length > 0 ? (p.length <= 2 ? p.join(', ') : `${p.slice(0, 2).join(', ')} +${p.length - 2}`) : null;
     }
-    case 7: return data.accommodationType || null;
+    case 7: {
+      const a = Array.isArray(data.accommodationType) ? data.accommodationType : (data.accommodationType ? [data.accommodationType] : []);
+      return a.length > 0 ? a.join(' + ') : null;
+    }
     case 8: return data.passportCountry?.name || null;
     case 9: return data.instructions?.trim() ? 'Extra notes' : null;
     default: return null;
@@ -45,6 +51,7 @@ export default function TripFormPage() {
     canProceed,
     promptText,
     promptBase,
+    promptForStep,
     isLastStep,
     goNext,
     goBack,
@@ -118,10 +125,16 @@ export default function TripFormPage() {
       destination_lng: destination?.lng ?? 0,
       start_date: startDate || null,
       end_date: endDate || null,
-      num_days: dataToSend.numDays ?? 7,
-      pace: dataToSend.pace || 'moderate',
+      num_days: (startDate && endDate)
+        ? Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1
+        : (dataToSend.numDays ?? 7),
+      pace: Array.isArray(dataToSend.pace) && dataToSend.pace.length > 0
+        ? dataToSend.pace.join(' + ')
+        : (dataToSend.pace || 'moderate'),
       budget_vibe: dataToSend.budgetVibe || '$$',
-      accommodation_type: dataToSend.accommodationType || 'hotel',
+      accommodation_type: Array.isArray(dataToSend.accommodationType) && dataToSend.accommodationType.length > 0
+        ? dataToSend.accommodationType.join(' + ')
+        : (dataToSend.accommodationType || 'hotel'),
       preferences: dataToSend.preferences || [],
       passport_country: passport || '',
       instructions: dataToSend.instructions || '',
@@ -156,11 +169,12 @@ export default function TripFormPage() {
       handleGenerate(formData, promptText);
     } else {
       const label = getStepLabel(currentStep, formData);
+      const stepIdx = currentStep;
       triggerAddedAnimation(label);
       // Brief delay so user sees the pill lift before step transitions
       setTimeout(() => goNext(), 150);
-      // Update displayed prompt when pill lands (after goNext has run + re-render)
-      setTimeout(() => setDisplayPrompt(promptText), 1100);
+      // Update displayed prompt when pill lands — show prompt up to this step
+      setTimeout(() => setDisplayPrompt(promptForStep(stepIdx)), 1100);
     }
   };
 
@@ -178,7 +192,7 @@ export default function TripFormPage() {
             {!isFirstStep && (
               <button
                 type="button"
-                onClick={goBack}
+                onClick={() => { setDisplayPrompt(promptForStep(currentStep - 2)); goBack(); }}
                 className="w-11 h-11 rounded-full border border-[var(--border)] bg-white dark:bg-[var(--surface)] text-[var(--text-secondary)] flex items-center justify-center hover:bg-[var(--surface-hover)] transition-colors cursor-pointer shadow-sm text-lg"
                 aria-label="Back"
               >
@@ -255,7 +269,7 @@ export default function TripFormPage() {
                   {!isFirstStep ? (
                     <button
                       type="button"
-                      onClick={goBack}
+                      onClick={() => { setDisplayPrompt(promptForStep(currentStep - 2)); goBack(); }}
                       className="text-sm font-medium text-[var(--text-secondary)] cursor-pointer"
                     >
                       &larr; Back

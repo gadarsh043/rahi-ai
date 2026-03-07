@@ -6,6 +6,7 @@ import { generateTrip, fetchPlan } from '../../services/api';
 import PlanTour from '../../components/onboarding/PlanTour';
 import { useOnboardingStore } from '../../stores/onboardingStore';
 import { ONBOARDING_DEMO_TRIP, ONBOARDING_DEMO_PLACES } from '../../utils/mockTripData';
+import GeneratingScreen from '../../components/plan/GeneratingScreen';
 
 function normalizeTrip(apiTrip, places = [], chatMessages = []) {
   if (!apiTrip) return null;
@@ -18,13 +19,19 @@ function normalizeTrip(apiTrip, places = [], chatMessages = []) {
     lat: p.lat,
     lng: p.lng,
     rating: p.rating,
+    userRatingCount: p.user_rating_count ?? null,
     priceLevel: p.price_level,
     address: p.address,
     photoUrl: p.photo_url,
     googleMapsUrl: p.google_maps_url,
+    website: p.website || '',
+    openingHoursDisplay: p.opening_hours_display || '',
+    description: p.description || '',
+    typeDisplay: p.type_display || '',
     isInItinerary: p.is_in_itinerary,
     dayNumber: p.day_number,
     timeSlot: p.time_slot,
+    affiliateUrl: p.affiliate_url || '',
     isCustom: p.is_custom ?? false,
     visit_duration_minutes: p.visit_duration_minutes ?? null,
   }));
@@ -63,6 +70,8 @@ function normalizeTrip(apiTrip, places = [], chatMessages = []) {
     costEstimate: apiTrip.cost_estimate || null,
     visaInfo: apiTrip.visa_info || null,
     travelEssentials: apiTrip.travel_essentials || null,
+    transportMode: apiTrip.transport_mode || null,
+    transportData: apiTrip.transport_data || null,
     places: normalizedPlaces,
     chatMessages,
   };
@@ -82,6 +91,8 @@ export default function PlanPage() {
   const [loadingMessage, setLoadingMessage] = useState('Loading your trip...');
   const [genError, setGenError] = useState(false);
   const [lastGenerateParams, setLastGenerateParams] = useState(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatingCity, setGeneratingCity] = useState('');
 
   const planTourDone = useOnboardingStore((s) => s.planTourDone);
 
@@ -125,6 +136,8 @@ export default function PlanPage() {
   const startGeneration = useCallback(
     async (params) => {
       setLoading(true);
+      setIsGenerating(true);
+      setGeneratingCity(params.destination_city || '');
       setLoadingMessage('Finding the best places for your trip...');
        setGenError(false);
        setLastGenerateParams(params);
@@ -136,9 +149,11 @@ export default function PlanPage() {
           }
           if (event === 'error') {
             setGenError(true);
+            setIsGenerating(false);
             setLoading(false);
           }
           if (event === 'done' && data?.trip_id) {
+            setIsGenerating(false);
             // After generation completes, load the full trip from API and update URL
             loadExistingTrip(data.trip_id);
             navigate(`/plan/${data.trip_id}`, { replace: true });
@@ -148,6 +163,7 @@ export default function PlanPage() {
         // eslint-disable-next-line no-console
         console.error('Error during trip generation', err);
         setLoadingMessage('Something went wrong while generating your trip.');
+        setIsGenerating(false);
         setLoading(false);
       }
     },
@@ -280,6 +296,16 @@ export default function PlanPage() {
   }
 
   if (!trip || loading) {
+    // Show rich generating screen during active generation, simple spinner for loading existing trips
+    if (isGenerating || generatingCity) {
+      return (
+        <GeneratingScreen
+          destinationCity={generatingCity}
+          isGenerating={isGenerating}
+        />
+      );
+    }
+
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">

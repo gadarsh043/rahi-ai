@@ -7,8 +7,6 @@ venv/
 env/
 
 # Build
-frontend/.env
-backend/.env
 frontend/dist/
 frontend/build/
 *.egg-info/
@@ -16,7 +14,6 @@ frontend/build/
 # Environment
 .env
 .env.local
-.env.*.local
 frontend/.env
 backend/.env
 

@@ -40,7 +40,8 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Plan View with tab-based navigation (7 tabs)
 - All tabs: Eat, Stay, Go, Trip (timeline), Flight, Costs, Next
 - Timeline hover tooltips: place photo, rating, category, price, address on hover (smart positioning)
-- Interactive map (Leaflet + OSM, color-coded markers, route polylines)
+- Timeline click-to-locate: click activity → geocode via Photon → show on map or open Google Maps
+- Interactive map (Leaflet + OSM, color-coded markers, route polylines, MapMessageCard overlay)
 - AI Chatbot (context-aware, mutations, bottom sheet mobile / drawer desktop)
   - Friend-like tone, short responses, multi-turn history
   - Syncs is_in_itinerary between trips table and trip_places table
@@ -50,7 +51,23 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Share system (6-char codes, mandatory login, suggest, fork)
 - Enhanced PDF (quick ref, Maps links, packing list, phrases, visa)
 - Right Now modal (geolocation → nearby places, 3 tabs)
-- Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner fallback)
+- Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner + Google Flights deep links)
+  - Custom header with inline date pickers (pill-based DatePillPicker dropdown)
+  - One-way / Round-trip toggle
+  - Smart date defaults: depart = tripStart-1, return = tripEnd
+  - Date bounds: Out = max(today, tripStart-5) to tripStart-1. Return = tripEnd to tripEnd+4
+  - Best/Cheapest/Fastest badges (computed from SerpAPI tag + price + duration)
+  - Deep links update instantly when dates change, include return date for round trips
+  - Skyscanner URL: /flights/{from}/{to}/{YYMMDD}/ (+ /{retYYMMDD}/ for round trip)
+  - Google Flights URL: natural language query (?q=Flights from X to Y on DATE return DATE)
+  - Backend refresh-flights accepts optional { departure_date, return_date } in body
+  - Backend tags flights: "tag": "best" (best_flights) or "tag": "other" (other_flights)
+  - LazySection hideHeader prop used for flight tab (renders its own custom header)
+- Map interactions: click-to-focus pattern (PlaceCard/Timeline → focusPlace → MapInfoCard)
+  - MapMessageCard for geocode fallback (10s countdown → auto-opens Google Maps, cancel button)
+  - Temporary markers for geocoded places via mapMessage state with lat/lng
+  - Geocode success: pin on map + address + Google Maps link (no countdown)
+  - Geocode failure: MapMessageCard with countdown + auto-open + cancel
 - Map route polylines (flight arc + day routes)
 - Currency selector (reusable, searchable, common pinned)
 - Onboarding (WelcomeTour + PlanTour, localStorage-persisted, one-time, replay from profile)
@@ -280,9 +297,10 @@ rahify/
 │   │   │   ├── auth/              ← GoogleLoginButton, ProtectedRoute
 │   │   │   ├── onboarding/        ← WelcomeTour, PlanTour
 │   │   │   ├── home/              ← CityAutocomplete, DatePicker, PaceSelector, PromptBox, StepperDots, etc.
-│   │   │   ├── plan/              ← PlanView, PlanHeader, TabBar, ActionBar, MapPanel, ChatDrawer,
-│   │   │   │                         LetsPickPopup, PlaceCard, FlightCard, SharedBanner, SuggestionsBadge
-│   │   │   │   └── sections/      ← EatSection, StaySection, PlacesSection, TripSection, FlightSection, CostsSection, NextSection
+│   │   │   ├── plan/              ← PlanView, PlanHeader, TabBar, ActionBar, MapPanel (+ MapMessageCard),
+│   │   │   │                         ChatDrawer, LetsPickPopup, PlaceCard, FlightCard (badges), SharedBanner,
+│   │   │   │                         LazySection (hideHeader), SuggestionsBadge
+│   │   │   │   └── tabs/          ← EatTab, StayTab, PlacesTab, TripTab (Timeline), FlightTab (DatePillPicker), CostsTab, NextTab
 │   │   │   ├── nearby/            ← NearbyModal
 │   │   │   ├── credits/           ← CreditsExhausted (email CTA, not paywall)
 │   │   │   └── profile/           ← ProfileForm
@@ -409,6 +427,12 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Flight tab: dashed orange arc (origin → destination)
 - Trip tab: colored day-route polylines connecting activities
 - Mobile: full-screen overlay toggled by floating 🗺️ button
+- MapMessageCard: overlay notification on map (z-[1000] to appear above Leaflet panes)
+  - Used for geocode success (pin + address) and failure (countdown + auto-open Google Maps)
+  - Temporary markers rendered via mapMessage state with lat/lng coordinates
+  - Cancel button to abort countdown and close card
+- focusPlace: store action that sets selectedMarkerId, mapCenter, mapZoom, and shows map on mobile
+- setMapMessage: store action that sets mapMessage, clears selectedMarkerId, shows map, optionally sets mapCenter/mapZoom
 
 ### Three Modes (one PlanView component)
 - `editing`: owner, chat + Let's Pick, all interactions
@@ -422,6 +446,9 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Chat messages in tripStore.chatMessages
 - Chat responses trigger removePlace() / addPlaceToItinerary() / selectFlight()
 - After any mutation: refresh trip from API → store updates → UI re-renders
+- normalizeTrip (PlanPage.jsx): must explicitly map EVERY field from API response — missing fields silently dropped
+  - Must include transportMode, transportData for flight deep links to work
+- useScrollSpy: uses getBoundingClientRect() relative to scroll container (not el.offsetTop which is relative to offsetParent)
 
 ---
 
@@ -471,6 +498,18 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Login page: terms/privacy open as modals on same page (no navigation away)
 - Itinerary prompt: friend tone, packed days, food as filler, day trips mandatory, self-check before responding
 - Chat prompt: friend who's been there, 1-3 sentences, specific tips, multi-turn history
+- Flight tab: custom header layout — Row 1: "Flights" + [Round trip|One way] + date pills + Search. Row 2: route + freshness + Refresh button
+- Flight date pickers: pill-based DatePillPicker dropdown (not native `<input type="date">`), brand-500 selected state, click-outside-to-close
+- Flight date defaults: depart = tripStart-1 (arrive day before trip), return = tripEnd. Bounds: depart max(today, tripStart-5)→tripStart-1, return tripEnd→tripEnd+4
+- Flight badges: Best (from SerpAPI tag), Cheapest (lowest price), Fastest (shortest duration) — orange/green/blue pills
+- Flight deep links: Skyscanner (/flights/dfw/sea/260310/260317/) + Google Flights (?q=Flights from Dallas to Seattle on 2026-03-10 return 2026-03-17)
+- Geocode fallback UX: MapMessageCard on map with 10s countdown → auto-opens Google Maps, cancel button. Replaces invisible toast.
+- Map interactions: PlaceCard/Timeline click → focusPlace (existing places) or setMapMessage (geocoded/temporary)
+- LazySection: hideHeader prop for tabs that render their own header (e.g., flight tab)
+- useScrollSpy: getBoundingClientRect() relative to container, not offsetTop (which is relative to offsetParent)
+- normalizeTrip: must explicitly include every API field — transportMode, transportData added for flight deep links
+- window.open in setInterval: blocked by popup blockers. Provide <a> tag as fallback for user-initiated navigation
+- Leaflet z-index: internal panes use 200-600. Custom overlays need z-[1000] to appear above map layers
 
 ---
 

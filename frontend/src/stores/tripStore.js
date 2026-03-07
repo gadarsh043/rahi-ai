@@ -10,6 +10,7 @@ const useTripStore = create((set, get) => ({
 
   // Map state
   mapCenter: null,
+  mapZoom: null,
   selectedMarkerId: null,
   showMap: false, // mobile map toggle
 
@@ -23,6 +24,9 @@ const useTripStore = create((set, get) => ({
 
   // Pending changes (for rebuild banner)
   pendingChanges: [],
+
+  // Map message (shown when geocode fails — temporary info card)
+  mapMessage: null,
 
   // Global rebuilding state (e.g. Let's Pick)
   isRebuilding: false,
@@ -52,9 +56,28 @@ const useTripStore = create((set, get) => ({
       };
     }),
   setIsDemo: (value) => set({ isDemo: Boolean(value) }),
-  setActiveSectionId: (id) => set({ activeSectionId: id }),
+  setActiveSectionId: (id) => set({ activeSectionId: id, mapZoom: null, selectedMarkerId: null }),
   setMode: (mode) => set({ mode }),
   setSelectedMarker: (id) => set({ selectedMarkerId: id }),
+  focusPlace: (place) =>
+    set({
+      selectedMarkerId: place.id,
+      mapCenter: { lat: place.lat, lng: place.lng },
+      mapZoom: 16,
+      showMap: true,
+      mapMessage: null,
+    }),
+  setMapMessage: (msg) => set({
+    mapMessage: msg,
+    selectedMarkerId: null,
+    showMap: true,
+    ...(msg?.lat != null && msg?.lng != null ? { mapCenter: { lat: msg.lat, lng: msg.lng }, mapZoom: 16 } : {}),
+  }),
+  clearMapMessage: () => {
+    const { mapMessage } = get();
+    if (mapMessage?._intervalId) clearInterval(mapMessage._intervalId);
+    set({ mapMessage: null });
+  },
   toggleMap: () => set((s) => ({ showMap: !s.showMap })),
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   toggleLetsPick: () => set((s) => ({ letsPickOpen: !s.letsPickOpen })),

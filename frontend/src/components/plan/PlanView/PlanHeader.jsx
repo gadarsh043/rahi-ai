@@ -73,7 +73,7 @@ export default function PlanHeader() {
     trip?.currency || profile?.preferred_currency || 'USD';
 
   return (
-    <header className="border-b border-[var(--border)] bg-[var(--bg)] lg:border-b-0 lg:bg-transparent mb-0 lg:mb-3">
+    <header className="relative z-[calc(var(--z-sticky)+10)] border-b border-[var(--border)] bg-[var(--bg)] lg:border-b-0 lg:bg-transparent mb-0 lg:mb-3">
       <div className="flex items-center justify-between gap-3 px-0 py-2 lg:px-0 lg:py-0">
         {/* Left: back + title */}
         <div className="flex items-center gap-2 min-w-0">

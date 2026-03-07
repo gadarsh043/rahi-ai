@@ -8,15 +8,25 @@ const PACE_OPTIONS = [
 ];
 
 export default function PaceSelector({ value, onChange }) {
+  const selected = Array.isArray(value) ? value : (value ? [value] : []);
+
+  const toggle = (id) => {
+    if (selected.includes(id)) {
+      onChange(selected.filter((v) => v !== id));
+    } else {
+      onChange([...selected, id]);
+    }
+  };
+
   return (
     <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
       {PACE_OPTIONS.map((option) => {
-        const isSelected = value === option.id;
+        const isSelected = selected.includes(option.id);
         return (
           <motion.button
             key={option.id}
             type="button"
-            onClick={() => onChange(option.id)}
+            onClick={() => toggle(option.id)}
             whileTap={{ scale: 0.97 }}
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}

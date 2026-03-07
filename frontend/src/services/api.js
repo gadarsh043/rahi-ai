@@ -48,3 +48,7 @@ export async function updateProfile(payload) {
   return apiPost('/user/profile', payload, { context: 'profile' });
 }
 
+export async function fetchDestinationFacts(city) {
+  return apiPost('/destination-facts', { city }, { context: 'facts', silent: true });
+}
+
