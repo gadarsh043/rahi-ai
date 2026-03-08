@@ -18,6 +18,8 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - **Onboarding:** Custom tour system (TourOverlay, tourRegistry, tourStore)
 - **PDF:** ReportLab (server-side, enhanced with Maps links, phrases, packing)
 - **Payments:** LemonSqueezy (planned). Currently email-based credit requests.
+- **Hosting:** Netlify (frontend) + Railway (backend Docker) + Porkbun (domain)
+- **FX Rates:** frankfurter.app (free ECB rates, cached 24h in localStorage)
 
 ## Current State (Post-MVP Build)
 
@@ -102,13 +104,22 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - GeneratingScreen: fallback facts shown immediately, async fetch for real destination facts
 - Credits UI: amber warning banner in PromptBox when 0 credits, "Request more" link in profile dropdown
 
+### Deployment (Live)
+- **Frontend:** Netlify (static SPA, `frontend/dist`) — rahify.com
+- **Backend:** Railway (Docker, FastAPI) — api.rahify.com
+- **Domain:** Porkbun (rahify.com), DNS managed via Netlify DNS
+- **SPA Redirects:** `frontend/public/_redirects` (`/* /index.html 200`)
+- **Catch-all route:** React Router `<Route path="*" element={<Navigate to="/" />} />` for unknown paths
+- **Auto-deploy:** Push to master → both Netlify and Railway auto-build + deploy
+- **CORS:** Backend `FRONTEND_URL=https://rahify.com`, expose_headers includes Content-Disposition
+- **Global exception handler:** Includes CORS headers for allowed origins (fixes PDF download CORS on error)
+
 ### Not Yet Implemented
-- LemonSqueezy payment integration (domain + setup needed)
+- LemonSqueezy payment integration
 - Travel Quiz
 - Credit card reference in NextTab
 - Service worker / offline mode
 - SEO meta tags + OG images
-- Production deploy (Railway + Vercel)
 - PDF future goal: match reference PDF quality (hotel comparison tables, restaurant detail tables, route overview diagram, senior-friendly notes, health/safety section with detailed medical info, booking reference quick table). See Future_Reference.pdf for target.
 
 ---
@@ -352,7 +363,7 @@ rahify/
 │   │   ├── App.jsx
 │   │   └── main.jsx
 │   ├── index.html
-│   ├── vercel.json                ← SPA rewrites
+│   │   └── _redirects             ← Netlify SPA redirects
 │   ├── vite.config.js
 │   └── package.json
 │
@@ -547,6 +558,14 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - normalizeTrip: must explicitly include every API field — transportMode, transportData added for flight deep links
 - window.open in setInterval: blocked by popup blockers. Provide <a> tag as fallback for user-initiated navigation
 - Leaflet z-index: internal panes use 200-600. Custom overlays need z-[1000] to appear above map layers
+- Deployment: Netlify (frontend SPA) + Railway (backend Docker). NOT Vercel — SSE streaming needs persistent connections, not serverless.
+- Domain: rahify.com (Porkbun) → DNS managed by Netlify. api.rahify.com CNAME → Railway.
+- SPA redirects: `frontend/public/_redirects` for Netlify. React Router `path="*"` catch-all → redirect to `/`.
+- Global exception handler: must include CORS headers for allowed origins (plain JSONResponse bypasses CORS middleware).
+- PDF download: available in all modes (editing + saved), visible on mobile + desktop, ghost button style. Loading spinner while generating.
+- PDF branding: Rahify (not Rahi AI). Orange accent bars, brand-colored day headers, trip stats row, pre-trip checklist, emergency contacts, packing by category.
+- Backend API title: "Rahify API" (not "Rahi AI API")
+- expose_headers: Content-Disposition added to CORS middleware for PDF filename.
 
 ---
 
