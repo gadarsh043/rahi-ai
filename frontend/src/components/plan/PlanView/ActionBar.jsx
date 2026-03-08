@@ -3,7 +3,7 @@ import useTripStore from '../../../stores/tripStore';
 import { apiPost } from '../../../services/apiClient';
 import { toast } from '../../common/Toast/Toast';
 
-export default function ActionBar() {
+export default function ActionBar({ isDemo = false }) {
   const openChat = useTripStore((s) => s.openChat);
   const toggleLetsPick = useTripStore((s) => s.toggleLetsPick);
   const pendingChanges = useTripStore((s) => s.pendingChanges);
@@ -44,11 +44,12 @@ export default function ActionBar() {
 
   return (
     <div
-      className="fixed bottom-14 lg:bottom-0 left-0 right-0 z-[var(--z-sticky)]
+      className={`fixed bottom-14 lg:bottom-0 left-0 right-0
                  flex items-center gap-2 px-3 py-2
                  bg-[var(--bg)] border-t border-[var(--border)]
                  pb-[max(8px,env(safe-area-inset-bottom))]
-                 lg:static lg:border-t-0 lg:pb-0 lg:px-6 lg:pt-2 lg:pb-4 lg:justify-end"
+                 lg:static lg:border-t-0 lg:pb-0 lg:px-6 lg:pt-2 lg:pb-4 lg:justify-end
+                 ${isDemo ? 'z-auto' : 'z-[var(--z-sticky)]'}`}
     >
       <div className="flex w-full lg:w-auto lg:inline-flex items-center gap-2">
         <button

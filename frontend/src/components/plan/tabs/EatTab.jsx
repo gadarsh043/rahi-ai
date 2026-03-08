@@ -18,8 +18,10 @@ export default function EatTab() {
       </div>
 
       <div className="space-y-3">
-        {restaurants.map((place) => (
-          <PlaceCard key={place.id} place={place} />
+        {restaurants.map((place, i) => (
+          <div key={place.id} {...(i === 0 ? { 'data-tour': 'place-card' } : {})}>
+            <PlaceCard place={place} />
+          </div>
         ))}
       </div>
     </div>

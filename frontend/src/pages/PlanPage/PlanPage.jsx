@@ -1,10 +1,9 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useTripStore from '../../stores/tripStore';
 import PlanView from '../../components/plan/PlanView/PlanView';
 import { generateTrip, fetchPlan } from '../../services/api';
-import PlanTour from '../../components/onboarding/PlanTour';
-import { useOnboardingStore } from '../../stores/onboardingStore';
+import useTourCheck from '../../hooks/useTourCheck';
 import { ONBOARDING_DEMO_TRIP, ONBOARDING_DEMO_PLACES } from '../../utils/mockTripData';
 import GeneratingScreen from '../../components/plan/GeneratingScreen';
 
@@ -93,8 +92,6 @@ export default function PlanPage() {
   const [lastGenerateParams, setLastGenerateParams] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingCity, setGeneratingCity] = useState('');
-
-  const planTourDone = useOnboardingStore((s) => s.planTourDone);
 
   const loadExistingTrip = useCallback(
     async (tripId, shareCode) => {
@@ -259,13 +256,9 @@ export default function PlanPage() {
     startGeneration,
   ]);
 
-  const shouldShowPlanTour = useMemo(() => {
-    if (!trip) return false;
-    if (location.pathname === '/plan/demo') return true;
-    if (planTourDone) return false;
-    if (!Array.isArray(trip.places) || trip.places.length === 0) return false;
-    return true;
-  }, [trip, planTourDone, location.pathname]);
+  // Tour check — show onboarding prompt when trip is loaded
+  const tripReady = Boolean(trip && Array.isArray(trip.places) && trip.places.length > 0);
+  useTourCheck('plan', tripReady, 1500);
 
   if (genError) {
     return (
@@ -316,13 +309,6 @@ export default function PlanPage() {
     );
   }
 
-  return (
-    <>
-      {shouldShowPlanTour && (
-        <PlanTour isDemo={location.pathname === '/plan/demo'} />
-      )}
-      <PlanView />
-    </>
-  );
+  return <PlanView />;
 }
 

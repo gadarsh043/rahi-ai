@@ -17,12 +17,15 @@ import ProtectedRoute from './components/auth/ProtectedRoute';
 import useAuthStore from './stores/authStore';
 import useUIStore from './stores/uiStore';
 import CreditsExhausted from './components/credits/CreditsExhausted';
-import { useOnboardingStore } from './stores/onboardingStore';
+import useTourStore from './stores/tourStore';
+import TourOverlay from './components/onboarding/TourOverlay';
+import TourPrompt from './components/onboarding/TourPrompt';
+import TourMenu from './components/onboarding/TourMenu';
 
 export default function App() {
   const initialize = useAuthStore((s) => s.initialize);
   const profile = useAuthStore((s) => s.profile);
-  const initFromProfile = useOnboardingStore((s) => s.initFromProfile);
+  const initToursFromProfile = useTourStore((s) => s.initFromProfile);
   const showCreditsExhausted = useUIStore((s) => s.showCreditsExhausted);
   const setShowCreditsExhausted = useUIStore((s) => s.setShowCreditsExhausted);
 
@@ -31,12 +34,17 @@ export default function App() {
   }, [initialize]);
 
   useEffect(() => {
-    if (profile) initFromProfile(profile);
-  }, [profile, initFromProfile]);
+    if (profile) {
+      initToursFromProfile(profile);
+    }
+  }, [profile, initToursFromProfile]);
 
   return (
     <BrowserRouter>
       <ToastContainer />
+      <TourOverlay />
+      <TourPrompt />
+      <TourMenu />
       {showCreditsExhausted && (
         <CreditsExhausted onClose={() => setShowCreditsExhausted(false)} />
       )}

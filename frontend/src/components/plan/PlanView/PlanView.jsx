@@ -1,4 +1,5 @@
 import { Component, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import useTripStore from '../../../stores/tripStore';
 import { PLAN_SECTIONS } from '../../../utils/mockTripData';
 import useScrollSpy from '../../../hooks/useScrollSpy';
@@ -60,6 +61,9 @@ export default function PlanView() {
     sectionIds
   );
 
+  const location = useLocation();
+  const isDemo = location.pathname === '/plan/demo';
+
   const [forcedVisible, setForcedVisible] = useState(() => new Set());
 
   const forcedVisibleLookup = useMemo(() => forcedVisible, [forcedVisible]);
@@ -98,7 +102,7 @@ export default function PlanView() {
           {mode === 'shared' && (
             <SharedBanner ownerName={trip?.owner_name} />
           )}
-          <PlanHeader />
+          <PlanHeader isDemo={isDemo} />
         </div>
         <TabBar activeId={activeId} onTabClick={handleTabClick} />
         <div
@@ -122,7 +126,7 @@ export default function PlanView() {
                 id={section.id}
                 title={section.label}
                 icon={section.icon}
-                forceVisible={forcedVisibleLookup.has(section.id)}
+                forceVisible={isDemo || forcedVisibleLookup.has(section.id)}
                 hideHeader={section.id === 'flight'}
               >
                 <SectionComponent />
@@ -131,7 +135,7 @@ export default function PlanView() {
           })}
           <div className="h-[50vh]" />
         </div>
-        {mode !== 'shared' && <ActionBar />}
+        {mode !== 'shared' && <ActionBar isDemo={isDemo} />}
       </div>
 
       {/* Map Panel — fixed to right side on desktop */}

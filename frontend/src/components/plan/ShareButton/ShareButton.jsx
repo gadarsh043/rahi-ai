@@ -64,7 +64,7 @@ export default function ShareButton() {
           }
           setShowPopup((open) => !open);
         }}
-        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+        className="flex items-center gap-1.5 border border-[var(--border)] px-3 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
       >
         🔗 Share
       </button>

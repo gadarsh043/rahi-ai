@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import ErrorFallback from './ErrorFallback/ErrorFallback';
+import useTourStore from '../../stores/tourStore';
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -14,6 +15,12 @@ export default class ErrorBoundary extends Component {
   componentDidCatch(error, info) {
     // eslint-disable-next-line no-console
     console.error('ErrorBoundary caught:', error, info);
+    // Stop any active tour to prevent further errors
+    const { activeTour, endTour, fullFlow, endFullFlow, hideTourMenu, hideTourPrompt } = useTourStore.getState();
+    if (activeTour) endTour();
+    if (fullFlow) endFullFlow();
+    hideTourMenu();
+    hideTourPrompt();
   }
 
   render() {

@@ -27,6 +27,7 @@ export default memo(function PlaceCard({ place, variant = 'standard' }) {
 
   return (
     <div
+      data-tour="place-card"
       onClick={handleClick}
       className={`flex gap-3 p-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] transition-all ${
         hasCoords ? 'cursor-pointer active:scale-[0.98] hover:border-brand-300' : ''

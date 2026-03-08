@@ -15,7 +15,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - **Font:** DM Sans (Google Fonts)
 - **Dates:** react-day-picker
 - **Animations:** framer-motion
-- **Onboarding:** intro.js
+- **Onboarding:** Custom tour system (TourOverlay, tourRegistry, tourStore)
 - **PDF:** ReportLab (server-side, enhanced with Maps links, phrases, packing)
 - **Payments:** LemonSqueezy (planned). Currently email-based credit requests.
 
@@ -70,7 +70,24 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - Geocode failure: MapMessageCard with countdown + auto-open + cancel
 - Map route polylines (flight arc + day routes)
 - Currency selector (reusable, searchable, common pinned)
-- Onboarding (WelcomeTour + PlanTour, localStorage-persisted, one-time, replay from profile)
+- Custom onboarding tour system (replaced intro.js)
+  - TourOverlay: scrim + element elevation + styled info card (handwritten font, brand accent bar)
+  - TourMenu: feature selection grid (full tour + individual features, NEW badges for unseen)
+  - TourPrompt: "First time here?" floating prompt (bottom-right)
+  - tourRegistry: declarative step definitions per page (home, form, plan) with priority ordering
+  - tourStore: Zustand store with cookie + localStorage + Supabase profile sync for seen tracking
+  - Full flow: home → form → plan (/plan/demo) → final step (profile dropdown "Replay Tour")
+  - Element elevation: z-index 10001 + ancestor stacking context traversal (preserves fixed/absolute)
+  - Scroll: scrollIntoView({ block: 'center', behavior: 'instant' }) + nudge +25% viewport height
+  - Info card: bottom-right default, bottom-left when element >65% viewport width, center for text-only
+  - Step properties: element, text, clickBefore, cleanupClick, elementIndex, formStep
+  - Form sync: formStep property auto-navigates to correct form step during tour
+  - Plan demo: /plan/demo disables lazy loading, z-auto on ActionBar/PlanHeader for elevation
+  - Chat tour: clickBefore opens real ChatDrawer, cleanupClick closes it on step advance
+  - Tab switching: clickBefore clicks tab bar buttons for flight/places steps
+  - Retry: up to 3 attempts (500ms apart) for lazy-mounted elements
+  - data-tour attributes on key elements for targeting (place-card, flight-section, chat-drawer, etc.)
+  - Error boundary stops all tours on crash
 - Light mode default (Tailwind + CSS variables, theme persisted to localStorage)
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
 - Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
@@ -295,7 +312,7 @@ rahify/
 │   │   │   ├── common/            ← Button, Modal, Toast, Dropdown, Badge, Loader, CurrencySelector
 │   │   │   ├── layout/            ← TopBar, Sidebar, BottomNav, ThemeToggle, ProfileDropdown
 │   │   │   ├── auth/              ← GoogleLoginButton, ProtectedRoute
-│   │   │   ├── onboarding/        ← WelcomeTour, PlanTour
+│   │   │   ├── onboarding/        ← TourOverlay, TourMenu, TourPrompt, tourRegistry
 │   │   │   ├── home/              ← CityAutocomplete, DatePicker, PaceSelector, PromptBox, StepperDots, etc.
 │   │   │   ├── plan/              ← PlanView, PlanHeader, TabBar, ActionBar, MapPanel (+ MapMessageCard),
 │   │   │   │                         ChatDrawer, LetsPickPopup, PlaceCard, FlightCard (badges), SharedBanner,
@@ -314,7 +331,7 @@ rahify/
 │   │   │   ├── authStore.js
 │   │   │   ├── tripStore.js
 │   │   │   ├── uiStore.js
-│   │   │   └── onboardingStore.js
+│   │   │   └── tourStore.js       ← tour state, seen tracking (cookie + localStorage + Supabase)
 │   │   ├── services/
 │   │   │   ├── api.js             ← apiGet, apiPost, apiSSE with error handling
 │   │   │   └── supabase.js
@@ -478,7 +495,12 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Chat: context-aware with live itinerary in system prompt
 - IATA: 200+ city lookup (not city[:3].upper())
 - PDF: Enhanced with maps links, packing, phrases, visa banner
-- Onboarding: WelcomeTour + PlanTour, persisted to localStorage, one-time only, replay from profile dropdown
+- Onboarding: Custom tour system (replaced intro.js). tourRegistry defines steps per page, TourOverlay renders scrim + elevation + info card. Persisted via cookie + localStorage + Supabase profile.tours_seen. Replay from profile dropdown.
+- Onboarding elevation: z-index 10001 on target + all ancestor stacking contexts. Preserves fixed/absolute positioning (only static elements get position:relative).
+- Onboarding scroll: always scrollIntoView + 25% nudge (no inView guard). Skipped for clickBefore steps (tab switch handles its own scroll).
+- Onboarding cleanup: cleanupClick property for steps that open drawers (e.g., ChatDrawer) — clicks a different element to close vs re-clicking the opener.
+- Onboarding demo page: /plan/demo disables lazy loading (forceVisible), uses z-auto on ActionBar/PlanHeader to avoid stacking context traps.
+- PlanHeader ghost buttons: Currency, Share, Save Trip all use consistent ghost button style (border, rounded-xl, text-sm font-medium, same padding)
 - Sidebar: overlay drawer only (no inline sidebar, no collapsed rail). Floating ☰ button. Logged-in users only.
 - Sidebar redundancy: no settings/credits/theme in sidebar — all in profile dropdown or topbar
 - Sidebar sync: re-fetches plans on open + route change

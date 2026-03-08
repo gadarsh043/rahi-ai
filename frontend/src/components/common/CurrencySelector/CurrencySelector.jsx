@@ -113,7 +113,7 @@ export default function CurrencySelector({ value, onChange, compact = false }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className={`inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-xs md:text-sm font-medium px-3 py-1.5 md:py-2 hover:bg-[var(--surface-hover)] transition-colors cursor-pointer ${
+        className={`inline-flex items-center gap-1 rounded-xl border border-[var(--border)] text-sm font-medium px-3 py-2 hover:bg-[var(--surface-hover)] transition-colors cursor-pointer ${
           compact ? '' : 'min-w-[110px] justify-between'
         }`}
       >

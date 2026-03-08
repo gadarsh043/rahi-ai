@@ -101,7 +101,7 @@ export default function LandingSection({ onStart }) {
       {/* How It Works — overlapping */}
       <section className="relative z-20 px-4 mb-20">
         <motion.div className="max-w-5xl mx-auto bg-white/95 dark:bg-[var(--surface)]/95 backdrop-blur-sm rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.1)] p-8 md:p-12 -mt-40" initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-60px' }} variants={fadeUp}>
-          <h2 className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] text-center mb-12">How it works</h2>
+          <h2 data-tour="how-it-works" className="text-2xl md:text-3xl font-bold text-[var(--text-primary)] text-center mb-12">How it works</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
             {HOW_IT_WORKS.map((item, i) => (
               <motion.div key={item.step} className="text-center" custom={i} variants={fadeUp}>

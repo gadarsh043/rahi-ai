@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import CountryAutocomplete from '../components/home/CountryAutocomplete';
 import CurrencySelector from '../components/common/CurrencySelector/CurrencySelector';
 import { fetchProfile, updateProfile } from '../services/api';
-import FeatureTip from '../components/onboarding/FeatureTip';
-
 export default function SettingsPage() {
   const [passportCountry, setPassportCountry] = useState(null);
   const [visaStatus, setVisaStatus] = useState('');
@@ -56,14 +54,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div data-tour="settings-root" className="flex flex-1 min-h-0 p-4 md:p-6">
-      <FeatureTip
-        tipId="settings"
-        element='[data-tour="settings-root"]'
-        title="Settings"
-        intro="Set your passport and default currency so trip costs and visa guidance are more accurate."
-        position="bottom"
-      />
+    <div className="flex flex-1 min-h-0 p-4 md:p-6">
       <div className="w-full max-w-2xl mx-auto">
         <div className="mb-4">
           <h1 className="text-xl font-bold text-[var(--text-primary)]">Settings</h1>

@@ -157,6 +157,7 @@ export default function ChatDrawer() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            data-tour="chat-drawer"
             className="fixed inset-x-0 bottom-0 z-[var(--z-drawer)] lg:hidden bg-[var(--bg)] rounded-t-2xl shadow-2xl border-t border-[var(--border)] flex flex-col h-[85dvh] max-h-[85dvh]"
           >
             {/* Drag handle */}
@@ -173,6 +174,7 @@ export default function ChatDrawer() {
               <button
                 type="button"
                 onClick={closeChat}
+                data-tour="chat-close"
                 className="p-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
               >
                 <span className="text-[var(--text-muted)] text-lg">✕</span>
@@ -255,6 +257,7 @@ export default function ChatDrawer() {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            data-tour="chat-drawer"
             className="hidden lg:flex fixed right-0 top-[var(--topbar-height)] bottom-0 z-[var(--z-drawer)] w-[400px] bg-[var(--bg)] border-l border-[var(--border)] flex-col shadow-2xl"
           >
             {/* Header */}
@@ -268,6 +271,7 @@ export default function ChatDrawer() {
               <button
                 type="button"
                 onClick={closeChat}
+                data-tour="chat-close"
                 className="p-1.5 rounded-lg hover:bg-[var(--surface-hover)] transition-colors"
               >
                 <svg

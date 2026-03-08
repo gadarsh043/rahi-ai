@@ -2,14 +2,16 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import useAuthStore from '../../stores/authStore';
-import { useOnboardingStore } from '../../stores/onboardingStore';
+import useTourStore from '../../stores/tourStore';
+import { getPageFeatures } from '../onboarding/tourRegistry';
 
 export default function TopBar() {
   const { isDark, toggle } = useTheme();
   const user = useAuthStore((s) => s.user);
   const profile = useAuthStore((s) => s.profile);
   const signOut = useAuthStore((s) => s.signOut);
-  const replayTour = useOnboardingStore((s) => s.replayTour);
+  const showTourMenu = useTourStore((s) => s.showTourMenu);
+  const clearPageSeen = useTourStore((s) => s.clearPageSeen);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
@@ -29,7 +31,16 @@ export default function TopBar() {
 
   const menuItems = useMemo(
     () => [
-      { icon: '🎓', label: 'Replay Tour', action: () => { replayTour('welcome'); replayTour('plan'); navigate('/'); } },
+      { icon: '🎓', label: 'Replay Tour', dataTour: 'replay-tour', action: () => {
+        // Figure out which page we're on and show the tour menu for it
+        const path = location.pathname;
+        let page = 'home';
+        if (path.startsWith('/plan') || path.startsWith('/trip')) page = 'plan';
+        else if (path === '/new') page = 'form';
+        // Clear seen status so all features show as available
+        clearPageSeen(getPageFeatures(page));
+        showTourMenu(page);
+      } },
       { icon: '⚙️', label: 'Settings', action: () => navigate('/settings') },
       {
         icon: '🎯',
@@ -53,7 +64,7 @@ export default function TopBar() {
         action: () => navigate('/privacy'),
       },
     ],
-    [navigate, quizCompleted, replayTour],
+    [navigate, quizCompleted, showTourMenu, clearPageSeen, location.pathname],
   );
 
   useEffect(() => {
@@ -86,7 +97,7 @@ export default function TopBar() {
   }, [location.pathname, location.search, location.hash]);
 
   const avatarButton = user ? (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" ref={menuRef} data-tour="profile-menu">
       <button
         type="button"
         onClick={() => setMenuOpen((open) => !open)}
@@ -136,6 +147,7 @@ export default function TopBar() {
               <button
                 key={item.label}
                 type="button"
+                data-tour={item.dataTour || undefined}
                 onClick={() => {
                   setMenuOpen(false);
                   item.action();

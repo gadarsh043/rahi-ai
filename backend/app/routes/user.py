@@ -12,7 +12,7 @@ async def get_profile(user=Depends(get_current_user)):
     try:
         resp = (
             supabase.table("profiles")
-            .select("id, passport_country, visa_status, email")
+            .select("id, passport_country, visa_status, email, tours_seen")
             .eq("id", user["id"])
             .single()
             .execute()
@@ -26,31 +26,38 @@ async def get_profile(user=Depends(get_current_user)):
 async def update_profile(body: dict, user=Depends(get_current_user)):
     supabase = get_supabase()
 
-    payload = {
-        "id": user["id"],
-        "passport_country": body.get("passport_country"),
-        "visa_status": body.get("visa_status"),
-    }
+    update_data = {}
+    if body.get("passport_country") is not None:
+        update_data["passport_country"] = body["passport_country"]
+    if body.get("visa_status") is not None:
+        update_data["visa_status"] = body["visa_status"]
+    if body.get("tours_seen") is not None:
+        update_data["tours_seen"] = body["tours_seen"]
+    if body.get("onboarding_completed") is not None:
+        update_data["onboarding_completed"] = body["onboarding_completed"]
+    if body.get("quiz_data") is not None:
+        update_data["quiz_data"] = body["quiz_data"]
+
+    if not update_data:
+        return {"ok": True, "profile": {}}
 
     try:
-        # Prefer update when row exists
-        (
+        resp = (
             supabase.table("profiles")
-            .update(
-                {
-                    "passport_country": payload["passport_country"],
-                    "visa_status": payload["visa_status"],
-                }
-            )
+            .update(update_data)
             .eq("id", user["id"])
+            .select()
+            .single()
             .execute()
         )
+        return {"ok": True, "profile": resp.data or update_data}
     except Exception:
-        # Fallback: insert minimal row (may require email depending on schema)
+        # Fallback: insert minimal row
         try:
-            supabase.table("profiles").insert(payload).execute()
+            supabase.table("profiles").insert(
+                {"id": user["id"], **update_data}
+            ).execute()
         except Exception:
             pass
-
-    return {"ok": True, "profile": payload}
+        return {"ok": True, "profile": update_data}
 

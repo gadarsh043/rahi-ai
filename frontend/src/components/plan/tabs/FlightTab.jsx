@@ -341,7 +341,7 @@ export default function FlightTab() {
     // Empty state
     if (flights.length === 0) {
       return (
-        <div className="p-4 space-y-4">
+        <div data-tour="flight-section" className="p-4 space-y-4">
           {flightHeader}
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 space-y-3">
             {(error || note) && (
@@ -369,7 +369,7 @@ export default function FlightTab() {
     }
 
     return (
-      <div className="p-4 space-y-4">
+      <div data-tour="flight-section" className="p-4 space-y-4">
         {flightHeader}
         <div className="space-y-3">
           {flights.map((flight) => {

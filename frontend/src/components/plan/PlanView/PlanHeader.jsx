@@ -7,7 +7,7 @@ import CurrencySelector from '../../common/CurrencySelector/CurrencySelector';
 import { toast } from '../../common/Toast/Toast';
 import { savePlan } from '../../../services/api';
 
-export default function PlanHeader() {
+export default function PlanHeader({ isDemo: isDemoProp = false }) {
   const trip = useTripStore((s) => s.trip);
   const mode = useTripStore((s) => s.mode);
   const setMode = useTripStore((s) => s.setMode);
@@ -73,7 +73,7 @@ export default function PlanHeader() {
     trip?.currency || profile?.preferred_currency || 'USD';
 
   return (
-    <header className="relative z-[calc(var(--z-sticky)+10)] border-b border-[var(--border)] bg-[var(--bg)] lg:border-b-0 lg:bg-transparent mb-0 lg:mb-3">
+    <header className={`relative border-b border-[var(--border)] bg-[var(--bg)] lg:border-b-0 lg:bg-transparent mb-0 lg:mb-3 ${isDemoProp ? 'z-auto' : 'z-[calc(var(--z-sticky)+10)]'}`}>
       <div className="flex items-center justify-between gap-3 px-0 py-2 lg:px-0 lg:py-0">
         {/* Left: back + title */}
         <div className="flex items-center gap-2 min-w-0">
@@ -107,7 +107,7 @@ export default function PlanHeader() {
               compact
             />
           </div>
-          <div className="hidden sm:block mt-1">
+          <div className="hidden sm:block">
             <CurrencySelector
               value={headerCurrency}
               onChange={handleCurrencyChange}
@@ -136,7 +136,7 @@ export default function PlanHeader() {
                   type="button"
                   onClick={handleSaveTrip}
                   data-tour="save-button"
-                  className="hidden md:flex items-center gap-1.5 border border-[var(--border)] text-xs md:text-sm font-semibold px-3 md:px-4 py-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+                  className="hidden md:flex items-center gap-1.5 border border-[var(--border)] text-sm font-medium px-3 py-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
                 >
                   💾 Save Trip
                 </button>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useHomeStepper } from '../hooks/useHomeStepper';
@@ -6,6 +6,8 @@ import { STEP_CONFIG } from '../utils/stepConfig';
 import StepQuestion from '../components/home/StepQuestion';
 import StepContentPlaceholder from '../components/home/StepContentPlaceholder';
 import useAuthStore from '../stores/authStore';
+import useTourStore from '../stores/tourStore';
+import useTourCheck from '../hooks/useTourCheck';
 
 function getStepLabel(step, data) {
   switch (step) {
@@ -55,6 +57,7 @@ export default function TripFormPage() {
     isLastStep,
     goNext,
     goBack,
+    goToStep,
     updateField,
   } = useHomeStepper();
 
@@ -77,6 +80,26 @@ export default function TripFormPage() {
     }, 1050);
     setTimeout(() => setPromptGlow(false), 1800);
   }, []);
+
+  useTourCheck('form', true, 1500);
+
+  // Navigate form to match tour step
+  const activeTour = useTourStore((s) => s.activeTour);
+  const goToStepRef = useRef(goToStep);
+  goToStepRef.current = goToStep;
+
+  useEffect(() => {
+    if (!activeTour || activeTour.page !== 'form') return;
+    const tourStep = activeTour.steps[activeTour.currentIndex];
+    if (tourStep?.formStep != null) {
+      goToStepRef.current(tourStep.formStep);
+    }
+  }, [activeTour]);
+
+  // Demo prompt for the prompt tour step
+  const DEMO_PROMPT = 'I want a moderate $$ trip from San Francisco to Tokyo for 8 days as a couple focused on culture, food, nightlife staying in hotels';
+  const tourOnPrompt = activeTour?.page === 'form'
+    && activeTour.steps[activeTour.currentIndex]?.featureId === 'form-prompt';
 
   const config = STEP_CONFIG[currentStep];
   const isForward = direction === 'forward';
@@ -203,7 +226,7 @@ export default function TripFormPage() {
 
           {/* Floating card */}
           <div className="flex-1 min-w-0 relative">
-            <div className="relative bg-white dark:bg-[var(--surface)] rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)] overflow-hidden">
+            <div data-tour="form-card" className="relative bg-white dark:bg-[var(--surface)] rounded-3xl shadow-[0_8px_40px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_40px_rgba(0,0,0,0.3)] overflow-hidden">
               {/* Warm gradient wash on the left */}
               <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute -left-20 -top-20 w-80 h-80 bg-gradient-to-br from-brand-200/40 via-brand-100/20 to-transparent rounded-full blur-3xl" />
@@ -212,7 +235,7 @@ export default function TripFormPage() {
 
               <div className="relative z-10 flex flex-col min-h-[min(65dvh,560px)]">
                 {/* Progress bar — top of card */}
-                <div className="flex items-center gap-3 px-5 md:px-8 pt-5 pb-2 shrink-0">
+                <div data-tour="form-progress" className="flex items-center gap-3 px-5 md:px-8 pt-5 pb-2 shrink-0">
                   <button
                     type="button"
                     onClick={() => navigate('/')}
@@ -325,8 +348,8 @@ export default function TripFormPage() {
         </div>
 
         {/* Prompt preview — updates only when pill lands, live on last step */}
-        <div className="w-full max-w-3xl mt-4 shrink-0">
-          {(isLastStep ? promptText : displayPrompt) ? (
+        <div data-tour="form-prompt" className="w-full max-w-3xl mt-4 shrink-0">
+          {(tourOnPrompt || isLastStep ? promptText : displayPrompt) || tourOnPrompt ? (
             <div
               className={`bg-white dark:bg-[var(--surface)] rounded-2xl px-5 py-3 transition-all duration-500 ease-out ${
                 promptGlow
@@ -336,7 +359,7 @@ export default function TripFormPage() {
             >
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 <span className="font-semibold text-brand-500">Request: </span>
-                {isLastStep ? promptText : displayPrompt}
+                {tourOnPrompt ? DEMO_PROMPT : (isLastStep ? promptText : displayPrompt)}
               </p>
             </div>
           ) : (
