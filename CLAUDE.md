@@ -92,7 +92,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Light mode default (Tailwind + CSS variables, theme persisted to localStorage)
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
 - Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
-- Credits: 5 free trips, email g.adarsh043@gmail.com for more (no payment platform yet)
+- Credits: 5 free trips, email adarsh@rahify.com for more (no payment platform yet). Credits deducted after successful trip generation.
 - Public home page: new users see full trip form, login required only on Generate
 - Login page: minimal, no AI slop, terms/privacy as inline modals (not separate pages)
 - Auth redirect flow: form data survives OAuth via sessionStorage (rahify-pending-trip)
@@ -493,7 +493,7 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Styling: Tailwind v4 only (no SCSS, no CSS Modules)
 - Map: Leaflet + OSM (free) — Google Places for data only
 - Payments: LemonSqueezy (planned). Currently email-based credits.
-- Credits: 5 free, email developer for more (no paywall modal)
+- Credits: 5 free, email adarsh@rahify.com for more (no paywall modal). Deducted in generate_stream after successful DB save. Frontend refreshes profile on generation done event.
 - Share: 6-char invite code + mandatory login (viral loop)
 - Chat: context-aware with live itinerary in system prompt
 - IATA: 200+ city lookup (not city[:3].upper())

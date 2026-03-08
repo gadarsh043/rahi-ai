@@ -1,6 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useTripStore from '../../stores/tripStore';
+import useAuthStore from '../../stores/authStore';
 import PlanView from '../../components/plan/PlanView/PlanView';
 import { generateTrip, fetchPlan } from '../../services/api';
 import useTourCheck from '../../hooks/useTourCheck';
@@ -92,6 +93,7 @@ export default function PlanPage() {
   const [lastGenerateParams, setLastGenerateParams] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingCity, setGeneratingCity] = useState('');
+  const hasStartedGenRef = useRef(false);
 
   const loadExistingTrip = useCallback(
     async (tripId, shareCode) => {
@@ -132,6 +134,8 @@ export default function PlanPage() {
 
   const startGeneration = useCallback(
     async (params) => {
+      if (hasStartedGenRef.current) return; // prevent StrictMode double-fire
+      hasStartedGenRef.current = true;
       setLoading(true);
       setIsGenerating(true);
       setGeneratingCity(params.destination_city || '');
@@ -148,12 +152,15 @@ export default function PlanPage() {
             setGenError(true);
             setIsGenerating(false);
             setLoading(false);
+            hasStartedGenRef.current = false; // allow retry
           }
           if (event === 'done' && data?.trip_id) {
             setIsGenerating(false);
             // After generation completes, load the full trip from API and update URL
             loadExistingTrip(data.trip_id);
             navigate(`/plan/${data.trip_id}`, { replace: true });
+            // Refresh profile to update remaining credits
+            useAuthStore.getState().fetchProfile();
           }
         });
       } catch (err) {
@@ -162,6 +169,7 @@ export default function PlanPage() {
         setLoadingMessage('Something went wrong while generating your trip.');
         setIsGenerating(false);
         setLoading(false);
+        hasStartedGenRef.current = false; // allow retry
       }
     },
     [loadExistingTrip, navigate]
@@ -215,19 +223,6 @@ export default function PlanPage() {
       return;
     }
 
-    // Check sessionStorage for params saved before OAuth redirect
-    if (!generateParams) {
-      const pending = sessionStorage.getItem('rahify-pending-trip');
-      if (pending && location.pathname === '/plan/new') {
-        sessionStorage.removeItem('rahify-pending-trip');
-        try {
-          generateParams = JSON.parse(pending);
-        } catch {
-          // ignore bad JSON
-        }
-      }
-    }
-
     if (generateParams) {
       startGeneration(generateParams);
       return;
@@ -276,6 +271,7 @@ export default function PlanPage() {
             onClick={() => {
               if (lastGenerateParams) {
                 setGenError(false);
+                hasStartedGenRef.current = false;
                 startGeneration(lastGenerateParams);
               }
             }}

@@ -5,7 +5,6 @@ import { useHomeStepper } from '../hooks/useHomeStepper';
 import { STEP_CONFIG } from '../utils/stepConfig';
 import StepQuestion from '../components/home/StepQuestion';
 import StepContentPlaceholder from '../components/home/StepContentPlaceholder';
-import useAuthStore from '../stores/authStore';
 import useTourStore from '../stores/tourStore';
 import useTourCheck from '../hooks/useTourCheck';
 
@@ -62,7 +61,6 @@ export default function TripFormPage() {
   } = useHomeStepper();
 
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
   const [flyingPill, setFlyingPill] = useState(null);
   const [promptGlow, setPromptGlow] = useState(false);
   const [displayPrompt, setDisplayPrompt] = useState('');
@@ -174,14 +172,6 @@ export default function TripFormPage() {
 
   const handleGenerate = (data, promptString) => {
     const generateParams = buildGenerateParams(data, promptString);
-
-    if (!user) {
-      // Save params so they survive the OAuth redirect
-      sessionStorage.setItem('rahify-pending-trip', JSON.stringify(generateParams));
-      navigate('/login?redirect=/plan/new');
-      return;
-    }
-
     navigate('/plan/new', { state: { generateParams } });
   };
 

@@ -12,7 +12,7 @@ async def get_profile(user=Depends(get_current_user)):
     try:
         resp = (
             supabase.table("profiles")
-            .select("id, passport_country, visa_status, email, tours_seen")
+            .select("id, passport_country, visa_status, email, tours_seen, trips_remaining, preferred_currency")
             .eq("id", user["id"])
             .single()
             .execute()

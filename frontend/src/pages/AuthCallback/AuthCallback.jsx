@@ -1,13 +1,16 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import useAuthStore from '../../stores/authStore';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const setUser = useAuthStore((s) => s.initialize);
+  const handledRef = useRef(false);
 
   useEffect(() => {
+    if (handledRef.current) return; // prevent StrictMode double-fire
+    handledRef.current = true;
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
         // Ensure the auth store has the user before navigating,

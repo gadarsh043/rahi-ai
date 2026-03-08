@@ -14,11 +14,7 @@ export default function ProtectedRoute({ children }) {
     return children;
   }
 
-  // If there's a pending trip generation waiting after OAuth, don't redirect —
-  // the auth state might not have propagated yet. Show spinner and let it resolve.
-  const hasPendingTrip = location.pathname === '/plan/new' && sessionStorage.getItem('rahify-pending-trip');
-
-  if (!initialized || loading || (hasPendingTrip && !user)) {
+  if (!initialized || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--bg)]">
         <div role="status" aria-label="Loading" className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />

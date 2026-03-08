@@ -44,7 +44,7 @@ async def generate_trip(req: TripGenerateRequest, user=Depends(get_current_user)
             raise HTTPException(
                 status_code=402,
                 detail={
-                    "message": "You've used all your free trips! Email g.adarsh043@gmail.com to request more credits.",
+                    "message": "You've used all your free trips! Email adarsh@rahify.com to request more credits.",
                     "type": "credits_exhausted",
                 },
             )
@@ -371,6 +371,26 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                         "time_slot": itin_info.get("time_slot"),
                     }
                 ).execute()
+
+            # Deduct one credit after successful trip creation
+            try:
+                cr = (
+                    supabase.table("profiles")
+                    .select("trips_remaining")
+                    .eq("id", user["id"])
+                    .single()
+                    .execute()
+                )
+                current = (cr.data or {}).get("trips_remaining")
+                if current is not None and current > 0:
+                    (
+                        supabase.table("profiles")
+                        .update({"trips_remaining": current - 1})
+                        .eq("id", user["id"])
+                        .execute()
+                    )
+            except Exception:
+                pass  # Don't block the response if credit deduction fails
         except Exception as e:
             print(f"Supabase save error: {e}")
 

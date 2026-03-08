@@ -73,9 +73,11 @@ export default function App() {
                 <Route
                   path="/new"
                   element={(
-                    <ErrorBoundary>
-                      <TripFormPage />
-                    </ErrorBoundary>
+                    <ProtectedRoute>
+                      <ErrorBoundary>
+                        <TripFormPage />
+                      </ErrorBoundary>
+                    </ProtectedRoute>
                   )}
                 />
                 <Route

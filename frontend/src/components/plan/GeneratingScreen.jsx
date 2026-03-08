@@ -36,14 +36,13 @@ export default function GeneratingScreen({ destinationCity, isGenerating }) {
   const progressTimer = useRef(null);
   const factTimer = useRef(null);
   const messageTimer = useRef(null);
-  const factsLoaded = useRef(false);
-
   // Fetch fun facts about the destination
   useEffect(() => {
-    if (!destinationCity || factsLoaded.current) return;
-    factsLoaded.current = true;
+    if (!destinationCity) return;
 
-    let cancelled = false;
+    // Use fallback immediately so something shows while API loads
+    setFacts(FALLBACK_FACTS.default);
+
     (async () => {
       try {
         const res = await apiPost(
@@ -51,20 +50,13 @@ export default function GeneratingScreen({ destinationCity, isGenerating }) {
           { city: destinationCity },
           { context: 'facts', silent: true }
         );
-        if (!cancelled && res?.facts?.length) {
+        if (res?.facts?.length) {
           setFacts(res.facts);
-          return;
         }
       } catch {
-        // silent fail
-      }
-      // Use fallback facts
-      if (!cancelled) {
-        setFacts(FALLBACK_FACTS.default);
+        // silent fail — fallback facts already set
       }
     })();
-
-    return () => { cancelled = true; };
   }, [destinationCity]);
 
   // Rotate facts every 4.5 seconds

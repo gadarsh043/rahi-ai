@@ -58,7 +58,7 @@ export default function TopBar() {
         label: 'Give Feedback',
         action: () => {
           window.open(
-            'mailto:g.adarsh043@gmail.com?subject=Rahify%20Feedback',
+            'mailto:adarsh@rahify.com?subject=Rahify%20Feedback',
             '_blank',
           );
         },
@@ -137,13 +137,22 @@ export default function TopBar() {
             )}
           </div>
 
-          {/* Credits (simple display) */}
+          {/* Credits */}
           <div className="px-4 py-2 border-b border-[var(--border)]">
             <span className="text-xs text-[var(--text-muted)]">
               {credits > 0
                 ? `${credits} trip${credits !== 1 ? 's' : ''} remaining`
                 : 'No trips remaining'}
             </span>
+            {credits <= 0 && (
+              <a
+                href="mailto:adarsh@rahify.com?subject=Rahify — Request More Credits&body=Hi! I've used my free trips on Rahify and would love more credits."
+                className="block text-xs text-brand-500 hover:text-brand-600 mt-1 font-medium"
+                onClick={() => setMenuOpen(false)}
+              >
+                Request more credits
+              </a>
+            )}
           </div>
 
           {/* Menu items */}

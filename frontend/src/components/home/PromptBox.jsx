@@ -40,11 +40,14 @@ function getHighlightSegments(text, formData) {
 
 export default function PromptBox({ promptText = '', promptBase = '', instructions = '', isComplete, formData, onGenerate }) {
   const user = useAuthStore((s) => s.user);
+  const profile = useAuthStore((s) => s.profile);
   const navigate = useNavigate();
+  const credits = profile?.trips_remaining ?? profile?.tripsRemaining;
+  const noCredits = user && credits !== null && credits !== undefined && credits <= 0;
   const [expanded, setExpanded] = useState(false);
   const [editInstructions, setEditInstructions] = useState(instructions);
 
-  const canGenerate = isComplete;
+  const canGenerate = isComplete && !noCredits;
 
   useEffect(() => {
     if (!expanded) return;
@@ -86,6 +89,19 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
   return (
     <div data-tour="prompt-box" className="sticky bottom-14 lg:bottom-0 left-0 right-0 z-[var(--z-sticky)] pt-4">
       <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl p-3 shadow-lg">
+        {noCredits && (
+          <div className="flex items-center gap-2 mb-2 px-1 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40">
+            <span className="text-xs text-amber-700 dark:text-amber-400 flex-1">
+              No trips remaining.{' '}
+              <a
+                href="mailto:adarsh@rahify.com?subject=Rahify — Request More Credits&body=Hi! I've used my free trips on Rahify and would love more credits."
+                className="text-brand-500 hover:text-brand-600 font-semibold underline"
+              >
+                Request more
+              </a>
+            </span>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {!expanded ? (
             <motion.div

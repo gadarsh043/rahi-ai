@@ -103,7 +103,7 @@ export default function SettingsPage() {
                 {tripsRemaining} trip
                 {tripsRemaining !== 1 ? 's' : ''} remaining. Need more?{' '}
                 <a
-                  href="mailto:g.adarsh043@gmail.com"
+                  href="mailto:adarsh@rahify.com"
                   className="text-brand-500 underline"
                 >
                   Email us

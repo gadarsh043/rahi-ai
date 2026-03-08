@@ -50,25 +50,28 @@ async def get_plan(
 ):
     supabase = get_supabase()
 
-    if shared:
-        # Public shared view — no auth check on user_id
-        resp = (
-            supabase.table("trips")
-            .select("*")
-            .eq("id", trip_id)
-            .eq("share_code", shared)
-            .single()
-            .execute()
-        )
-    else:
-        resp = (
-            supabase.table("trips")
-            .select("*")
-            .eq("id", trip_id)
-            .eq("user_id", user["id"])
-            .single()
-            .execute()
-        )
+    try:
+        if shared:
+            # Public shared view — no auth check on user_id
+            resp = (
+                supabase.table("trips")
+                .select("*")
+                .eq("id", trip_id)
+                .eq("share_code", shared)
+                .single()
+                .execute()
+            )
+        else:
+            resp = (
+                supabase.table("trips")
+                .select("*")
+                .eq("id", trip_id)
+                .eq("user_id", user["id"])
+                .single()
+                .execute()
+            )
+    except Exception:
+        raise HTTPException(status_code=404, detail="Trip not found")
 
     if not resp.data:
         raise HTTPException(status_code=404, detail="Trip not found")
