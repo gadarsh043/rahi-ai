@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import useAuthStore from '../../stores/authStore';
+import { trackEvent } from '../../services/posthog';
 
 function LegalModal({ title, onClose, children }) {
   return (
@@ -43,6 +44,10 @@ export default function AuthPage() {
   const signInWithGoogle = useAuthStore((s) => s.signInWithGoogle);
   const [searchParams] = useSearchParams();
   const [legalModal, setLegalModal] = useState(null);
+
+  useEffect(() => {
+    trackEvent('login_page_viewed', { referrer: document.referrer });
+  }, []);
 
   const handleLogin = () => {
     const redirect = searchParams.get('redirect') || '/';

@@ -1,4 +1,15 @@
+import { useEffect } from 'react';
+import useAuthStore from '../../stores/authStore';
+import { trackEvent } from '../../services/posthog';
+
 export default function CreditsExhausted({ onClose }) {
+  const user = useAuthStore((s) => s.user);
+
+  useEffect(() => {
+    if (user?.id) {
+      trackEvent('credits_exhausted', { user_id: user.id });
+    }
+  }, [user?.id]);
   return (
     <div
       className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center bg-black/50"

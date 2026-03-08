@@ -4,6 +4,7 @@ import { apiPost } from '../../../services/apiClient';
 import { toast } from '../../common/Toast/Toast';
 import useTripStore from '../../../stores/tripStore';
 import useAuthStore from '../../../stores/authStore';
+import { trackEvent } from '../../../services/posthog';
 
 export default function SharedBanner({ ownerName }) {
   const trip = useTripStore((s) => s.trip);
@@ -31,6 +32,7 @@ export default function SharedBanner({ ownerName }) {
 
     if (!result.error) {
       toast.success('Suggestion sent!');
+      trackEvent('suggestion_submitted', { trip_id: trip.id });
       setSuggestion('');
       setName('');
       setShowSuggest(false);
@@ -50,6 +52,10 @@ export default function SharedBanner({ ownerName }) {
       { context: 'fork' },
     );
     if (!result.error && result.new_trip_id) {
+      trackEvent('trip_forked', {
+        original_trip_id: trip.id,
+        share_code: trip.shareCode || trip.share_code,
+      });
       toast.success('Trip forked! Editing your copy now.');
       navigate(`/plan/${result.new_trip_id}`);
     }

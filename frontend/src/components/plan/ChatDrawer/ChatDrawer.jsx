@@ -4,6 +4,7 @@ import useTripStore from '../../../stores/tripStore';
 import { sendChatMessage } from '../../../services/api';
 import { renderChatMarkdown } from '../../../utils/formatChat';
 import { toast } from '../../common/Toast/Toast';
+import { trackEvent } from '../../../services/posthog';
 
 const ChatMessage = memo(function ChatMessage({ message }) {
   return (
@@ -95,6 +96,11 @@ export default function ChatDrawer() {
       return;
     }
     const text = input.trim();
+
+    trackEvent('chat_message_sent', {
+      trip_id: trip.id,
+      message_length: text.length,
+    });
 
     addChatMessage({
       id: `user-${Date.now()}`,

@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
 import { apiPost } from '../../../services/apiClient';
 import { toast } from '../../common/Toast/Toast';
+import { trackEvent } from '../../../services/posthog';
 
 const PICK_CATEGORIES = [
   { id: 'restaurant', label: 'Restaurants', icon: '🍽' },
@@ -80,6 +81,14 @@ export default function LetsPickPopup() {
       toggleLetsPick();
       return;
     }
+
+    const addedCount = added.length + customPlaces.length;
+    const removedCount = removed.length;
+    trackEvent('lets_pick_completed', {
+      trip_id: trip.id,
+      added: addedCount,
+      removed: removedCount,
+    });
 
     // Update local trip state + record pending changes
     for (const p of removed) {

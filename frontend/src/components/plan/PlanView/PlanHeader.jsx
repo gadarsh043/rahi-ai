@@ -5,6 +5,7 @@ import ShareButton from '../ShareButton/ShareButton';
 import SuggestionsPanel from '../SuggestionsPanel/SuggestionsPanel';
 import { toast } from '../../common/Toast/Toast';
 import { savePlan } from '../../../services/api';
+import { trackEvent } from '../../../services/posthog';
 
 export default function PlanHeader({ isDemo: isDemoProp = false }) {
   const trip = useTripStore((s) => s.trip);
@@ -19,6 +20,10 @@ export default function PlanHeader({ isDemo: isDemoProp = false }) {
   const handleDownloadPDF = async () => {
     if (downloadingPDF) return;
     setDownloadingPDF(true);
+    trackEvent('pdf_downloaded', {
+      trip_id: trip.id,
+      mode,
+    });
     try {
       const API_URL =
         import.meta.env.VITE_API_URL || 'http://localhost:8000/v1';

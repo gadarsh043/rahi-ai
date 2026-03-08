@@ -7,6 +7,7 @@ import StepQuestion from '../components/home/StepQuestion';
 import StepContentPlaceholder from '../components/home/StepContentPlaceholder';
 import useTourStore from '../stores/tourStore';
 import useTourCheck from '../hooks/useTourCheck';
+import { trackEvent } from '../services/posthog';
 
 function getStepLabel(step, data) {
   switch (step) {
@@ -43,6 +44,19 @@ function getStepLabel(step, data) {
     default: return null;
   }
 }
+
+const STEP_NAMES = [
+  'origin',
+  'destination',
+  'dates',
+  'travel_group',
+  'pace',
+  'budget',
+  'preferences',
+  'accommodation',
+  'passport_country',
+  'extras',
+];
 
 export default function TripFormPage() {
   const {
@@ -172,6 +186,13 @@ export default function TripFormPage() {
 
   const handleGenerate = (data, promptString) => {
     const generateParams = buildGenerateParams(data, promptString);
+    trackEvent('trip_generate_clicked', {
+      origin: generateParams.origin_city,
+      destination: generateParams.destination_city,
+      num_days: generateParams.num_days,
+      pace: generateParams.pace,
+      budget_vibe: generateParams.budget_vibe,
+    });
     navigate('/plan/new', { state: { generateParams } });
   };
 
@@ -183,6 +204,11 @@ export default function TripFormPage() {
     } else {
       const label = getStepLabel(currentStep, formData);
       const stepIdx = currentStep;
+      const stepName = STEP_NAMES[stepIdx] || `step_${stepIdx + 1}`;
+      trackEvent('form_step_completed', {
+        step: stepIdx + 1,
+        step_name: stepName,
+      });
       triggerAddedAnimation(label);
       // Brief delay so user sees the pill lift before step transitions
       setTimeout(() => goNext(), 150);

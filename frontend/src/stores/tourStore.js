@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { trackEvent } from '../services/posthog';
 
 const COOKIE_KEY = 'rahify-tours';
 const STORAGE_KEY = 'rahify-tours';
@@ -98,6 +99,7 @@ const useTourStore = create((set, get) => ({
   },
 
   startTour: (page, steps) => {
+    trackEvent('tour_started', { page });
     set({
       activeTour: { page, steps, currentIndex: 0 },
       showPrompt: null,

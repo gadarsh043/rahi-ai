@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../services/supabase';
 import useAuthStore from '../../stores/authStore';
+import { trackEvent } from '../../services/posthog';
 
 export default function AuthCallback() {
   const navigate = useNavigate();
@@ -21,7 +22,12 @@ export default function AuthCallback() {
           localStorage.setItem('supabase_token', session.access_token);
           useAuthStore.setState({ user: session.user, loading: false, initialized: true });
           // Fetch profile in background
-          useAuthStore.getState().fetchProfile();
+          await useAuthStore.getState().fetchProfile();
+          const justCreated = useAuthStore.getState().profileJustCreated;
+          if (justCreated) {
+            trackEvent('signup_completed', { method: 'google' });
+            useAuthStore.getState().setProfileJustCreated(false);
+          }
         }
 
         const returnTo = sessionStorage.getItem('rahify-redirect') || '/';

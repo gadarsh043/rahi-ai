@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import useAuthStore from '../../stores/authStore';
+import { trackEvent } from '../../services/posthog';
 
 function getHighlightSegments(text, formData) {
   const highlights = [
@@ -65,6 +66,12 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [expanded]);
 
+  useEffect(() => {
+    if (noCredits && user?.id) {
+      trackEvent('credits_exhausted', { user_id: user.id });
+    }
+  }, [noCredits, user?.id]);
+
   const handleExpand = () => {
     setEditInstructions(instructions);
     setExpanded(true);
@@ -83,6 +90,27 @@ export default function PromptBox({ promptText = '', promptBase = '', instructio
     const promptToUse = promptBase.trim()
       ? (promptBase.trim() + (instructionsTrimmed ? ' ' + instructionsTrimmed : '')).trim()
       : instructionsTrimmed || promptText;
+    const origin =
+      formData?.origin && typeof formData.origin === 'object'
+        ? formData.origin.city
+        : formData?.origin;
+    const destination =
+      formData?.destination && typeof formData.destination === 'object'
+        ? formData.destination.city
+        : formData?.destination;
+    const numDays = formData?.numDays;
+    const pace = Array.isArray(formData?.pace)
+      ? formData.pace.join(' + ')
+      : formData?.pace;
+    const budgetVibe = formData?.budgetVibe;
+
+    trackEvent('trip_generate_clicked', {
+      origin: origin || '',
+      destination: destination || '',
+      num_days: numDays ?? null,
+      pace: pace || '',
+      budget_vibe: budgetVibe || '',
+    });
     onGenerate(formData, promptToUse);
   };
 

@@ -1,11 +1,13 @@
 import { create } from 'zustand';
 import { supabase } from '../services/supabase';
+import { identifyUser, resetUser } from '../services/posthog';
 
 const useAuthStore = create((set, get) => ({
   user: null,
   profile: null,
   loading: true,
   initialized: false,
+  profileJustCreated: false,
 
   initialize: async () => {
     try {
@@ -32,6 +34,7 @@ const useAuthStore = create((set, get) => ({
         await get().fetchProfile();
       }
       if (event === 'SIGNED_OUT') {
+        resetUser();
         localStorage.removeItem('supabase_token');
         set({ user: null, profile: null });
       }
@@ -64,9 +67,25 @@ const useAuthStore = create((set, get) => ({
         })
         .select()
         .single();
-      set({ profile: newProfile });
+      set({ profile: newProfile, profileJustCreated: true });
+      if (newProfile) {
+        identifyUser({
+          id: user.id,
+          email: user.email ?? undefined,
+          display_name: newProfile.display_name,
+          trips_remaining: newProfile.trips_remaining,
+          passport_country: newProfile.passport_country,
+        });
+      }
     } else if (data) {
-      set({ profile: data });
+      set({ profile: data, profileJustCreated: false });
+      identifyUser({
+        id: user.id,
+        email: user.email ?? undefined,
+        display_name: data.display_name,
+        trips_remaining: data.trips_remaining,
+        passport_country: data.passport_country,
+      });
     }
   },
 
@@ -83,6 +102,13 @@ const useAuthStore = create((set, get) => ({
 
     if (!error && data) {
       set({ profile: data });
+      identifyUser({
+        id: user.id,
+        email: user.email ?? undefined,
+        display_name: data.display_name,
+        trips_remaining: data.trips_remaining,
+        passport_country: data.passport_country,
+      });
     }
     return { data, error };
   },
@@ -104,11 +130,14 @@ const useAuthStore = create((set, get) => ({
   },
 
   signOut: async () => {
+    resetUser();
     await supabase.auth.signOut();
     localStorage.removeItem('supabase_token');
     set({ user: null, profile: null });
     window.location.href = '/login';
   },
+
+  setProfileJustCreated: (value) => set({ profileJustCreated: value }),
 }));
 
 export default useAuthStore;

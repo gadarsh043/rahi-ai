@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import useUIStore from '../../../stores/uiStore';
+import { trackEvent } from '../../../services/posthog';
 
 const NAV_ITEMS = [
   { key: 'home', icon: '🏠', activeIcon: '🏠', label: 'Home', path: '/' },
@@ -21,6 +22,7 @@ export default function BottomNav() {
   const handleTap = (item) => {
     if (item.action === 'rightnow') {
       setShowNearby(true);
+      trackEvent('right_now_opened', {});
     } else if (item.action === 'plans') {
       // For now, navigate home where sidebar / plans live
       navigate('/');

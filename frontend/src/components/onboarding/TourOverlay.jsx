@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useTourStore from '../../stores/tourStore';
 import useAuthStore from '../../stores/authStore';
 import { getPageFeatures, getPageSteps, FINAL_STEP, FULL_FLOW_PAGES, PAGE_ROUTES } from './tourRegistry';
+import { trackEvent } from '../../services/posthog';
 
 /* ── Element elevation (z-index boost + ancestor stacking context fix) ── */
 
@@ -233,6 +234,7 @@ export default function TourOverlay() {
       } else {
         // Normal end or final step done
         if (fullFlow) endFullFlow();
+        trackEvent('tour_completed', {});
         endTour();
       }
     } else {
@@ -242,6 +244,7 @@ export default function TourOverlay() {
 
   const handleSkip = useCallback(() => {
     if (activeTour) {
+      trackEvent('tour_dismissed', { step: activeTour.currentIndex });
       const pageFeatures = getPageFeatures(activeTour.page);
       const allIds = pageFeatures.map((f) => f.id);
       markSeen(allIds, (toursSeen) =>

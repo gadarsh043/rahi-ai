@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { apiPost } from '../../../services/apiClient';
 import { toast } from '../../common/Toast/Toast';
 import useTripStore from '../../../stores/tripStore';
+import { trackEvent } from '../../../services/posthog';
 
 export default function ShareButton() {
   const trip = useTripStore((s) => s.trip);
@@ -32,6 +33,7 @@ export default function ShareButton() {
     if (!result.error) {
       setTrip({ ...trip, shareCode: result.share_code });
       toast.success('Share link created!');
+      trackEvent('share_created', { trip_id: trip.id });
     }
     setLoading(false);
   };

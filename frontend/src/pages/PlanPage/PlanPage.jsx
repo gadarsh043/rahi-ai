@@ -7,6 +7,7 @@ import { generateTrip, fetchPlan } from '../../services/api';
 import useTourCheck from '../../hooks/useTourCheck';
 import { ONBOARDING_DEMO_TRIP, ONBOARDING_DEMO_PLACES } from '../../utils/mockTripData';
 import GeneratingScreen from '../../components/plan/GeneratingScreen';
+import { trackEvent } from '../../services/posthog';
 
 function normalizeTrip(apiTrip, places = [], chatMessages = []) {
   if (!apiTrip) return null;
@@ -114,6 +115,10 @@ export default function PlanPage() {
         if (normalized) {
           setTrip(normalized);
           if (shareCode) {
+            trackEvent('shared_trip_viewed', {
+              trip_id: normalized.id,
+              share_code: shareCode,
+            });
             setMode('shared');
           } else if (normalized.status === 'saved') {
             setMode('saved');
@@ -156,6 +161,12 @@ export default function PlanPage() {
           }
           if (event === 'done' && data?.trip_id) {
             setIsGenerating(false);
+            trackEvent('trip_generated', {
+              trip_id: data.trip_id,
+              origin: params.origin_city,
+              destination: params.destination_city,
+              num_days: params.num_days,
+            });
             // After generation completes, load the full trip from API and update URL
             loadExistingTrip(data.trip_id);
             navigate(`/plan/${data.trip_id}`, { replace: true });
