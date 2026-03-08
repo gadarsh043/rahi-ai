@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import TopBar from './components/layout/TopBar';
 import Sidebar from './components/layout/Sidebar';
 import BottomNav from './components/layout/BottomNav/BottomNav';
@@ -120,6 +120,8 @@ export default function App() {
                     </ProtectedRoute>
                   )}
                 />
+                {/* Catch-all: unknown paths → home */}
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </div>
             <BottomNav />
