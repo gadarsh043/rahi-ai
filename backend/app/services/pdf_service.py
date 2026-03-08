@@ -18,21 +18,29 @@ import urllib.parse
 
 # Colors
 BRAND = colors.HexColor("#F97316")
+BRAND_LIGHT = colors.HexColor("#FB923C")
 BRAND_BG = colors.HexColor("#FFF7ED")
+BRAND_BG2 = colors.HexColor("#FFEDD5")
 DARK = colors.HexColor("#0F172A")
 TEXT = colors.HexColor("#1E293B")
 MUTED = colors.HexColor("#6B7280")
 LIGHT_BG = colors.HexColor("#F9FAFB")
 BORDER = colors.HexColor("#E5E7EB")
 GREEN = colors.HexColor("#10B981")
+GREEN_BG = colors.HexColor("#F0FDF4")
 BLUE = colors.HexColor("#3B82F6")
 RED = colors.HexColor("#EF4444")
+RED_BG = colors.HexColor("#FEF2F2")
 WHITE = colors.white
+CREAM = colors.HexColor("#FDF8F4")
 
-# Hex strings for use in link tags (ReportLab Color has no hexval())
+# Hex strings for use in link tags
 BLUE_HEX = "3B82F6"
 MUTED_HEX = "6B7280"
 BRAND_HEX = "F97316"
+GREEN_HEX = "10B981"
+RED_HEX = "EF4444"
+DARK_HEX = "0F172A"
 
 
 def build_styles():
@@ -41,19 +49,20 @@ def build_styles():
         ParagraphStyle(
             "Brand",
             parent=s["Normal"],
-            fontSize=10,
+            fontSize=11,
             textColor=BRAND,
             fontName="Helvetica-Bold",
             alignment=TA_CENTER,
+            spaceAfter=2,
         )
     )
     s.add(
         ParagraphStyle(
             "TripTitle",
             parent=s["Title"],
-            fontSize=22,
+            fontSize=24,
             textColor=DARK,
-            spaceAfter=2,
+            spaceAfter=4,
             alignment=TA_CENTER,
             fontName="Helvetica-Bold",
         )
@@ -77,6 +86,15 @@ def build_styles():
             spaceBefore=18,
             spaceAfter=8,
             fontName="Helvetica-Bold",
+        )
+    )
+    s.add(
+        ParagraphStyle(
+            "SectionSub",
+            parent=s["Normal"],
+            fontSize=8.5,
+            textColor=MUTED,
+            spaceAfter=6,
         )
     )
     s.add(
@@ -181,6 +199,44 @@ def build_styles():
             spaceAfter=4,
         )
     )
+    s.add(
+        ParagraphStyle(
+            "StatLabel",
+            parent=s["Normal"],
+            fontSize=8,
+            textColor=MUTED,
+            alignment=TA_CENTER,
+        )
+    )
+    s.add(
+        ParagraphStyle(
+            "StatValue",
+            parent=s["Normal"],
+            fontSize=14,
+            textColor=DARK,
+            fontName="Helvetica-Bold",
+            alignment=TA_CENTER,
+        )
+    )
+    s.add(
+        ParagraphStyle(
+            "TipText",
+            parent=s["Normal"],
+            fontSize=8,
+            textColor=TEXT,
+            spaceAfter=2,
+            leftIndent=8,
+        )
+    )
+    s.add(
+        ParagraphStyle(
+            "NoticeText",
+            parent=s["Normal"],
+            fontSize=8.5,
+            textColor=TEXT,
+            spaceAfter=3,
+        )
+    )
     return s
 
 
@@ -211,8 +267,16 @@ def _safe_cost(costs, section, key, default=0):
         return default
 
 
+def _build_stat_cell(value, label, styles):
+    """Build a stat cell for the header stats row."""
+    return [
+        Paragraph(str(value), styles["StatValue"]),
+        Paragraph(label, styles["StatLabel"]),
+    ]
+
+
 def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dict) -> bytes:
-    """Generate enhanced trip PDF: quick ref, itinerary with Maps links, costs, visa, packing, phrases."""
+    """Generate Rahify trip PDF with header stats, day-by-day itinerary, costs, places, visa, packing, phrases."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -227,39 +291,106 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
 
     origin = trip.get("origin_city", "?")
     dest = trip.get("destination_city", "?")
+    dest_country = trip.get("destination_country", "")
     days = trip.get("num_days", "?")
     travelers = trip.get("num_travelers", 1)
+    pace = trip.get("pace", "moderate")
+    budget = trip.get("budget_vibe", "$$")
     dates_str = ""
     if trip.get("start_date") and trip.get("end_date"):
         dates_str = f"{trip['start_date']} to {trip['end_date']}"
 
+    essentials = essentials or {}
+    visa_info = visa_info or {}
+    costs = trip.get("cost_estimate") or {}
+
+    PAGE_W = 170 * mm  # usable width
+
     # ═══════════════════════════════════════
-    # PAGE 1: COVER + QUICK REFERENCE CARD
+    # PAGE 1: COVER WITH TRIP STATS
     # ═══════════════════════════════════════
 
-    story.append(Spacer(1, 30))
-    story.append(Paragraph("Rahi AI", styles["Brand"]))
-    story.append(Spacer(1, 8))
-    story.append(Paragraph(f"{origin} to {dest}", styles["TripTitle"]))
+    # Brand accent bar at top
     story.append(
-        Paragraph(
-            f"{days} Days  |  {travelers} Traveler{'s' if travelers != 1 else ''}  |  {dates_str}",
-            styles["Subtitle"],
+        HRFlowable(width="100%", thickness=3, color=BRAND, spaceAfter=20)
+    )
+    story.append(Spacer(1, 10))
+
+    # Brand header
+    story.append(Paragraph("RAHIFY", styles["Brand"]))
+    story.append(Spacer(1, 4))
+    story.append(
+        HRFlowable(width="30%", thickness=2, color=BRAND, spaceAfter=8)
+    )
+    story.append(Paragraph(f"{origin} to {dest}", styles["TripTitle"]))
+    if dest_country:
+        story.append(Paragraph(dest_country, styles["Subtitle"]))
+    if dates_str:
+        story.append(Paragraph(dates_str, styles["Subtitle"]))
+    story.append(Spacer(1, 4))
+
+    # Trip stats row (like reference PDF header)
+    stat_cells = []
+    stat_cells.append(_build_stat_cell(travelers, f"Traveler{'s' if travelers != 1 else ''}", styles))
+    stat_cells.append(_build_stat_cell(days, "Days", styles))
+    stat_cells.append(_build_stat_cell(pace.title(), "Pace", styles))
+    stat_cells.append(_build_stat_cell(budget, "Budget", styles))
+
+    total_cost = _safe_cost(costs, "root", "total", costs.get("total", 0))
+    if total_cost > 0:
+        stat_cells.append(_build_stat_cell(f"${total_cost:,}", "Est. Budget", styles))
+
+    # Build stats table
+    num_stats = len(stat_cells)
+    col_w = PAGE_W / num_stats
+    stat_row_top = [c[0] for c in stat_cells]
+    stat_row_bot = [c[1] for c in stat_cells]
+
+    stats_table = Table(
+        [stat_row_top, stat_row_bot],
+        colWidths=[col_w] * num_stats,
+    )
+    stats_table.setStyle(
+        TableStyle(
+            [
+                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("BACKGROUND", (0, 0), (-1, -1), BRAND_BG),
+                ("TOPPADDING", (0, 0), (-1, 0), 10),
+                ("BOTTOMPADDING", (0, -1), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 0),
+                ("TOPPADDING", (0, -1), (-1, -1), 2),
+                ("BOX", (0, 0), (-1, -1), 1, BORDER),
+            ]
         )
     )
-    story.append(Spacer(1, 6))
-    story.append(HRFlowable(width="100%", thickness=1, color=BORDER, spaceAfter=16))
+    story.append(stats_table)
+    story.append(Spacer(1, 16))
 
-    # Quick Reference Card
+    # Route overview
     story.append(
-        Paragraph("Quick Reference — Screenshot This Page", styles["Section"])
+        Paragraph(
+            f"<b>Route:</b> {origin} <font color='#{BRAND_HEX}'>\u2708</font> {dest}",
+            styles["BodyText"],
+        )
     )
 
-    essentials = essentials or {}
-    ref_data = []
-    em_nums = essentials.get("emergency_numbers") or essentials.get(
-        "emergencyNumbers"
+    story.append(HRFlowable(width="100%", thickness=1, color=BORDER, spaceAfter=12))
+
+    # ═══════════════════════════════════════
+    # QUICK REFERENCE CARD
+    # ═══════════════════════════════════════
+
+    story.append(Paragraph("Quick Reference", styles["Section"]))
+    story.append(
+        Paragraph(
+            "Save or screenshot this section for easy access during your trip.",
+            styles["SectionSub"],
+        )
     )
+
+    ref_data = []
+    em_nums = essentials.get("emergency_numbers") or essentials.get("emergencyNumbers")
     if em_nums and isinstance(em_nums, dict):
         emergency = " | ".join(
             f"{k.title()}: {v}" for k, v in em_nums.items() if k != "note"
@@ -267,9 +398,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         if emergency:
             ref_data.append(["Emergency", emergency])
 
-    ref_data.append(
-        ["Language", essentials.get("language", "Check before travel")]
-    )
+    ref_data.append(["Language", essentials.get("language", "Check before travel")])
     ref_data.append(
         [
             "Currency",
@@ -279,7 +408,11 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     )
     ref_data.append(["Tipping", essentials.get("tipping", "Varies")])
     ref_data.append(
-        ["Power", essentials.get("power_plug") or essentials.get("powerPlug") or "Bring universal adapter"]
+        [
+            "Power",
+            essentials.get("power_plug") or essentials.get("powerPlug")
+            or "Bring universal adapter",
+        ]
     )
     ref_data.append(
         [
@@ -295,9 +428,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             or "Buy local SIM at airport",
         ]
     )
-    ref_data.append(
-        ["Timezone", essentials.get("timezone", "Check before travel")]
-    )
+    ref_data.append(["Timezone", essentials.get("timezone", "Check before travel")])
 
     dress = essentials.get("dress_code") or essentials.get("dressCode")
     if dress:
@@ -312,13 +443,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                     ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
                     ("TEXTCOLOR", (0, 0), (0, -1), DARK),
                     ("TEXTCOLOR", (1, 0), (1, -1), TEXT),
-                    ("BACKGROUND", (0, 0), (-1, -1), BRAND_BG),
-                    (
-                        "ROWBACKGROUNDS",
-                        (0, 0),
-                        (-1, -1),
-                        [BRAND_BG, WHITE],
-                    ),
+                    ("ROWBACKGROUNDS", (0, 0), (-1, -1), [BRAND_BG, WHITE]),
                     ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
                     ("TOPPADDING", (0, 0), (-1, -1), 5),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
@@ -330,8 +455,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         story.append(t)
 
     # Visa Quick Status
-    story.append(Spacer(1, 12))
-    visa_info = visa_info or {}
+    story.append(Spacer(1, 10))
     if visa_info.get("note"):
         visa_text = visa_info["note"]
     elif visa_info.get("visa_required") is False:
@@ -344,33 +468,15 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     else:
         visa_text = "Check visa requirements with embassy"
 
-    visa_color = (
-        GREEN
-        if visa_info.get("visa_required") is False
-        else RED
-    )
+    visa_is_ok = visa_info.get("visa_required") is False
     story.append(
         Table(
-            [
-                [
-                    Paragraph(
-                        f"<b>Visa:</b> {visa_text}",
-                        styles["BodyText"],
-                    )
-                ]
-            ],
-            colWidths=[170 * mm],
+            [[Paragraph(f"<b>Visa:</b> {visa_text}", styles["BodyText"])]],
+            colWidths=[PAGE_W],
             style=TableStyle(
                 [
-                    (
-                        "BACKGROUND",
-                        (0, 0),
-                        (-1, -1),
-                        colors.HexColor("#F0FDF4")
-                        if visa_info.get("visa_required") is False
-                        else colors.HexColor("#FEF2F2"),
-                    ),
-                    ("BORDER", (0, 0), (-1, -1), 1, visa_color),
+                    ("BACKGROUND", (0, 0), (-1, -1), GREEN_BG if visa_is_ok else RED_BG),
+                    ("BOX", (0, 0), (-1, -1), 1, GREEN if visa_is_ok else RED),
                     ("TOPPADDING", (0, 0), (-1, -1), 6),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
                     ("LEFTPADDING", (0, 0), (-1, -1), 10),
@@ -382,16 +488,20 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     story.append(PageBreak())
 
     # ═══════════════════════════════════════
-    # PAGES 2+: DAY-BY-DAY ITINERARY
+    # DAY-BY-DAY ITINERARY
     # ═══════════════════════════════════════
 
     story.append(Paragraph("Your Itinerary", styles["Section"]))
+    story.append(
+        Paragraph(
+            "Tap place names to open in Google Maps. Times are suggested — adjust to your pace.",
+            styles["SectionSub"],
+        )
+    )
 
     itinerary = trip.get("itinerary", {})
     itinerary_days = (
-        itinerary.get("itinerary", [])
-        if isinstance(itinerary, dict)
-        else []
+        itinerary.get("itinerary", []) if isinstance(itinerary, dict) else []
     )
 
     place_lookup = {}
@@ -407,19 +517,20 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         day_num = day.get("day_number", "?")
         title = day.get("title", "")
 
+        # Day header with brand accent
         day_header = Table(
             [
                 [
                     Paragraph(
-                        f"Day {day_num} — {title}",
+                        f"Day {day_num} \u2014 {title}",
                         styles["DayTitle"],
                     )
                 ]
             ],
-            colWidths=[170 * mm],
+            colWidths=[PAGE_W],
             style=TableStyle(
                 [
-                    ("BACKGROUND", (0, 0), (-1, -1), DARK),
+                    ("BACKGROUND", (0, 0), (-1, -1), BRAND),
                     ("TOPPADDING", (0, 0), (-1, -1), 8),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
                     ("LEFTPADDING", (0, 0), (-1, -1), 12),
@@ -436,48 +547,57 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             act_type = act.get("type", "")
             place_id = act.get("place_id") or act.get("placeId", "")
 
-            type_label = {
-                "food": "EAT",
-                "attraction": "VISIT",
-                "hotel": "STAY",
-                "free": "FREE",
-            }.get(act_type, "")
+            type_colors = {
+                "food": (BRAND_HEX, "EAT"),
+                "attraction": (BLUE_HEX, "VISIT"),
+                "hotel": (GREEN_HEX, "STAY"),
+                "free": (MUTED_HEX, "FREE"),
+            }
+            type_color, type_label = type_colors.get(act_type, (MUTED_HEX, ""))
 
             matched = place_lookup.get(place_id) or place_lookup.get(
                 (act_title or "").lower()
             )
             address = ""
             rating = None
+            price_level = None
             gmap_url = ""
             if matched:
                 address = matched.get("address") or ""
                 rating = matched.get("rating")
+                price_level = matched.get("price_level")
                 gmap_url = maps_link(
                     act_title,
                     matched.get("lat"),
                     matched.get("lng"),
-                    matched.get("google_place_id")
-                    or matched.get("googlePlaceId"),
+                    matched.get("google_place_id") or matched.get("googlePlaceId"),
                 )
 
             activity_parts = []
 
+            # Time + type badge
             time_line = f"<b>{time}</b>"
             if type_label:
-                time_line += f"  <font color='#{BRAND_HEX}'>[{type_label}]</font>"
+                time_line += f"  <font color='#{type_color}'>[{type_label}]</font>"
             activity_parts.append(Paragraph(time_line, styles["Time"]))
 
+            # Place name (linked if possible)
             if gmap_url:
-                name_text = (
-                    f"<b><a href='{gmap_url}' color='#{BLUE_HEX}'>{act_title}</a></b>"
-                )
+                name_text = f"<b><a href='{gmap_url}' color='#{BLUE_HEX}'>{act_title}</a></b>"
             else:
                 name_text = f"<b>{act_title}</b>"
 
+            # Rating + price level
+            meta_parts = []
             if rating is not None:
-                name_text += f"  <font color='#{MUTED_HEX}'>({rating})</font>"
+                meta_parts.append(f"\u2605 {rating}")
+            if price_level is not None:
+                meta_parts.append("$" * int(price_level))
+            if meta_parts:
+                name_text += f"  <font color='#{MUTED_HEX}'>({' | '.join(meta_parts)})</font>"
             activity_parts.append(Paragraph(name_text, styles["PlaceName"]))
 
+            # Address
             if address:
                 activity_parts.append(
                     Paragraph(
@@ -486,6 +606,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                     )
                 )
 
+            # Detail / description
             if detail:
                 activity_parts.append(Paragraph(detail, styles["PlaceDetail"]))
 
@@ -500,9 +621,14 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     # COST BREAKDOWN
     # ═══════════════════════════════════════
 
-    costs = trip.get("cost_estimate") or {}
     if costs:
         story.append(Paragraph("Cost Estimate", styles["Section"]))
+        story.append(
+            Paragraph(
+                "All costs are estimates in USD. Actual prices may vary by season and availability.",
+                styles["SectionSub"],
+            )
+        )
 
         cost_rows = [
             ["Category", "Total", "Rate"],
@@ -512,12 +638,12 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                 f"${_safe_cost(costs, 'accommodation', 'per_night')}/night",
             ],
             [
-                "Food",
+                "Food & Drinks",
                 f"${_safe_cost(costs, 'food', 'total'):,}",
                 f"${_safe_cost(costs, 'food', 'per_day')}/day",
             ],
             [
-                "Activities",
+                "Activities & Tickets",
                 f"${_safe_cost(costs, 'activities', 'total'):,}",
                 f"${_safe_cost(costs, 'activities', 'per_day')}/day",
             ],
@@ -532,10 +658,13 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                 f"${_safe_cost(costs, 'flights', 'per_person')}/person",
             ],
         ]
+
+        total_val = _safe_cost(costs, "root", "total", costs.get("total", 0))
+        per_person = _safe_cost(costs, "root", "per_person", costs.get("per_person", 0))
         total_row = [
             "TOTAL",
-            f"${_safe_cost(costs, 'root', 'total', costs.get('total', 0)):,}",
-            f"${_safe_cost(costs, 'root', 'per_person', costs.get('per_person', 0)):,}/person",
+            f"${total_val:,}",
+            f"${per_person:,}/person",
         ]
 
         t = Table(cost_rows + [total_row], colWidths=[65 * mm, 45 * mm, 60 * mm])
@@ -551,6 +680,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                     ("ROWBACKGROUNDS", (0, 1), (-1, -2), [WHITE, LIGHT_BG]),
                     ("TOPPADDING", (0, 0), (-1, -1), 6),
                     ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
                     ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
                     ("BACKGROUND", (0, -1), (-1, -1), BRAND_BG),
                     ("TEXTCOLOR", (0, -1), (-1, -1), BRAND),
@@ -560,6 +690,17 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         )
         story.append(t)
 
+        # Daily average note
+        daily_avg = _safe_cost(costs, "root", "daily_avg", costs.get("daily_avg", 0))
+        if daily_avg > 0:
+            story.append(Spacer(1, 6))
+            story.append(
+                Paragraph(
+                    f"<b>Daily average:</b> ${daily_avg:,}/day (excluding flights)",
+                    styles["SmallMuted"],
+                )
+            )
+
     # ═══════════════════════════════════════
     # YOUR PLACES — Full list with addresses
     # ═══════════════════════════════════════
@@ -567,11 +708,10 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     story.append(Paragraph("Your Places", styles["Section"]))
     story.append(
         Paragraph(
-            "All places in your itinerary with addresses. Tap place names to open in Google Maps.",
-            styles["SmallMuted"],
+            "All places in your itinerary. Tap names to open in Google Maps.",
+            styles["SectionSub"],
         )
     )
-    story.append(Spacer(1, 6))
 
     categories = {}
     for p in places or []:
@@ -590,11 +730,12 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         "tourist_attraction": "Places to Visit",
         "museum": "Museums",
         "park": "Parks & Outdoors",
+        "bar": "Bars & Nightlife",
         "other": "Other",
     }
 
     for cat, cat_places in categories.items():
-        label = cat_labels.get(cat, cat.title())
+        label = cat_labels.get(cat, cat.replace("_", " ").title())
         story.append(Paragraph(f"<b>{label}</b>", styles["RefKey"]))
         story.append(Spacer(1, 3))
 
@@ -606,22 +747,23 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                 p.get("google_place_id") or p.get("googlePlaceId"),
             )
             line = f"<a href='{gurl}' color='#{BLUE_HEX}'>{p.get('name', '')}</a>"
-            if p.get("rating") is not None:
-                line += f" ({p['rating']})"
+            r = p.get("rating")
+            if r is not None:
+                line += f" (\u2605 {r})"
             addr = p.get("address") or ""
             if addr:
-                line += f" — <font color='#{MUTED_HEX}'>{addr}</font>"
+                line += f" \u2014 <font color='#{MUTED_HEX}'>{addr}</font>"
             story.append(Paragraph(line, styles["PlaceInfo"]))
             story.append(Spacer(1, 2))
 
         story.append(Spacer(1, 6))
 
     # ═══════════════════════════════════════
-    # VISA & DOCUMENTS CHECKLIST
+    # VISA & DOCUMENTS
     # ═══════════════════════════════════════
 
     if visa_info:
-        story.append(Paragraph("Visa and Documents", styles["Section"]))
+        story.append(Paragraph("Visa & Documents", styles["Section"]))
 
         if visa_info.get("note"):
             story.append(Paragraph(visa_info["note"], styles["BodyText"]))
@@ -651,13 +793,38 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             story.append(Spacer(1, 4))
             for item in checklist:
                 text = item.get("text", item) if isinstance(item, dict) else item
-                story.append(Paragraph(f"[ ]  {text}", styles["CheckItem"]))
+                story.append(Paragraph(f"\u25a1  {text}", styles["CheckItem"]))
 
         warnings = visa_info.get("warnings", [])
         if warnings:
             story.append(Spacer(1, 6))
             for w in warnings:
-                story.append(Paragraph(f"! {w}", styles["PlaceInfo"]))
+                story.append(
+                    Paragraph(
+                        f"<font color='#{RED_HEX}'>\u26a0 {w}</font>",
+                        styles["PlaceInfo"],
+                    )
+                )
+
+    # ═══════════════════════════════════════
+    # PRE-TRIP CHECKLIST
+    # ═══════════════════════════════════════
+
+    story.append(Paragraph("Pre-Trip Checklist", styles["Section"]))
+
+    pre_trip_items = [
+        "Confirm all bookings (flights, hotels, activities)",
+        "Check passport validity (6+ months from travel date)",
+        "Arrange visa if required",
+        "Get travel insurance",
+        "Notify bank of travel dates",
+        "Download offline maps for destination",
+        "Share itinerary with emergency contact",
+        "Check weather forecast and pack accordingly",
+    ]
+
+    for item in pre_trip_items:
+        story.append(Paragraph(f"\u25a1  {item}", styles["CheckItem"]))
 
     # ═══════════════════════════════════════
     # PACKING CHECKLIST
@@ -665,7 +832,10 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
 
     story.append(Paragraph("Packing Checklist", styles["Section"]))
 
-    packing_essentials = [
+    # Documents
+    story.append(Paragraph("<b>Documents & Money</b>", styles["RefKey"]))
+    story.append(Spacer(1, 3))
+    doc_items = [
         "Passport (valid 6+ months)",
         "Visa documents (if required)",
         "Flight confirmation (printed + phone)",
@@ -673,32 +843,55 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         "Travel insurance details",
         "Copies of all documents (email yourself)",
         "Local currency or travel card",
-        "Phone charger + power adapter",
-        "Medications + prescriptions",
+        "Credit/debit cards (notify bank)",
+    ]
+    for item in doc_items:
+        story.append(Paragraph(f"\u25a1  {item}", styles["CheckItem"]))
+
+    story.append(Spacer(1, 6))
+
+    # Electronics
+    story.append(Paragraph("<b>Electronics</b>", styles["RefKey"]))
+    story.append(Spacer(1, 3))
+    electronics = [
+        "Phone + charger",
+        "Portable battery pack",
     ]
 
-    plug = (
-        essentials.get("power_plug")
-        or essentials.get("powerPlug")
-        or ""
-    )
+    plug = essentials.get("power_plug") or essentials.get("powerPlug") or ""
     if plug and "Type G" in plug:
-        packing_essentials.append("UK power adapter (Type G)")
+        electronics.append("UK power adapter (Type G)")
     elif plug and "Type C" in plug:
-        packing_essentials.append("European power adapter (Type C/E)")
+        electronics.append("European power adapter (Type C/E)")
     elif plug and "Type A" not in plug:
-        packing_essentials.append("Universal power adapter")
+        electronics.append("Universal power adapter")
+    else:
+        electronics.append("Power adapter (check plug type)")
 
-    water = (
-        essentials.get("water_safety") or essentials.get("waterSafety") or ""
-    )
+    electronics.append("Headphones")
+    for item in electronics:
+        story.append(Paragraph(f"\u25a1  {item}", styles["CheckItem"]))
+
+    story.append(Spacer(1, 6))
+
+    # Health & Comfort
+    story.append(Paragraph("<b>Health & Comfort</b>", styles["RefKey"]))
+    story.append(Spacer(1, 3))
+    health_items = [
+        "Medications + prescriptions",
+        "First aid basics (band-aids, painkillers)",
+        "Sunscreen + sunglasses",
+        "Hand sanitizer",
+    ]
+
+    water = essentials.get("water_safety") or essentials.get("waterSafety") or ""
     if water and ("NOT" in water.upper() or "bottled" in water.lower()):
-        packing_essentials.append(
-            "Reusable water bottle (for bottled water)"
-        )
+        health_items.append("Reusable water bottle (for bottled water)")
+    else:
+        health_items.append("Reusable water bottle")
 
-    for item in packing_essentials:
-        story.append(Paragraph(f"[ ]  {item}", styles["CheckItem"]))
+    for item in health_items:
+        story.append(Paragraph(f"\u25a1  {item}", styles["CheckItem"]))
 
     # ═══════════════════════════════════════
     # USEFUL PHRASES (non-English destinations)
@@ -710,16 +903,13 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             language.split("(")[0].strip().split(",")[0].strip() or "Local"
         )
 
-        story.append(
-            Paragraph(f"Useful {lang_name} Phrases", styles["Section"])
-        )
+        story.append(Paragraph(f"Useful {lang_name} Phrases", styles["Section"]))
         story.append(
             Paragraph(
                 f"The primary language is {language}. Here are essential phrases:",
-                styles["SmallMuted"],
+                styles["SectionSub"],
             )
         )
-        story.append(Spacer(1, 6))
 
         PHRASES = {
             "Japanese": [
@@ -782,6 +972,78 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
                 ("God willing", "Inshallah"),
                 ("Help!", "Musaada!"),
             ],
+            "Spanish": [
+                ("Hello", "Hola"),
+                ("Thank you", "Gracias"),
+                ("Please", "Por favor"),
+                ("Yes / No", "Si / No"),
+                ("How much?", "Cuanto cuesta?"),
+                ("Where is...?", "Donde esta...?"),
+                ("The check please", "La cuenta por favor"),
+                ("I don't understand", "No entiendo"),
+                ("Do you speak English?", "Habla ingles?"),
+                ("Help!", "Ayuda!"),
+            ],
+            "Italian": [
+                ("Hello", "Ciao / Buongiorno"),
+                ("Thank you", "Grazie"),
+                ("Please", "Per favore"),
+                ("Yes / No", "Si / No"),
+                ("How much?", "Quanto costa?"),
+                ("Where is...?", "Dove...?"),
+                ("The check please", "Il conto per favore"),
+                ("I don't understand", "Non capisco"),
+                ("Do you speak English?", "Parla inglese?"),
+                ("Help!", "Aiuto!"),
+            ],
+            "Portuguese": [
+                ("Hello", "Ola"),
+                ("Thank you", "Obrigado/Obrigada"),
+                ("Please", "Por favor"),
+                ("Yes / No", "Sim / Nao"),
+                ("How much?", "Quanto custa?"),
+                ("Where is...?", "Onde fica...?"),
+                ("The check please", "A conta por favor"),
+                ("I don't understand", "Nao entendo"),
+                ("Do you speak English?", "Fala ingles?"),
+                ("Help!", "Socorro!"),
+            ],
+            "German": [
+                ("Hello", "Hallo / Guten Tag"),
+                ("Thank you", "Danke"),
+                ("Please", "Bitte"),
+                ("Yes / No", "Ja / Nein"),
+                ("How much?", "Wie viel kostet das?"),
+                ("Where is...?", "Wo ist...?"),
+                ("The check please", "Die Rechnung bitte"),
+                ("I don't understand", "Ich verstehe nicht"),
+                ("Do you speak English?", "Sprechen Sie Englisch?"),
+                ("Help!", "Hilfe!"),
+            ],
+            "Korean": [
+                ("Hello", "Annyeonghaseyo"),
+                ("Thank you", "Gamsahamnida"),
+                ("Yes / No", "Ne / Aniyo"),
+                ("How much?", "Eolma-eyo?"),
+                ("Where is...?", "...eodi-eyo?"),
+                ("Delicious!", "Mashisseoyo!"),
+                ("The check please", "Gyesanseo juseyo"),
+                ("I don't understand", "Moreugeseoyo"),
+                ("Do you speak English?", "Yeongeo hashimnikka?"),
+                ("Help!", "Dowajuseyo!"),
+            ],
+            "Turkish": [
+                ("Hello", "Merhaba"),
+                ("Thank you", "Tesekkur ederim"),
+                ("Yes / No", "Evet / Hayir"),
+                ("How much?", "Ne kadar?"),
+                ("Where is...?", "...nerede?"),
+                ("Delicious!", "Cok guzel!"),
+                ("The check please", "Hesap lutfen"),
+                ("I don't understand", "Anlamiyorum"),
+                ("Do you speak English?", "Ingilizce biliyor musunuz?"),
+                ("Help!", "Imdat!"),
+            ],
         }
 
         lang_phrases = PHRASES.get(
@@ -814,19 +1076,57 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         story.append(pt)
 
     # ═══════════════════════════════════════
+    # EMERGENCY CONTACTS
+    # ═══════════════════════════════════════
+
+    story.append(Paragraph("Emergency Contacts", styles["Section"]))
+
+    em_data = []
+    if em_nums and isinstance(em_nums, dict):
+        for k, v in em_nums.items():
+            if k != "note":
+                em_data.append([k.title(), str(v)])
+
+    # Always include general emergency entries
+    em_data.append(["Your Embassy", f"Look up {dest_country or dest} embassy before traveling"])
+    em_data.append(["Travel Insurance", "Save your policy number and hotline"])
+    em_data.append(["Emergency Contact", "Share this PDF with someone at home"])
+
+    if em_data:
+        et = Table(em_data, colWidths=[45 * mm, 125 * mm])
+        et.setStyle(
+            TableStyle(
+                [
+                    ("FONTSIZE", (0, 0), (-1, -1), 9),
+                    ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
+                    ("TEXTCOLOR", (0, 0), (0, -1), DARK),
+                    ("TEXTCOLOR", (1, 0), (1, -1), TEXT),
+                    ("ROWBACKGROUNDS", (0, 0), (-1, -1), [RED_BG, WHITE]),
+                    ("GRID", (0, 0), (-1, -1), 0.5, BORDER),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 8),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        story.append(et)
+
+    # ═══════════════════════════════════════
     # FOOTER
     # ═══════════════════════════════════════
 
     story.append(Spacer(1, 30))
+    story.append(HRFlowable(width="100%", thickness=2, color=BRAND, spaceAfter=8))
     story.append(
-        HRFlowable(width="100%", thickness=0.5, color=BORDER, spaceAfter=8)
-    )
-    story.append(
-        Paragraph("Generated by Rahi AI | rahi.ai", styles["CenterSmall"])
+        Paragraph(
+            f"<font color='#{BRAND_HEX}'><b>RAHIFY</b></font> | Your trip, planned.",
+            styles["CenterSmall"],
+        )
     )
     story.append(
         Paragraph(
-            "Prices are estimates. Verify bookings and visa requirements independently.",
+            "rahify.com | Prices are estimates. Verify bookings and visa requirements independently.",
             styles["CenterSmall"],
         )
     )

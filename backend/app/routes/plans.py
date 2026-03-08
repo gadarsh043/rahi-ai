@@ -354,14 +354,18 @@ async def download_pdf(trip_id: str, user=Depends(get_current_user)) -> Response
 
     supabase = get_supabase()
 
-    trip_resp = (
-        supabase.table("trips")
-        .select("*")
-        .eq("id", trip_id)
-        .eq("user_id", user["id"])
-        .single()
-        .execute()
-    )
+    try:
+        trip_resp = (
+            supabase.table("trips")
+            .select("*")
+            .eq("id", trip_id)
+            .eq("user_id", user["id"])
+            .single()
+            .execute()
+        )
+    except Exception:
+        raise HTTPException(status_code=404, detail="Trip not found")
+
     trip = trip_resp.data
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
@@ -385,7 +389,7 @@ async def download_pdf(trip_id: str, user=Depends(get_current_user)) -> Response
 
     pdf_bytes = generate_trip_pdf(trip, places, visa_info, essentials)
 
-    filename = f"rahi-{trip.get('origin_city','')}-to-{trip.get('destination_city','')}-{trip.get('num_days','')}days.pdf"
+    filename = f"rahify-{trip.get('origin_city','')}-to-{trip.get('destination_city','')}-{trip.get('num_days','')}days.pdf"
 
     return Response(
         content=pdf_bytes,

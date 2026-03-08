@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.routes import generate, chat, plans, pick, nearby, user, credits, webhooks, facts
 
-app = FastAPI(title="Rahi AI API", version="1.0.0")
+app = FastAPI(title="Rahify API", version="1.0.0")
 
 settings = get_settings()
 
@@ -15,6 +15,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Content-Disposition"],
 )
 
 
@@ -28,9 +29,16 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
     import traceback
 
     traceback.print_exc()
+    origin = request.headers.get("origin", "")
+    allowed = [settings.frontend_url, "http://localhost:5173", "http://localhost:3000"]
+    headers = {}
+    if origin in allowed:
+        headers["access-control-allow-origin"] = origin
+        headers["access-control-allow-credentials"] = "true"
     return JSONResponse(
         status_code=500,
         content={"detail": "Something went wrong. Please try again."},
+        headers=headers,
     )
 
 

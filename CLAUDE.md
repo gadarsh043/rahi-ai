@@ -50,7 +50,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Sidebar: overlay drawer (floating ☰ button, logged-in users only)
 - Bottom nav bar (mobile: Home, Right Now, New Trip, My Plans)
 - Share system (6-char codes, mandatory login, suggest, fork)
-- Enhanced PDF (quick ref, Maps links, packing list, phrases, visa)
+- Enhanced PDF (Rahify branding, trip stats header, quick ref, day-by-day with Maps links, cost table, places list, visa, pre-trip checklist, packing checklist, phrases, emergency contacts)
 - Right Now modal (geolocation → nearby places, 3 tabs)
 - Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner + Google Flights deep links)
   - Custom header with inline date pickers (pill-based DatePillPicker dropdown)
@@ -70,7 +70,8 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - Geocode success: pin on map + address + Google Maps link (no countdown)
   - Geocode failure: MapMessageCard with countdown + auto-open + cancel
 - Map route polylines (flight arc + day routes)
-- Currency selector (reusable, searchable, common pinned)
+- Currency selector (reusable, searchable, common pinned) — only in CostsTab (removed from PlanHeader)
+- Real-time currency conversion via frankfurter.app (free ECB rates, cached 24h in localStorage)
 - Custom onboarding tour system (replaced intro.js)
   - TourOverlay: scrim + element elevation + styled info card (handwritten font, brand accent bar)
   - TourMenu: feature selection grid (full tour + individual features, NEW badges for unseen)
@@ -93,9 +94,13 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
 - Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
 - Credits: 5 free trips, email adarsh@rahify.com for more (no payment platform yet). Credits deducted after successful trip generation.
-- Public home page: new users see full trip form, login required only on Generate
+- Public home page: new users see full trip form, login required before form filling (/new is ProtectedRoute)
 - Login page: minimal, no AI slop, terms/privacy as inline modals (not separate pages)
-- Auth redirect flow: form data survives OAuth via sessionStorage (rahify-pending-trip)
+- Auth flow: Home → login → /new (form) → generate → /plan/new. No sessionStorage form persistence needed.
+- React 18 StrictMode guards: useRef(false) on SSE generation, AuthCallback, and other one-shot effects
+- Cross-account security: invalid tokens always return 401 (no dev fallback when token is provided)
+- GeneratingScreen: fallback facts shown immediately, async fetch for real destination facts
+- Credits UI: amber warning banner in PromptBox when 0 credits, "Request more" link in profile dropdown
 
 ### Not Yet Implemented
 - LemonSqueezy payment integration (domain + setup needed)
@@ -104,6 +109,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Service worker / offline mode
 - SEO meta tags + OG images
 - Production deploy (Railway + Vercel)
+- PDF future goal: match reference PDF quality (hotel comparison tables, restaurant detail tables, route overview diagram, senior-friendly notes, health/safety section with detailed medical info, booking reference quick table). See Future_Reference.pdf for target.
 
 ---
 
@@ -497,7 +503,7 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Share: 6-char invite code + mandatory login (viral loop)
 - Chat: context-aware with live itinerary in system prompt
 - IATA: 200+ city lookup (not city[:3].upper())
-- PDF: Enhanced with maps links, packing, phrases, visa banner
+- PDF: Rahify-branded, trip stats header, quick ref, day-by-day with Maps links, costs, places, visa, pre-trip checklist, packing, phrases, emergency contacts. Filename: rahify-{origin}-to-{dest}-{days}days.pdf
 - Onboarding: Custom tour system (replaced intro.js). tourRegistry defines steps per page, TourOverlay renders scrim + elevation + info card. Persisted via cookie + localStorage + Supabase profile.tours_seen. Replay from profile dropdown.
 - Onboarding elevation: z-index 10001 on target + all ancestor stacking contexts. Preserves fixed/absolute positioning (only static elements get position:relative).
 - Onboarding scroll: always scrollIntoView + 25% nudge (no inView guard). Skipped for clickBefore steps (tab switch handles its own scroll).
@@ -517,9 +523,11 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - TripFormPage: prompt preview updates only on pill land, not live
 - Form step 3: "Who's coming along?" (travelGroup: solo/couple/friends/family/work)
 - City autocomplete: Photon API layers=city,locality,district,county + IATA code lookup (100+ airports)
-- Auth flow for non-logged-in users: generateParams saved to sessionStorage before OAuth redirect → restored on /plan/new after login
-- AuthCallback: sets user in authStore BEFORE navigating to prevent ProtectedRoute race condition
-- ProtectedRoute: shows spinner (not redirect) when rahify-pending-trip exists in sessionStorage
+- Auth flow: /new wrapped in ProtectedRoute → login required before form. No sessionStorage form persistence needed. Home → login → /new → generate → /plan/new
+- AuthCallback: sets user in authStore BEFORE navigating + useRef guard to prevent StrictMode double-fire losing redirect
+- React 18 StrictMode pattern: useRef(false) guard on one-shot effects (SSE generation, AuthCallback, etc.) to prevent double-fire
+- Backend auth security: invalid tokens ALWAYS return 401 regardless of environment. Dev fallback only when NO auth header sent at all.
+- Currency conversion: frankfurter.app (free ECB rates), cached 24h in localStorage. CurrencySelector only in CostsTab (removed from PlanHeader).
 - Login page: terms/privacy open as modals on same page (no navigation away)
 - Itinerary prompt: friend tone, packed days, food as filler, day trips mandatory, self-check before responding
 - Chat classifier: question/hypothetical guard routes "if I want to add...", "how does...", "can I..." to LLM instead of regex. Prevents misclassification of exploratory messages as commands.

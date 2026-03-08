@@ -1,6 +1,7 @@
 import { ALL_CURRENCIES } from '../../common/CurrencySelector/CurrencySelector';
+import { convertAmount } from '../../../utils/exchangeRates';
 
-export default function CostBreakdown({ estimate, numTravelers, currencyCode }) {
+export default function CostBreakdown({ estimate, numTravelers, currencyCode, rate = 1 }) {
   if (!estimate) return null;
 
   const safeNum = (v) => {
@@ -8,17 +9,20 @@ export default function CostBreakdown({ estimate, numTravelers, currencyCode }) 
     return Number.isFinite(n) ? n : 0;
   };
 
+  const fx = (usd) => convertAmount(usd, rate);
+
   const accommodation = estimate.accommodation;
   const food = estimate.food;
   const activities = estimate.activities;
   const flights = estimate.flights;
   const localTransport = estimate.localTransport ?? estimate.local_transport;
 
-  const total = safeNum(estimate.total);
-  const perPerson = safeNum(
-    estimate.perPerson ?? estimate.per_person ?? (numTravelers ? total / numTravelers : total)
-  );
-  const dailyAvg = safeNum(estimate.dailyAvg ?? estimate.daily_avg);
+  const totalUSD = safeNum(estimate.total);
+  const total = fx(totalUSD);
+  const perPerson = fx(safeNum(
+    estimate.perPerson ?? estimate.per_person ?? (numTravelers ? totalUSD / numTravelers : totalUSD)
+  ));
+  const dailyAvg = fx(safeNum(estimate.dailyAvg ?? estimate.daily_avg));
   const currency = currencyCode || estimate.currency || 'USD';
   const label = estimate.label;
 
@@ -31,31 +35,31 @@ export default function CostBreakdown({ estimate, numTravelers, currencyCode }) 
       key: 'accommodation',
       icon: '🛏',
       label: accommodation?.label || 'Accommodation',
-      amount: safeNum(accommodation?.total ?? accommodation),
+      amount: fx(safeNum(accommodation?.total ?? accommodation)),
     },
     {
       key: 'food',
       icon: '🍽',
       label: food?.label || 'Food & Drinks',
-      amount: safeNum(food?.total ?? food),
+      amount: fx(safeNum(food?.total ?? food)),
     },
     {
       key: 'activities',
       icon: '🎟',
       label: 'Activities & Tickets',
-      amount: safeNum(activities?.total ?? activities),
+      amount: fx(safeNum(activities?.total ?? activities)),
     },
     {
       key: 'flights',
       icon: '✈️',
       label: flights?.label || 'Flights',
-      amount: safeNum(flights?.total ?? flights),
+      amount: fx(safeNum(flights?.total ?? flights)),
     },
     {
       key: 'localTransport',
       icon: '🚕',
       label: localTransport?.label || 'Local Transport',
-      amount: safeNum(localTransport?.total ?? localTransport),
+      amount: fx(safeNum(localTransport?.total ?? localTransport)),
     },
   ];
 
@@ -131,4 +135,3 @@ export default function CostBreakdown({ estimate, numTravelers, currencyCode }) 
     </div>
   );
 }
-

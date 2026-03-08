@@ -1,21 +1,27 @@
+import { useState, useEffect } from 'react';
 import useTripStore from '../../../stores/tripStore';
 import useAuthStore from '../../../stores/authStore';
 import CurrencySelector from '../../common/CurrencySelector/CurrencySelector';
 import CostBreakdown from './CostBreakdown';
+import { fetchRates } from '../../../utils/exchangeRates';
 
 export default function CostsTab() {
   const trip = useTripStore((s) => s.trip);
   const setCurrency = useTripStore((s) => s.setCurrency);
   const profile = useAuthStore((s) => s.profile);
-  if (!trip) return null;
+  const [rates, setRates] = useState(null);
 
-  const estimate = trip.costEstimate;
   const currencyCode =
     trip?.currency || profile?.preferred_currency || 'USD';
 
-  const handleCurrencyChange = (code) => {
-    setCurrency(code);
-  };
+  useEffect(() => {
+    fetchRates().then((r) => { if (r) setRates(r); });
+  }, []);
+
+  if (!trip) return null;
+
+  const estimate = trip.costEstimate;
+  const rate = rates?.[currencyCode] || 1;
 
   return (
     <div className="p-4 space-y-4">
@@ -30,7 +36,7 @@ export default function CostsTab() {
         </div>
         <CurrencySelector
           value={currencyCode}
-          onChange={handleCurrencyChange}
+          onChange={setCurrency}
           compact
         />
       </div>
@@ -39,8 +45,8 @@ export default function CostsTab() {
         estimate={estimate}
         numTravelers={trip.numTravelers}
         currencyCode={currencyCode}
+        rate={rate}
       />
     </div>
   );
 }
-
