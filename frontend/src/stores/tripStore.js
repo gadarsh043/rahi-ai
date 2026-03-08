@@ -13,6 +13,9 @@ const useTripStore = create((set, get) => ({
   mapZoom: null,
   selectedMarkerId: null,
   showMap: false, // mobile map toggle
+  desktopMapCollapsed: (() => {
+    try { return localStorage.getItem('rahify-map-collapsed') === '1'; } catch { return false; }
+  })(),
 
   // Chat state
   chatOpen: false,
@@ -59,26 +62,42 @@ const useTripStore = create((set, get) => ({
   setActiveSectionId: (id) => set({ activeSectionId: id, mapZoom: null, selectedMarkerId: null }),
   setMode: (mode) => set({ mode }),
   setSelectedMarker: (id) => set({ selectedMarkerId: id }),
-  focusPlace: (place) =>
+  focusPlace: (place) => {
+    try { localStorage.setItem('rahify-map-collapsed', ''); } catch {}
     set({
       selectedMarkerId: place.id,
       mapCenter: { lat: place.lat, lng: place.lng },
       mapZoom: 16,
       showMap: true,
+      desktopMapCollapsed: false,
       mapMessage: null,
-    }),
-  setMapMessage: (msg) => set({
-    mapMessage: msg,
-    selectedMarkerId: null,
-    showMap: true,
-    ...(msg?.lat != null && msg?.lng != null ? { mapCenter: { lat: msg.lat, lng: msg.lng }, mapZoom: 16 } : {}),
-  }),
+    });
+  },
+  setMapMessage: (msg) => {
+    try { localStorage.setItem('rahify-map-collapsed', ''); } catch {}
+    set({
+      mapMessage: msg,
+      selectedMarkerId: null,
+      showMap: true,
+      desktopMapCollapsed: false,
+      ...(msg?.lat != null && msg?.lng != null ? { mapCenter: { lat: msg.lat, lng: msg.lng }, mapZoom: 16 } : {}),
+    });
+  },
   clearMapMessage: () => {
     const { mapMessage } = get();
     if (mapMessage?._intervalId) clearInterval(mapMessage._intervalId);
     set({ mapMessage: null });
   },
   toggleMap: () => set((s) => ({ showMap: !s.showMap })),
+  toggleDesktopMap: () => set((s) => {
+    const next = !s.desktopMapCollapsed;
+    try { localStorage.setItem('rahify-map-collapsed', next ? '1' : ''); } catch {}
+    return { desktopMapCollapsed: next };
+  }),
+  expandDesktopMap: () => {
+    try { localStorage.setItem('rahify-map-collapsed', ''); } catch {}
+    set({ desktopMapCollapsed: false });
+  },
   toggleChat: () => set((s) => ({ chatOpen: !s.chatOpen })),
   toggleLetsPick: () => set((s) => ({ letsPickOpen: !s.letsPickOpen })),
   setChatOpen: (open) => set({ chatOpen: open }),

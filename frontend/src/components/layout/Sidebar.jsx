@@ -220,10 +220,12 @@ export default function Sidebar() {
   // Hide entire sidebar for logged-out users
   if (!user) return null;
 
+  const isPlanPage = location.pathname.startsWith('/plan') || location.pathname.startsWith('/trip');
+
   return (
     <>
-      {/* Floating toggle — visible when sidebar is closed */}
-      {!sidebarExpanded && (
+      {/* Floating toggle — visible when sidebar is closed, hidden on plan pages (TopBar has it) */}
+      {!sidebarExpanded && !isPlanPage && (
         <button
           type="button"
           onClick={() => setSidebarExpanded(true)}

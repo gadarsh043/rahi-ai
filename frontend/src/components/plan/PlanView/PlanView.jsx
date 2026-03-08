@@ -55,6 +55,8 @@ export default function PlanView() {
   const trip = useTripStore((s) => s.trip);
   const isRebuilding = useTripStore((s) => s.isRebuilding);
   const rebuildStatus = useTripStore((s) => s.rebuildStatus);
+  const desktopMapCollapsed = useTripStore((s) => s.desktopMapCollapsed);
+  const toggleDesktopMap = useTripStore((s) => s.toggleDesktopMap);
 
   const sectionIds = PLAN_SECTIONS.map((s) => s.id);
   const { activeId, scrollToSection, scrollContainerRef } = useScrollSpy(
@@ -94,8 +96,8 @@ export default function PlanView() {
     <>
       {/* Content Panel — full width on mobile, left side on desktop */}
       <div
-        className={`flex flex-col h-[calc(100dvh-var(--topbar-height))] overflow-hidden ${
-          chatOpen ? 'lg:mr-[400px]' : !letsPickOpen ? 'lg:mr-[45%]' : ''
+        className={`flex flex-col h-[calc(100dvh-var(--topbar-height))] overflow-hidden transition-[margin] duration-300 ease-out ${
+          chatOpen ? 'lg:mr-[400px]' : !letsPickOpen && !desktopMapCollapsed ? 'lg:mr-[40%]' : ''
         }`}
       >
         <div className="px-3 pt-3 pb-2 lg:px-6 lg:pt-6">
@@ -138,11 +140,28 @@ export default function PlanView() {
         {mode !== 'shared' && <ActionBar isDemo={isDemo} />}
       </div>
 
-      {/* Map Panel — fixed to right side on desktop */}
+      {/* Map Panel — fixed to right side on desktop, collapsible */}
       {!letsPickOpen && !chatOpen && (
-        <div className="hidden lg:block fixed top-[var(--topbar-height)] right-0 w-[45%] h-[calc(100dvh-var(--topbar-height))] bg-[var(--surface)] border-l border-[var(--border)] z-10">
+        <div
+          className={`hidden lg:block fixed top-[var(--topbar-height)] right-0 h-[calc(100dvh-var(--topbar-height))] bg-[var(--surface)] border-l border-[var(--border)] z-10 transition-[width,opacity] duration-300 ease-out ${
+            desktopMapCollapsed ? 'w-0 opacity-0 overflow-hidden' : 'w-[40%]'
+          }`}
+        >
           <MapErrorBoundary><MapPanel trip={trip} places={trip?.places} activeTab={activeId} /></MapErrorBoundary>
         </div>
+      )}
+
+      {/* Desktop map collapse/expand toggle */}
+      {!letsPickOpen && !chatOpen && (
+        <button
+          type="button"
+          onClick={toggleDesktopMap}
+          className="hidden lg:flex fixed z-20 items-center justify-center w-6 h-12 rounded-l-lg bg-[var(--surface)] border border-r-0 border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+          style={{ top: 'calc(var(--topbar-height) + 12px)', right: desktopMapCollapsed ? 0 : '40%' }}
+          aria-label={desktopMapCollapsed ? 'Show map' : 'Hide map'}
+        >
+          <span className="text-xs">{desktopMapCollapsed ? '‹' : '›'}</span>
+        </button>
       )}
 
       {/* Mobile map toggle button (floating above action bar + bottom nav) */}

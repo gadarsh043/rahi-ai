@@ -40,12 +40,13 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Plan View with tab-based navigation (7 tabs)
 - All tabs: Eat, Stay, Go, Trip (timeline), Flight, Costs, Next
 - Timeline hover tooltips: place photo, rating, category, price, address on hover (smart positioning)
+- Timeline day alerts: ⓘ icon on day headers for holidays/events/seasonal warnings (LLM-generated day_alert field, hover tooltip)
 - Timeline click-to-locate: click activity → geocode via Photon → show on map or open Google Maps
 - Interactive map (Leaflet + OSM, color-coded markers, route polylines, MapMessageCard overlay)
 - AI Chatbot (context-aware, mutations, bottom sheet mobile / drawer desktop)
   - Friend-like tone, short responses, multi-turn history
   - Syncs is_in_itinerary between trips table and trip_places table
-- Let's Pick popup → /pick SSE wiring
+- Let's Pick popup → queues pending changes (no auto-rebuild), persists to DB via /update-picks
 - Sidebar: overlay drawer (floating ☰ button, logged-in users only)
 - Bottom nav bar (mobile: Home, Right Now, New Trip, My Plans)
 - Share system (6-char codes, mandatory login, suggest, fork)
@@ -358,7 +359,7 @@ rahify/
 │   │   │   ├── generate.py        ← /generate SSE (places first → AI)
 │   │   │   ├── chat.py            ← /chat SSE (context-aware, mutations)
 │   │   │   ├── plans.py           ← CRUD + share + suggest + fork + refresh-flights
-│   │   │   ├── pick.py            ← /pick SSE (rebuild from selections)
+│   │   │   ├── pick.py            ← /pick SSE (rebuild from selections) + /update-picks (persist without rebuild)
 │   │   │   ├── nearby.py          ← /nearby (geolocation → Google Places)
 │   │   │   ├── user.py            ← profile CRUD
 │   │   │   └── webhooks.py        ← future payment webhooks
@@ -407,7 +408,7 @@ rahify/
      │                          │   Click → popup       │
      ├──────────────────────────┤                      │
      │ ActionBar                │                      │
-     │ [💬 Chat] [🎯 Let's Pick]│                      │
+     │ [💬 Chat][🎯 Pick][🔄 Rebuild]│                      │
      └──────────────────────────┴──────────────────────┘
 Floating ☰ opens overlay sidebar drawer (not inline)
 ```
@@ -424,7 +425,7 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 │   (scrollable)             │
 │                            │
 ├────────────────────────────┤
-│ [💬 Chat] [🎯 Let's Pick]  │  sticky action bar
+│ [💬][🎯 Pick][🔄 Rebuild]  │  sticky action bar
 ├────────────────────────────┤
 │ 🏠  🔍  📍  📋             │  bottom nav
 └────────────────────────────┘
@@ -461,8 +462,10 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Sections read from trip.places filtered by category
 - Map reads from trip.places + highlights based on active tab
 - Chat messages in tripStore.chatMessages
-- Chat responses trigger removePlace() / addPlaceToItinerary() / selectFlight()
-- After any mutation: refresh trip from API → store updates → UI re-renders
+- Chat responses trigger removePlace() / addPlaceToItinerary() / selectFlight() + addPendingChange()
+- Let's Pick "Done" triggers removePlace() / addPlaceToItinerary() + addPendingChange() (no auto-rebuild)
+- Rebuild button (third ActionBar button) appears when pendingChanges > 0 — calls POST /plans/:id/rebuild
+- After rebuild: refresh trip from API → store updates → UI re-renders
 - normalizeTrip (PlanPage.jsx): must explicitly map EVERY field from API response — missing fields silently dropped
   - Must include transportMode, transportData for flight deep links to work
 - useScrollSpy: uses getBoundingClientRect() relative to scroll container (not el.offsetTop which is relative to offsetParent)
@@ -519,7 +522,11 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - ProtectedRoute: shows spinner (not redirect) when rahify-pending-trip exists in sessionStorage
 - Login page: terms/privacy open as modals on same page (no navigation away)
 - Itinerary prompt: friend tone, packed days, food as filler, day trips mandatory, self-check before responding
+- Chat classifier: question/hypothetical guard routes "if I want to add...", "how does...", "can I..." to LLM instead of regex. Prevents misclassification of exploratory messages as commands.
 - Chat prompt: friend who's been there, 1-3 sentences, specific tips, multi-turn history
+- Rebuild as third button: ActionBar always shows Chat + Let's Pick. Rebuild appears as third button when pendingChanges > 0. User can do multiple Let's Pick + Chat actions, then rebuild once.
+- Let's Pick no auto-rebuild: "Done" queues changes as pending, persists selection to DB via POST /update-picks, shows toast with count. User clicks Rebuild when ready.
+- Day alerts: LLM generates optional `day_alert` field per itinerary day for holidays/events/seasonal concerns. Shown as ⓘ hover tooltip on Timeline day headers.
 - Flight tab: custom header layout — Row 1: "Flights" + [Round trip|One way] + date pills + Search. Row 2: route + freshness + Refresh button
 - Flight date pickers: pill-based DatePillPicker dropdown (not native `<input type="date">`), brand-500 selected state, click-outside-to-close
 - Flight date defaults: depart = tripStart-1 (arrive day before trip), return = tripEnd. Bounds: depart max(today, tripStart-5)→tripStart-1, return tripEnd→tripEnd+4

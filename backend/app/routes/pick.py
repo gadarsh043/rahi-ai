@@ -11,6 +11,44 @@ import json
 router = APIRouter()
 
 
+@router.post("/plans/{trip_id}/update-picks")
+async def update_picks(trip_id: str, req: PickRequest, user=Depends(get_current_user)):
+    """Persist place selection changes to DB without rebuilding the itinerary."""
+    supabase = get_supabase()
+
+    # Verify ownership
+    trip_resp = (
+        supabase.table("trips")
+        .select("user_id")
+        .eq("id", trip_id)
+        .single()
+        .execute()
+    )
+    if not trip_resp.data or trip_resp.data.get("user_id") != user.get("id"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=403, detail="Not your trip")
+
+    for pid in req.selected_place_ids:
+        (
+            supabase.table("trip_places")
+            .update({"is_in_itinerary": True})
+            .eq("trip_id", trip_id)
+            .eq("google_place_id", pid)
+            .execute()
+        )
+
+    for pid in req.removed_place_ids:
+        (
+            supabase.table("trip_places")
+            .update({"is_in_itinerary": False, "day_number": None, "time_slot": None})
+            .eq("trip_id", trip_id)
+            .eq("google_place_id", pid)
+            .execute()
+        )
+
+    return {"ok": True, "updated": len(req.selected_place_ids) + len(req.removed_place_ids)}
+
+
 @router.post("/plans/{trip_id}/pick")
 async def pick_places(trip_id: str, req: PickRequest, user=Depends(get_current_user)):
     return StreamingResponse(

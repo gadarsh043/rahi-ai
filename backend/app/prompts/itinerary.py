@@ -37,8 +37,13 @@ OUTPUT FORMAT:
 - Each place_id must be the exact google_place_id from the provided list.
 - Each place used at most ONCE (hotel: check-in Day 1 + check-out last day is fine).
 
+DAY ALERTS — IMPORTANT:
+- If any travel day falls on a public holiday, major local event, festival, or seasonal concern for the destination, add a "day_alert" field to that day.
+- Keep it short and practical: "Independence Day — most shops and banks closed. Restaurants and tourist spots usually open." or "Monsoon season — expect afternoon downpours. Carry an umbrella."
+- Only add when genuinely relevant. Don't force alerts on normal days.
+
 JSON format:
-{"itinerary":[{"day_number":1,"title":"Arrival & First Taste","activities":[{"time":"10:00","type":"food|attraction|hotel|free","title":"Short activity name","detail":"1-2 sentence friend-style tip","place_id":"google_place_id or null"}]}],"narrative":"2-3 paragraph trip overview written like a friend hyping up the trip"}"""
+{"itinerary":[{"day_number":1,"title":"Arrival & First Taste","day_alert":"optional — only if holiday/event/weather concern on this date","activities":[{"time":"10:00","type":"food|attraction|hotel|free","title":"Short activity name","detail":"1-2 sentence friend-style tip","place_id":"google_place_id or null"}]}],"narrative":"2-3 paragraph trip overview written like a friend hyping up the trip"}"""
 
 
 def build_itinerary_prompt(places: list, params: dict) -> str:
@@ -114,7 +119,9 @@ TONE: Friend recommending spots. "their garlic noodles slap" not "enjoy wonderfu
 
 RULES: Each place ONCE (hotel: Day 1 check-in + last day check-out ok).
 
-JSON: {"itinerary":[{"day_number":1,"title":"Day title","activities":[{"time":"10:00","type":"food|attraction|hotel|free","title":"Name","detail":"1-2 sentence tip","place_id":"google_id or null"}]}],"narrative":"2-3 paragraph trip hype"}"""
+DAY ALERTS: If a travel day falls on a public holiday, major event, or seasonal concern for the destination, add "day_alert" to that day. Short & practical: "Independence Day — most shops closed, tourist spots open." Only when genuinely relevant.
+
+JSON: {"itinerary":[{"day_number":1,"title":"Day title","day_alert":"optional — holiday/event/weather note","activities":[{"time":"10:00","type":"food|attraction|hotel|free","title":"Name","detail":"1-2 sentence tip","place_id":"google_id or null"}]}],"narrative":"2-3 paragraph trip hype"}"""
 
 
 def build_itinerary_prompt_lean(places_text: str, params: dict) -> str:

@@ -315,6 +315,7 @@ export const MOCK_TRIP = {
     {
       dayNumber: 2,
       title: 'Nature & Gardens',
+      dayAlert: 'Spring Break week — popular spots may be busier than usual. Book tickets online to skip lines.',
       activities: [
         { time: '09:00', type: 'food', title: 'Breakfast at hotel', detail: 'The Adolphus has excellent breakfast.', placeId: 'place-h1' },
         { time: '10:00', type: 'attraction', title: 'Dallas Arboretum & Botanical Garden', detail: '66 acres of gardens on White Rock Lake. Bring sunscreen!', placeId: 'place-a1' },
@@ -551,6 +552,7 @@ export const ONBOARDING_DEMO_TRIP = {
       {
         day_number: 2,
         title: 'Space Needle & Beyond',
+        day_alert: 'Cherry blossom season — UW Quad and parks will be gorgeous but crowded.',
         activities: [
           {
             time: '9:00 AM',

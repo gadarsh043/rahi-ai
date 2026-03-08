@@ -14,7 +14,7 @@ REMOVE_PATTERNS = [
 
 # Patterns that mean "add"
 ADD_PATTERNS = [
-    r"(?:add|include|put|throw in)\s+(.+?)(?:\s+to\s+(?:day\s*(\d+)))?(?:\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?))?",
+    r"(?:add|include|put|throw in)\s+(.+?)(?:\s+to\s+day\s*(\d+))?(?:\s+at\s+(\d{1,2}(?::\d{2})?\s*(?:am|pm)?))?\s*[.,!?]?\s*$",
 ]
 
 # Patterns that mean "replace/swap"
@@ -60,23 +60,47 @@ def parse_day(text: str) -> Optional[int]:
     return None
 
 
+_STOP_WORDS = frozenset({
+    "the", "a", "an", "and", "or", "in", "on", "at", "to", "for", "of",
+    "is", "it", "my", "i", "we", "do", "so", "up", "if", "by", "no",
+    "how", "can", "day", "this", "that", "with", "from", "some", "more",
+    "new", "old", "not", "but", "all", "any", "its", "our", "get",
+})
+
+
 def find_place_by_name(name: str, places: list) -> Optional[dict]:
     """Fuzzy match a place name against the places list."""
     name_lower = name.lower().strip()
+
+    # Too short for any meaningful match
+    if len(name_lower) < 3:
+        return None
+
     # Exact match
     for p in places:
         if p["name"].lower() == name_lower:
             return p
-    # Partial match (user said "kerry park", place is "Kerry Park - Seattle")
-    for p in places:
-        if name_lower in p["name"].lower() or p["name"].lower() in name_lower:
-            return p
-    # Word overlap (at least 2 matching words)
-    name_words = set(name_lower.split())
-    for p in places:
-        place_words = set(p["name"].lower().split())
-        if len(name_words & place_words) >= 2:
-            return p
+
+    # Partial match — require at least 3 chars and meaningful overlap
+    if len(name_lower) >= 3:
+        for p in places:
+            pname = p["name"].lower()
+            if name_lower in pname or pname in name_lower:
+                # Ensure the match is meaningful (not just "n" in "restaurant")
+                shorter = min(len(name_lower), len(pname))
+                longer = max(len(name_lower), len(pname))
+                if shorter / longer > 0.3:
+                    return p
+
+    # Word overlap (at least 2 non-stop-words matching)
+    name_words = set(name_lower.split()) - _STOP_WORDS
+    if len(name_words) >= 2:
+        for p in places:
+            place_words = set(p["name"].lower().split()) - _STOP_WORDS
+            overlap = name_words & place_words
+            if len(overlap) >= 2:
+                return p
+
     return None
 
 
@@ -206,6 +230,39 @@ def check_scope_guard(message: str, trip: dict) -> dict | None:
 
 
 # ============================================
+# QUESTION / HYPOTHETICAL GUARD
+# ============================================
+
+_QUESTION_STARTERS = re.compile(
+    r"^(?:if\b|how\b|can\s+(?:i|you|we)\b|could\s+(?:i|you|we)\b|would\s+(?:it|i|you)\b|"
+    r"what\s+(?:if|about|would|happens)\b|is\s+it\b|do\s+you\b|does\b|should\b|"
+    r"i\s+(?:was\s+)?(?:wondering|thinking)\b|what'?s?\b|where\b|when\b|why\b|"
+    r"is\s+there\b|are\s+there\b)",
+    re.IGNORECASE,
+)
+
+_QUESTION_ENDINGS = re.compile(r"\?\s*$")
+
+_HYPOTHETICAL_PHRASES = re.compile(
+    r"(?:how\s+does\s+it\s+work|how\s+would|is\s+it\s+possible|"
+    r"if\s+i\s+(?:want|wanted)\s+to|would\s+it\s+be|do\s+you\s+think|"
+    r"what\s+do\s+you\s+(?:think|suggest|recommend))",
+    re.IGNORECASE,
+)
+
+
+def _is_question_or_hypothetical(msg_lower: str) -> bool:
+    """Detect if a message is a question or hypothetical, not a direct command."""
+    if _QUESTION_ENDINGS.search(msg_lower):
+        return True
+    if _QUESTION_STARTERS.match(msg_lower):
+        return True
+    if _HYPOTHETICAL_PHRASES.search(msg_lower):
+        return True
+    return False
+
+
+# ============================================
 # MAIN CLASSIFIER
 # ============================================
 
@@ -241,6 +298,15 @@ def classify_message(
     # Step 0: If there's a pending action, interpret this as an answer
     if pending_action:
         return handle_pending_response(msg, msg_lower, places, pending_action)
+
+    # Step 0.5: Question/hypothetical guard — route to LLM, not regex
+    if _is_question_or_hypothetical(msg_lower):
+        return {
+            "type": "need_llm",
+            "action": None,
+            "response": None,
+            "pending_action": None,
+        }
 
     # Step 1: Check for cancel
     for pattern in CANCEL_PATTERNS:

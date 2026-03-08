@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, memo } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import useTripStore from '../../../stores/tripStore';
 import { sendChatMessage } from '../../../services/api';
@@ -62,6 +62,13 @@ export default function ChatDrawer() {
   const [input, setInput] = useState('');
   const endRef = useRef(null);
   const inputRef = useRef(null);
+  const desktopInputRef = useRef(null);
+
+  const autoResize = useCallback((el) => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,7 +76,14 @@ export default function ChatDrawer() {
 
   useEffect(() => {
     if (chatOpen) {
-      const t = setTimeout(() => inputRef.current?.focus(), 300);
+      const t = setTimeout(() => {
+        // Focus whichever textarea is visible (mobile or desktop)
+        if (window.innerWidth >= 1024) {
+          desktopInputRef.current?.focus();
+        } else {
+          inputRef.current?.focus();
+        }
+      }, 300);
       return () => clearTimeout(t);
     }
   }, [chatOpen]);
@@ -88,6 +102,8 @@ export default function ChatDrawer() {
       content: text,
     });
     setInput('');
+    if (inputRef.current) inputRef.current.style.height = 'auto';
+    if (desktopInputRef.current) desktopInputRef.current.style.height = 'auto';
     setChatThinking(true);
     updateStreamingMessage('');
 
@@ -221,26 +237,34 @@ export default function ChatDrawer() {
 
             {/* Input */}
             <div className="sticky bottom-0 px-3 py-2 bg-[var(--bg)] border-t border-[var(--border)] flex-shrink-0 pb-[env(safe-area-inset-bottom)]">
-              <div className="flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-3 py-2.5 focus-within:border-brand-500/50 transition-colors">
-                <input
+              <div className="flex items-end gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-3 py-2.5 focus-within:border-brand-500/50 transition-colors">
+                <textarea
                   ref={inputRef}
-                  type="text"
+                  rows={1}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    autoResize(e.target);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   placeholder={
                     isDemo
                       ? 'Demo mode: chat disabled'
                       : "Remove Terry Black's, add vegan spots..."
                   }
                   disabled={isDemo}
-                  className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none min-h-[44px]"
+                  className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none min-h-[44px] max-h-[120px] resize-none overflow-y-auto"
                 />
                 <button
                   type="button"
                   onClick={handleSend}
                   disabled={isDemo || !input.trim()}
-                  className="w-11 h-11 rounded-xl bg-brand-500 text-white flex items-center justify-center disabled:opacity-30 transition-colors"
+                  className="w-11 h-11 rounded-xl bg-brand-500 text-white flex items-center justify-center disabled:opacity-30 transition-colors flex-shrink-0"
                 >
                   ➤
                 </button>
@@ -330,26 +354,34 @@ export default function ChatDrawer() {
 
             {/* Input */}
             <div className="p-4 border-t border-[var(--border)] flex-shrink-0">
-              <div className="flex items-center gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-3 py-2.5 focus-within:border-brand-500/50 transition-colors">
-                <input
-                  ref={inputRef}
-                  type="text"
+              <div className="flex items-end gap-2 bg-[var(--surface)] border border-[var(--border)] rounded-xl px-3 py-2.5 focus-within:border-brand-500/50 transition-colors">
+                <textarea
+                  ref={desktopInputRef}
+                  rows={1}
                   value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    autoResize(e.target);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend();
+                    }
+                  }}
                   placeholder={
                     isDemo
                       ? 'Demo mode: chat disabled'
                       : "Remove Terry Black's, add vegan spots..."
                   }
                   disabled={isDemo}
-                  className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none"
+                  className="flex-1 bg-transparent text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] outline-none min-h-[36px] max-h-[120px] resize-none overflow-y-auto"
                 />
                 <button
                   type="button"
                   onClick={handleSend}
                   disabled={isDemo || !input.trim()}
-                  className="text-brand-500 hover:text-brand-600 disabled:opacity-30 transition-colors"
+                  className="text-brand-500 hover:text-brand-600 disabled:opacity-30 transition-colors flex-shrink-0 pb-1"
                 >
                   <svg
                     className="w-5 h-5"

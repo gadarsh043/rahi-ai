@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../hooks/useTheme';
 import useAuthStore from '../../stores/authStore';
+import useUIStore from '../../stores/uiStore';
 import useTourStore from '../../stores/tourStore';
 import { getPageFeatures } from '../onboarding/tourRegistry';
 
@@ -12,10 +13,14 @@ export default function TopBar() {
   const signOut = useAuthStore((s) => s.signOut);
   const showTourMenu = useTourStore((s) => s.showTourMenu);
   const clearPageSeen = useTourStore((s) => s.clearPageSeen);
+  const sidebarExpanded = useUIStore((s) => s.sidebarExpanded);
+  const setSidebarExpanded = useUIStore((s) => s.setSidebarExpanded);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const isPlanPage = location.pathname.startsWith('/plan') || location.pathname.startsWith('/trip');
 
   const name =
     profile?.display_name ||
@@ -200,12 +205,24 @@ export default function TopBar() {
     <header className="shrink-0 sticky top-0 z-[var(--z-topbar)] border-b border-[var(--border)] bg-white dark:bg-[var(--bg)] dark:bg-opacity-80 dark:backdrop-blur-md">
       {/* Mobile: slim topbar */}
       <div className="flex lg:hidden items-center justify-between w-full px-3 h-11">
-        <Link
-          to="/"
-          className="text-lg font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
-        >
-          Rahify
-        </Link>
+        <div className="flex items-center gap-2">
+          {isPlanPage && user && (
+            <button
+              type="button"
+              onClick={() => setSidebarExpanded(!sidebarExpanded)}
+              className="w-8 h-8 rounded-lg border border-[var(--border)] flex items-center justify-center text-sm text-[var(--text-muted)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+              aria-label={sidebarExpanded ? 'Close sidebar' : 'Open sidebar'}
+            >
+              ☰
+            </button>
+          )}
+          <Link
+            to="/"
+            className="text-lg font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
+          >
+            Rahify
+          </Link>
+        </div>
         <div className="flex items-center gap-2">
           {avatarButton}
         </div>
@@ -213,12 +230,24 @@ export default function TopBar() {
 
       {/* Desktop: full topbar */}
       <div className="hidden lg:flex items-center justify-between w-full px-4 h-[var(--topbar-height)]">
-        <Link
-          to="/"
-          className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
-        >
-          Rahify
-        </Link>
+        <div className="flex items-center gap-2.5">
+          {isPlanPage && user && (
+            <button
+              type="button"
+              onClick={() => setSidebarExpanded(!sidebarExpanded)}
+              className="w-8 h-8 rounded-lg border border-[var(--border)] flex items-center justify-center text-sm text-[var(--text-muted)] hover:bg-[var(--surface-hover)] transition-colors cursor-pointer"
+              aria-label={sidebarExpanded ? 'Close sidebar' : 'Open sidebar'}
+            >
+              ☰
+            </button>
+          )}
+          <Link
+            to="/"
+            className="text-xl font-bold bg-gradient-to-r from-brand-500 to-brand-600 bg-clip-text text-transparent"
+          >
+            Rahify
+          </Link>
+        </div>
         <div className="flex items-center gap-3">
           <button
             type="button"

@@ -62,36 +62,36 @@ export default function ActionBar({ isDemo = false }) {
           💬 <span className="hidden sm:inline">Chat</span>
         </button>
 
-        {hasPending ? (
+        <button
+          type="button"
+          onClick={toggleLetsPick}
+          data-tour="lets-pick"
+          aria-label="Open place picker"
+          className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-brand-500 text-sm font-medium text-white active:scale-[0.98] transition-transform touch-target"
+        >
+          🎯 <span className="hidden sm:inline">Let&apos;s Pick</span>
+        </button>
+
+        {hasPending && (
           <button
             type="button"
             onClick={handleRebuild}
             disabled={rebuilding}
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-brand-500 text-sm font-semibold text-white active:scale-[0.98] transition-transform touch-target disabled:opacity-60"
+            className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border-2 border-brand-500 bg-brand-500/10 text-sm font-semibold text-brand-600 active:scale-[0.98] transition-transform touch-target disabled:opacity-60"
           >
             {rebuilding ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                 <span>Rebuilding…</span>
               </>
             ) : (
               <>
-                🔄 Rebuild Itinerary
-                <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-white/20">
+                🔄 <span className="hidden sm:inline">Rebuild</span>
+                <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-brand-500 text-white">
                   {pendingChanges.length}
                 </span>
               </>
             )}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={toggleLetsPick}
-            data-tour="lets-pick"
-            aria-label="Open place picker"
-            className="flex-1 lg:flex-none flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-brand-500 text-sm font-medium text-white active:scale-[0.98] transition-transform touch-target"
-          >
-            🎯 <span className="hidden sm:inline">Let&apos;s Pick</span>
           </button>
         )}
       </div>

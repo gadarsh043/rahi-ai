@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import useTripStore from '../../../stores/tripStore';
 
 function buildMapsSearchUrl(title, destinationCity) {
@@ -126,6 +127,43 @@ function getDayDate(startDate, dayNumber) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function DayAlertIcon({ alert }) {
+  const [show, setShow] = useState(false);
+  const ref = useRef(null);
+  const [position, setPosition] = useState('bottom');
+
+  useEffect(() => {
+    if (show && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      // If tooltip would overflow bottom, show above
+      setPosition(rect.bottom + 80 > window.innerHeight ? 'top' : 'bottom');
+    }
+  }, [show]);
+
+  return (
+    <span
+      ref={ref}
+      className="relative inline-flex items-center ml-1.5"
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onTouchStart={() => setShow((s) => !s)}
+    >
+      <span className="w-4 h-4 rounded-full border border-amber-400/60 bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 text-[10px] font-bold flex items-center justify-center cursor-default select-none">
+        i
+      </span>
+      {show && (
+        <span
+          className={`absolute left-1/2 -translate-x-1/2 z-30 w-56 px-3 py-2 rounded-lg bg-[var(--surface)] border border-[var(--border)] shadow-lg text-xs text-[var(--text-secondary)] leading-relaxed pointer-events-none ${
+            position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'
+          }`}
+        >
+          {alert}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export default function Timeline({ itinerary }) {
   const trip = useTripStore((s) => s.trip);
   const places = trip?.places || [];
@@ -139,6 +177,7 @@ export default function Timeline({ itinerary }) {
       {itinerary.map((day, dayIndex) => {
         const dayNumber = day.dayNumber ?? day.day_number ?? dayIndex + 1;
         const dayTitle = day.title ?? day.day_title ?? '';
+        const dayAlert = day.dayAlert ?? day.day_alert ?? null;
         const activities = Array.isArray(day.activities) ? day.activities : [];
         const dateStr = getDayDate(startDate, dayNumber);
         return (
@@ -150,6 +189,7 @@ export default function Timeline({ itinerary }) {
             <span className="text-sm font-semibold text-[var(--text-primary)]">
               {dayTitle}
             </span>
+            {dayAlert && <DayAlertIcon alert={dayAlert} />}
           </div>
 
           <div className="space-y-3 ml-2 border-l-2 border-[var(--border)] pl-4">
