@@ -687,6 +687,10 @@ Each selection → auto-fills prompt text → selector animates out → next app
 
 ### Brand: Sunset Orange 🧡
 
+> **Note:** The SCSS variables and mixins in this section reflect the original design approach.  
+> The live app now uses **Tailwind CSS v4** with tokens defined in `frontend/src/index.css` (see `CLAUDE.md`).  
+> Use this section as conceptual reference only; do **not** reintroduce SCSS.
+
 **SCSS Variables (`_variables.scss`):**
 
 ```scss
@@ -1090,231 +1094,48 @@ Prompts include:
 ## 14. Folder Structure
 
 ```
-rahi-ai/
+rahify/
+├── CLAUDE.md
+├── PROJECT_SPEC.md
+├── MWEB_UI_SPEC.md
+│
 ├── frontend/
 │   ├── public/
-│   │   └── favicon.svg
+│   │   ├── favicon.svg
+│   │   ├── manifest.json          ← PWA config
+│   │   ├── icons/                 ← PWA icons
+│   │   ├── sitemap.xml            ← static sitemap (/, /login, /explore, /explore/paris)
+│   │   └── robots.txt             ← crawl rules (blocks /plan, /trip, /new, etc.)
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── common/
-│   │   │   │   ├── Button/
-│   │   │   │   │   ├── Button.jsx
-│   │   │   │   │   └── Button.module.scss
-│   │   │   │   ├── Card/
-│   │   │   │   │   ├── Card.jsx
-│   │   │   │   │   └── Card.module.scss
-│   │   │   │   ├── Modal/
-│   │   │   │   │   ├── Modal.jsx
-│   │   │   │   │   └── Modal.module.scss
-│   │   │   │   ├── Toast/
-│   │   │   │   │   ├── Toast.jsx
-│   │   │   │   │   └── Toast.module.scss
-│   │   │   │   ├── Dropdown/
-│   │   │   │   │   ├── Dropdown.jsx
-│   │   │   │   │   └── Dropdown.module.scss
-│   │   │   │   ├── Badge/
-│   │   │   │   │   ├── Badge.jsx
-│   │   │   │   │   └── Badge.module.scss
-│   │   │   │   └── Loader/
-│   │   │   │       ├── Loader.jsx
-│   │   │   │       └── Loader.module.scss
-│   │   │   │
-│   │   │   ├── layout/
-│   │   │   │   ├── TopBar/
-│   │   │   │   │   ├── TopBar.jsx
-│   │   │   │   │   └── TopBar.module.scss
-│   │   │   │   ├── Sidebar/
-│   │   │   │   │   ├── Sidebar.jsx
-│   │   │   │   │   └── Sidebar.module.scss
-│   │   │   │   ├── ThemeToggle/
-│   │   │   │   │   ├── ThemeToggle.jsx
-│   │   │   │   │   └── ThemeToggle.module.scss
-│   │   │   │   └── ProfileDropdown/
-│   │   │   │       ├── ProfileDropdown.jsx
-│   │   │   │       └── ProfileDropdown.module.scss
-│   │   │   │
-│   │   │   ├── auth/
-│   │   │   │   ├── GoogleLoginButton/
-│   │   │   │   │   ├── GoogleLoginButton.jsx
-│   │   │   │   │   └── GoogleLoginButton.module.scss
-│   │   │   │   └── ProtectedRoute.jsx
-│   │   │   │
-│   │   │   ├── onboarding/
-│   │   │   │   ├── OnboardingTour.jsx
-│   │   │   │   └── OnboardingTour.module.scss
-│   │   │   │
-│   │   │   ├── home/
-│   │   │   │   ├── PaceSelector/
-│   │   │   │   │   ├── PaceSelector.jsx
-│   │   │   │   │   └── PaceSelector.module.scss
-│   │   │   │   ├── BudgetVibeSelector/
-│   │   │   │   │   ├── BudgetVibeSelector.jsx
-│   │   │   │   │   └── BudgetVibeSelector.module.scss
-│   │   │   │   ├── PreferencePills/
-│   │   │   │   │   ├── PreferencePills.jsx
-│   │   │   │   │   └── PreferencePills.module.scss
-│   │   │   │   ├── AccommodationSelector/
-│   │   │   │   │   ├── AccommodationSelector.jsx
-│   │   │   │   │   └── AccommodationSelector.module.scss
-│   │   │   │   ├── CityAutocomplete/
-│   │   │   │   │   ├── CityAutocomplete.jsx
-│   │   │   │   │   └── CityAutocomplete.module.scss
-│   │   │   │   ├── CountryAutocomplete/
-│   │   │   │   │   ├── CountryAutocomplete.jsx
-│   │   │   │   │   └── CountryAutocomplete.module.scss
-│   │   │   │   ├── DatePicker/
-│   │   │   │   │   ├── DatePicker.jsx
-│   │   │   │   │   └── DatePicker.module.scss
-│   │   │   │   ├── DurationSlider/
-│   │   │   │   │   ├── DurationSlider.jsx
-│   │   │   │   │   └── DurationSlider.module.scss
-│   │   │   │   ├── PromptBox/
-│   │   │   │   │   ├── PromptBox.jsx
-│   │   │   │   │   └── PromptBox.module.scss
-│   │   │   │   └── JoinTrip/
-│   │   │   │       ├── JoinTrip.jsx
-│   │   │   │       └── JoinTrip.module.scss
-│   │   │   │
-│   │   │   ├── plan/
-│   │   │   │   ├── PlanView/
-│   │   │   │   │   ├── PlanView.jsx
-│   │   │   │   │   └── PlanView.module.scss
-│   │   │   │   ├── PlanHeader/
-│   │   │   │   │   ├── PlanHeader.jsx
-│   │   │   │   │   └── PlanHeader.module.scss
-│   │   │   │   ├── TabBar/
-│   │   │   │   │   ├── TabBar.jsx
-│   │   │   │   │   └── TabBar.module.scss
-│   │   │   │   ├── MapPanel/
-│   │   │   │   │   ├── MapPanel.jsx
-│   │   │   │   │   └── MapPanel.module.scss
-│   │   │   │   ├── ChatInput/
-│   │   │   │   │   ├── ChatInput.jsx
-│   │   │   │   │   └── ChatInput.module.scss
-│   │   │   │   ├── ChatMessages/
-│   │   │   │   │   ├── ChatMessages.jsx
-│   │   │   │   │   └── ChatMessages.module.scss
-│   │   │   │   ├── LetsPickPopup/
-│   │   │   │   │   ├── LetsPickPopup.jsx
-│   │   │   │   │   └── LetsPickPopup.module.scss
-│   │   │   │   ├── PlaceCard/
-│   │   │   │   │   ├── PlaceCard.jsx
-│   │   │   │   │   └── PlaceCard.module.scss
-│   │   │   │   ├── FlightCard/
-│   │   │   │   │   ├── FlightCard.jsx
-│   │   │   │   │   └── FlightCard.module.scss
-│   │   │   │   ├── Timeline/
-│   │   │   │   │   ├── Timeline.jsx
-│   │   │   │   │   └── Timeline.module.scss
-│   │   │   │   ├── CostBreakdown/
-│   │   │   │   │   ├── CostBreakdown.jsx
-│   │   │   │   │   └── CostBreakdown.module.scss
-│   │   │   │   ├── SharedBanner/
-│   │   │   │   │   ├── SharedBanner.jsx
-│   │   │   │   │   └── SharedBanner.module.scss
-│   │   │   │   ├── SuggestionsBadge/
-│   │   │   │   │   ├── SuggestionsBadge.jsx
-│   │   │   │   │   └── SuggestionsBadge.module.scss
-│   │   │   │   ├── CurrencySelector/
-│   │   │   │   │   ├── CurrencySelector.jsx
-│   │   │   │   │   └── CurrencySelector.module.scss
-│   │   │   │   └── tabs/
-│   │   │   │       ├── EatTab/
-│   │   │   │       │   ├── EatTab.jsx
-│   │   │   │       │   └── EatTab.module.scss
-│   │   │   │       ├── StayTab/
-│   │   │   │       │   ├── StayTab.jsx
-│   │   │   │       │   └── StayTab.module.scss
-│   │   │   │       ├── PlacesTab/
-│   │   │   │       │   ├── PlacesTab.jsx
-│   │   │   │       │   └── PlacesTab.module.scss
-│   │   │   │       ├── FlightTab/
-│   │   │   │       │   ├── FlightTab.jsx
-│   │   │   │       │   └── FlightTab.module.scss
-│   │   │   │       ├── CostsTab/
-│   │   │   │       │   ├── CostsTab.jsx
-│   │   │   │       │   └── CostsTab.module.scss
-│   │   │   │       ├── TripTab/
-│   │   │   │       │   ├── TripTab.jsx
-│   │   │   │       │   └── TripTab.module.scss
-│   │   │   │       └── NextTab/
-│   │   │   │           ├── NextTab.jsx
-│   │   │   │           └── NextTab.module.scss
-│   │   │   │
-│   │   │   ├── nearby/
-│   │   │   │   ├── NearbyModal/
-│   │   │   │   │   ├── NearbyModal.jsx
-│   │   │   │   │   └── NearbyModal.module.scss
-│   │   │   │   └── NearbyCard/
-│   │   │   │       ├── NearbyCard.jsx
-│   │   │   │       └── NearbyCard.module.scss
-│   │   │   │
-│   │   │   ├── credits/
-│   │   │   │   ├── CreditsModal/
-│   │   │   │   │   ├── CreditsModal.jsx
-│   │   │   │   │   └── CreditsModal.module.scss
-│   │   │   │   └── PlanCard/
-│   │   │   │       ├── PlanCard.jsx
-│   │   │   │       └── PlanCard.module.scss
-│   │   │   │
-│   │   │   └── profile/
-│   │   │       ├── ProfileForm/
-│   │   │       │   ├── ProfileForm.jsx
-│   │   │       │   └── ProfileForm.module.scss
-│   │   │       ├── QuizView/
-│   │   │       │   ├── QuizView.jsx
-│   │   │       │   └── QuizView.module.scss
-│   │   │       └── PurchaseHistory/
-│   │   │           ├── PurchaseHistory.jsx
-│   │   │           └── PurchaseHistory.module.scss
-│   │   │
+│   │   │   ├── common/            ← Button, Modal, Toast, Dropdown, Badge, Loader, CurrencySelector
+│   │   │   ├── layout/            ← TopBar, Sidebar, BottomNav, ThemeToggle, ProfileDropdown
+│   │   │   ├── auth/              ← GoogleLoginButton, ProtectedRoute
+│   │   │   ├── onboarding/        ← TourOverlay, TourMenu, TourPrompt, tourRegistry
+│   │   │   ├── home/              ← CityAutocomplete, DatePicker, PaceSelector, PromptBox, JoinTrip, etc.
+│   │   │   ├── plan/              ← PlanView, PlanHeader, TabBar, ActionBar, MapPanel (+ MapMessageCard),
+│   │   │   │                         ChatDrawer, LetsPickPopup, PlaceCard, FlightCard, SharedBanner,
+│   │   │   │                         LazySection, SuggestionsBadge, tabs/
+│   │   │   ├── nearby/            ← NearbyModal
+│   │   │   ├── credits/           ← CreditsExhausted
+│   │   │   └── profile/           ← ProfileForm
 │   │   ├── pages/
-│   │   │   ├── HomePage/
-│   │   │   │   ├── HomePage.jsx
-│   │   │   │   └── HomePage.module.scss
-│   │   │   ├── PlanPage/
-│   │   │   │   ├── PlanPage.jsx
-│   │   │   │   └── PlanPage.module.scss
-│   │   │   ├── SettingsPage/
-│   │   │   │   ├── SettingsPage.jsx
-│   │   │   │   └── SettingsPage.module.scss
-│   │   │   └── AuthPage/
-│   │   │       ├── AuthPage.jsx
-│   │   │       └── AuthPage.module.scss
-│   │   │
+│   │   │   ├── HomePage.jsx
+│   │   │   ├── PlanPage.jsx       ← handles /plan/:id, /plan/demo, /trip/:id
+│   │   │   ├── SettingsPage.jsx
+│   │   │   ├── AuthPage.jsx
+│   │   │   ├── ExplorePage.jsx              ← /explore gallery
+│   │   │   └── ExploreDestinationPage.jsx   ← /explore/:slug landing pages
 │   │   ├── hooks/
-│   │   │   ├── useAuth.js
-│   │   │   ├── useSSE.js
-│   │   │   ├── useTrip.js
-│   │   │   ├── useGeolocation.js
-│   │   │   └── useTheme.js
-│   │   │
-│   │   ├── stores/
-│   │   │   ├── authStore.js
-│   │   │   ├── tripStore.js
-│   │   │   └── uiStore.js
-│   │   │
-│   │   ├── services/
-│   │   │   ├── api.js
-│   │   │   └── supabase.js
-│   │   │
-│   │   ├── utils/
-│   │   │   ├── constants.js
-│   │   │   ├── formatCurrency.js
-│   │   │   ├── countries.js
-│   │   │   └── affiliateLinks.js
-│   │   │
-│   │   ├── styles/
-│   │   │   ├── _variables.scss        ← design tokens
-│   │   │   ├── _mixins.scss           ← reusable patterns
-│   │   │   ├── _reset.scss            ← CSS reset/normalize
-│   │   │   ├── _typography.scss       ← font imports + base type
-│   │   │   ├── _animations.scss       ← keyframes
-│   │   │   └── global.scss            ← imports all above + base styles
-│   │   │
+│   │   ├── stores/                ← authStore, tripStore, uiStore, tourStore
+│   │   ├── services/              ← api.js, supabase.js, posthog.js
+│   │   ├── utils/                 ← constants.js, formatCurrency.js, countries.js, affiliateLinks.js
+│   │   ├── data/
+│   │   │   └── exploreDestinations.js
+│   │   ├── index.css              ← Tailwind imports + @theme + glass utilities
 │   │   ├── App.jsx
 │   │   └── main.jsx
-│   │
+│   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
 │
@@ -1330,7 +1151,6 @@ rahi-ai/
 │   │   │   ├── pick.py
 │   │   │   ├── nearby.py
 │   │   │   ├── user.py
-│   │   │   ├── credits.py
 │   │   │   └── webhooks.py
 │   │   ├── services/
 │   │   │   ├── llm_service.py
@@ -1338,25 +1158,20 @@ rahi-ai/
 │   │   │   ├── flight_service.py
 │   │   │   ├── geocode_service.py
 │   │   │   ├── pdf_service.py
-│   │   │   └── stripe_service.py
-│   │   ├── models/
-│   │   │   ├── trip.py
-│   │   │   ├── chat.py
-│   │   │   ├── places.py
-│   │   │   └── user.py
+│   │   │   ├── cost_service.py
+│   │   │   ├── visa_service.py
+│   │   │   └── essentials_service.py
 │   │   ├── prompts/
 │   │   │   ├── itinerary.py
 │   │   │   ├── chat.py
 │   │   │   └── essentials.py
 │   │   └── utils/
 │   │       ├── supabase_client.py
+│   │       ├── iata_codes.py
 │   │       ├── distance.py
 │   │       └── cache.py
-│   ├── scripts/
-│   │   └── seed.py                    ← creates test trip data
 │   ├── requirements.txt
-│   ├── Dockerfile
-│   └── .env.example
+│   └── Dockerfile
 │
 ├── supabase/
 │   └── migrations/
@@ -1366,23 +1181,27 @@ rahi-ai/
 │   ├── PROJECT_SPEC.md
 │   └── PROMPTS.md
 │
+├── package.json          ← root helper (npm run dev starts frontend + backend)
 ├── .gitignore
-├── README.md
-└── docker-compose.yml
+└── README.md
 ```
 
 ---
 
 ## 15. Styling Architecture (Tailwind CSS)
 
-### Will Use Tailwind
+Rahify’s frontend uses **Tailwind CSS v4** (no SCSS, no CSS Modules, no inline `style={{}}`) with:
 
-### Vite Config for SCSS
-```import tailwindcss from '@tailwindcss/vite';
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-});
-```
+- `@tailwindcss/vite` configured in `vite.config.js`.
+- A single `index.css` that:
+  - Imports Tailwind.
+  - Defines the design tokens via `@theme` (brand colors, semantic colors, map marker colors, layout constants, typography fonts).
+  - Defines light/dark theme variables on `:root` and `.dark`.
+  - Adds custom utilities like `glass`, `glass-dark`, `glass-strong`, `glass-strong-dark`, and `shadow-brand`.
+- Components styled exclusively with Tailwind utility classes using theme variables (e.g. `bg-[var(--surface)]`, `text-[var(--text-primary)]`, `border-[var(--border)]`).
+- Typography and spacing patterns (Hero, Section, Card, Body, Caption, Label) implemented via Tailwind classes described in `CLAUDE.md`.
+
+Any SCSS-related content in this spec is historical and should not be reintroduced into the codebase.
 
 ---
 
