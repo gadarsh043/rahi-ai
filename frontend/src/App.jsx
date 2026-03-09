@@ -13,6 +13,8 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import AuthCallback from './pages/AuthCallback/AuthCallback';
 import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
+import ExplorePage from './pages/ExplorePage';
+import ExploreDestinationPage from './pages/ExploreDestinationPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import useAuthStore from './stores/authStore';
 import useUIStore from './stores/uiStore';
@@ -61,6 +63,24 @@ export default function App() {
                   element={(
                     <ErrorBoundary>
                       <HomePage />
+                    </ErrorBoundary>
+                  )}
+                />
+
+                {/* Explore SEO pages (public, crawlable) */}
+                <Route
+                  path="/explore"
+                  element={(
+                    <ErrorBoundary>
+                      <ExplorePage />
+                    </ErrorBoundary>
+                  )}
+                />
+                <Route
+                  path="/explore/:slug"
+                  element={(
+                    <ErrorBoundary>
+                      <ExploreDestinationPage />
                     </ErrorBoundary>
                   )}
                 />

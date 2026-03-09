@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /plan/
+Disallow: /trip/
+Disallow: /settings
+Disallow: /auth/
+Disallow: /new
+Sitemap: https://rahify.com/sitemap.xml
+
