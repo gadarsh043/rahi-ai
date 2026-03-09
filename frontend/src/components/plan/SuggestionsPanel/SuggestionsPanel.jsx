@@ -6,7 +6,7 @@ export default function SuggestionsPanel({ tripId }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (tripId) {
+    if (tripId && tripId !== 'demo') {
       loadSuggestions();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

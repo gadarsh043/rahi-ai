@@ -254,6 +254,12 @@ async def suggest(trip_id: str, body: dict):
 
 @router.get("/plans/{trip_id}/suggestions")
 async def get_suggestions(trip_id: str, user=Depends(get_current_user)):
+    # Demo or non-UUID trip_id: return empty (avoids Supabase UUID type error)
+    try:
+        uuid.UUID(trip_id)
+    except (ValueError, TypeError):
+        return {"suggestions": []}
+
     supabase = get_supabase()
     resp = (
         supabase.table("trip_suggestions")

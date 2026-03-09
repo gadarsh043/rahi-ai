@@ -391,10 +391,15 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                     )
             except Exception:
                 pass  # Don't block the response if credit deduction fails
-        except Exception as e:
-            print(f"Supabase save error: {e}")
 
-        yield sse_event("done", {"trip_id": trip_id, "message": "Your trip is ready!"})
+            yield sse_event("done", {"trip_id": trip_id, "message": "Your trip is ready!"})
+
+        except Exception as e:
+            traceback.print_exc()
+            yield sse_event(
+                "error",
+                {"message": "We couldn't save your trip. Please try again.", "retry": True},
+            )
 
     except Exception as e:
         traceback.print_exc()

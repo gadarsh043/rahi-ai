@@ -268,30 +268,45 @@ export default function PlanPage() {
 
   if (genError) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] px-4">
-        <div className="text-center max-w-sm">
-          <div className="text-5xl mb-4">🌧️</div>
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
-            Trip planning hit a snag
-          </h2>
-          <p className="text-sm text-[var(--text-muted)] mb-6">
-            This happens sometimes. Your selections are saved — just retry.
-          </p>
-          <button
-            type="button"
-            onClick={() => {
-              if (lastGenerateParams) {
-                setGenError(false);
-                hasStartedGenRef.current = false;
-                startGeneration(lastGenerateParams);
-              }
-            }}
-            className="bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-2.5 rounded-xl transition-colors"
-          >
-            🔄 Retry
-          </button>
+      <>
+        <div
+          className="fixed inset-0 z-[10000] bg-black/95"
+          aria-hidden
+        />
+        <div
+          className="fixed inset-0 z-[10001] flex items-center justify-center px-4"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="gen-error-title"
+        >
+          <div className="bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
+            <div className="h-1 bg-gradient-to-r from-brand-400 to-brand-500 rounded-t-2xl -mt-8 -mx-8 mb-6" />
+            <div className="text-5xl mb-4">🌧️</div>
+            <h2
+              id="gen-error-title"
+              className="text-xl font-semibold text-[var(--text-primary)] mb-2"
+            >
+              Trip planning hit a snag
+            </h2>
+            <p className="text-sm text-[var(--text-muted)] mb-6">
+              This happens sometimes. Your selections are saved — just retry.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (lastGenerateParams) {
+                  setGenError(false);
+                  hasStartedGenRef.current = false;
+                  startGeneration(lastGenerateParams);
+                }
+              }}
+              className="w-full bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-3 rounded-xl transition-colors active:scale-[0.98]"
+            >
+              🔄 Retry
+            </button>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
