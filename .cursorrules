@@ -40,7 +40,13 @@ Always read `CLAUDE.md` in the project root before making any changes. It has th
 - Don't install UI libraries (MUI, Chakra, shadcn).
 - Don't use placeholder images from external URLs.
 - Don't build backend until asked.
-- Don't modify PROJECT_SPEC.md or MWEB_UI_SPEC.md.
+- Only modify `PROJECT_SPEC.md` or `MWEB_UI_SPEC.md` when explicitly asked, and keep them in sync with the real implementation.
+
+## Analytics
+- Use `posthog-js` via `src/services/posthog.js` (no inline PostHog setup in components).
+- Call `initPosthog()` once in `main.jsx` — it already no-ops in Vite dev (`import.meta.env.DEV`) and when `VITE_POSTHOG_KEY` is missing.
+- Use the exported `trackEvent(name, props)` helper instead of calling `posthog.capture` directly.
+- Only add tracking that reflects real product behavior (no spammy or overly granular events).
 
 ## Build Prompts
 Reference HOME_PAGE_PROMPTS.md for step-by-step build instructions.

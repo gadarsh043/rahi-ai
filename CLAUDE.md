@@ -8,6 +8,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - **Backend:** Python 3.12 + FastAPI (separate repo/folder)
 - **DB/Auth:** Supabase (PostgreSQL + Google OAuth only)
 - **AI:** Groq (Llama 3 70B) → Claude (later, model-agnostic wrapper)
+- **Analytics:** PostHog (posthog-js in frontend + PostHog MCP in Cursor)
 - **Map Rendering:** Leaflet + OpenStreetMap (free, no API key)
 - **Place Data:** Google Places API (New) for real place data, photos, ratings
 - **Flights:** SerpAPI (Google Flights) with 10-min cache + IATA resolver
@@ -80,7 +81,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - TourPrompt: "First time here?" floating prompt (bottom-right)
   - tourRegistry: declarative step definitions per page (home, form, plan) with priority ordering
   - tourStore: Zustand store with cookie + localStorage + Supabase profile sync for seen tracking
-  - Full flow: home → form → plan (/plan/demo) → final step (profile dropdown "Replay Tour")
+  - Full flow: home → form → plan (/plan/demo) → final step (profile dropdown "Replay Tour") for logged-in users
   - Element elevation: z-index 10001 + ancestor stacking context traversal (preserves fixed/absolute)
   - Scroll: scrollIntoView({ block: 'center', behavior: 'instant' }) + nudge +25% viewport height
   - Info card: bottom-right default, bottom-left when element >65% viewport width, center for text-only
@@ -92,6 +93,10 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - Retry: up to 3 attempts (500ms apart) for lazy-mounted elements
   - data-tour attributes on key elements for targeting (place-card, flight-section, chat-drawer, etc.)
   - Error boundary stops all tours on crash
+  - Home-only tour: works for all users (logged-in or not), never navigates away from `/`, final step spotlights "Sign in to start planning"
+  - Full cross-page flow (home → form → plan → final step) only runs for logged-in users and is triggered from TourPrompt or "Replay Tour"
+  - TourPrompt on the home page chooses home-only vs full flow based on auth state
+  - "Replay Tour" in the profile dropdown always navigates to `/` and then starts the full flow for logged-in users
 - Light mode default (Tailwind + CSS variables, theme persisted to localStorage)
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
 - Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
@@ -103,6 +108,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Cross-account security: invalid tokens always return 401 (no dev fallback when token is provided)
 - GeneratingScreen: fallback facts shown immediately, async fetch for real destination facts
 - Credits UI: amber warning banner in PromptBox when 0 credits, "Request more" link in profile dropdown
+- Generation error UX: if Supabase save fails during `/generate`, backend emits an `error` SSE (not `done`), and PlanPage shows a full-screen dark overlay with a prominent "Retry" button so users don't miss it
 
 ### Deployment (Live)
 - **Frontend:** Netlify (static SPA, `frontend/dist`) — rahify.com
@@ -566,6 +572,9 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - PDF branding: Rahify (not Rahi AI). Orange accent bars, brand-colored day headers, trip stats row, pre-trip checklist, emergency contacts, packing by category.
 - Backend API title: "Rahify API" (not "Rahi AI API")
 - expose_headers: Content-Disposition added to CORS middleware for PDF filename.
+ - Railway config: `railway_cname` is an optional `Settings` field so Railway's injected env var doesn't break Pydantic validation.
+ - Suggestions safety: `/plans/{trip_id}/suggestions` short-circuits to an empty list for non-UUID IDs (e.g., `/plan/demo`), and the frontend skips suggestions fetch entirely when `tripId === 'demo'`.
+ - PostHog dev behavior: analytics are disabled in local Vite dev (`import.meta.env.DEV`) and when `VITE_POSTHOG_KEY` is unset, to avoid noisy local data and adblock errors.
 
 ---
 
