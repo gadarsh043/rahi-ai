@@ -125,7 +125,6 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Travel Quiz
 - Credit card reference in NextTab
 - Service worker / offline mode
-- SEO meta tags + OG images
 - PDF future goal: match reference PDF quality (hotel comparison tables, restaurant detail tables, route overview diagram, senior-friendly notes, health/safety section with detailed medical info, booking reference quick table). See Future_Reference.pdf for target.
 
 ---
@@ -330,7 +329,9 @@ rahify/
 │   ├── public/
 │   │   ├── favicon.svg
 │   │   ├── manifest.json          ← PWA config
-│   │   └── icons/                 ← PWA icons
+│   │   ├── icons/                 ← PWA icons
+│   │   ├── sitemap.xml            ← SEO sitemap (home, login, explore, destinations)
+│   │   └── robots.txt             ← SEO crawl rules (blocks /plan, /trip, /new, etc.)
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── common/            ← Button, Modal, Toast, Dropdown, Badge, Loader, CurrencySelector
@@ -349,7 +350,9 @@ rahify/
 │   │   │   ├── HomePage.jsx
 │   │   │   ├── PlanPage.jsx       ← handles /plan/:id, /plan/demo, /trip/:id
 │   │   │   ├── SettingsPage.jsx
-│   │   │   └── AuthPage.jsx
+│   │   │   ├── AuthPage.jsx
+│   │   │   ├── ExplorePage.jsx              ← /explore SEO gallery
+│   │   │   └── ExploreDestinationPage.jsx   ← /explore/:slug SEO landing pages
 │   │   ├── hooks/
 │   │   ├── stores/
 │   │   │   ├── authStore.js
@@ -359,6 +362,8 @@ rahify/
 │   │   ├── services/
 │   │   │   ├── api.js             ← apiGet, apiPost, apiSSE with error handling
 │   │   │   └── supabase.js
+│   │   ├── data/
+│   │   │   └── exploreDestinations.js ← static SEO content for /explore/:slug
 │   │   ├── utils/
 │   │   │   ├── constants.js
 │   │   │   ├── formatCurrency.js
@@ -575,6 +580,8 @@ Floating ☰ opens overlay sidebar drawer (not inline)
  - Railway config: `railway_cname` is an optional `Settings` field so Railway's injected env var doesn't break Pydantic validation.
  - Suggestions safety: `/plans/{trip_id}/suggestions` short-circuits to an empty list for non-UUID IDs (e.g., `/plan/demo`), and the frontend skips suggestions fetch entirely when `tripId === 'demo'`.
  - PostHog dev behavior: analytics are disabled in local Vite dev (`import.meta.env.DEV`) and when `VITE_POSTHOG_KEY` is unset, to avoid noisy local data and adblock errors.
+ - Explore SEO pages: `/explore` gallery and `/explore/:slug` landing pages (starting with Paris) are public and crawlable, powered by `exploreDestinations.js` and lucide-react icons.
+ - SEO foundation: static sitemap.xml + robots.txt, site-wide meta tags, Open Graph + Twitter tags, JSON-LD (WebApplication + Organization), and a `<noscript>` fallback in `index.html`. Prerendering is deferred until the build pipeline supports puppeteer.
 
 ---
 
