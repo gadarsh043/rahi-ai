@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"
     dev_user_id: str = "test-user-uuid-123"
     frontend_url: str = "http://localhost:5173"
+    railway_cname: str = ""  # Set by Railway at runtime; optional for local
 
     class Config:
         env_file = ".env"

@@ -4,7 +4,7 @@ import { useTheme } from '../../hooks/useTheme';
 import useAuthStore from '../../stores/authStore';
 import useUIStore from '../../stores/uiStore';
 import useTourStore from '../../stores/tourStore';
-import { getPageFeatures } from '../onboarding/tourRegistry';
+import { getPageFeatures, getPageSteps } from '../onboarding/tourRegistry';
 
 export default function TopBar() {
   const { isDark, toggle } = useTheme();
@@ -13,6 +13,8 @@ export default function TopBar() {
   const signOut = useAuthStore((s) => s.signOut);
   const showTourMenu = useTourStore((s) => s.showTourMenu);
   const clearPageSeen = useTourStore((s) => s.clearPageSeen);
+  const startFullFlow = useTourStore((s) => s.startFullFlow);
+  const startTour = useTourStore((s) => s.startTour);
   const sidebarExpanded = useUIStore((s) => s.sidebarExpanded);
   const setSidebarExpanded = useUIStore((s) => s.setSidebarExpanded);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -37,14 +39,12 @@ export default function TopBar() {
   const menuItems = useMemo(
     () => [
       { icon: '🎓', label: 'Replay Tour', dataTour: 'replay-tour', action: () => {
-        // Figure out which page we're on and show the tour menu for it
-        const path = location.pathname;
-        let page = 'home';
-        if (path.startsWith('/plan') || path.startsWith('/trip')) page = 'plan';
-        else if (path === '/new') page = 'form';
-        // Clear seen status so all features show as available
-        clearPageSeen(getPageFeatures(page));
-        showTourMenu(page);
+        // Start full tour from home (home → form → plan)
+        navigate('/');
+        setTimeout(() => {
+          startFullFlow();
+          startTour('home', getPageSteps('home'));
+        }, 800);
       } },
       { icon: '⚙️', label: 'Settings', action: () => navigate('/settings') },
       {
@@ -69,7 +69,7 @@ export default function TopBar() {
         action: () => navigate('/privacy'),
       },
     ],
-    [navigate, quizCompleted, showTourMenu, clearPageSeen, location.pathname],
+    [navigate, quizCompleted, startFullFlow, startTour, location.pathname],
   );
 
   useEffect(() => {

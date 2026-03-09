@@ -84,7 +84,7 @@ export default function LandingSection({ onStart }) {
                 then build a day-by-day itinerary you can customize with AI chat.
               </p>
               <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
-                <button type="button" onClick={onStart} className="bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-8 py-3.5 text-base font-semibold shadow-[0_4px_20px_-2px_rgba(249,115,22,0.5)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer">
+                <button type="button" onClick={onStart} className="bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-8 py-3.5 text-base font-semibold shadow-[0_4px_20px_-2px_rgba(249,115,22,0.5)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer" data-tour="home-cta">
                   Plan My Trip
                 </button>
                 <span className="text-sm text-[var(--text-muted)]">Free &middot; No sign up to start</span>

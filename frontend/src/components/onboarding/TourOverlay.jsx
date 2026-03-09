@@ -216,6 +216,14 @@ export default function TourOverlay() {
 
         if (currentIdx < FULL_FLOW_PAGES.length - 1) {
           const nextPage = FULL_FLOW_PAGES[currentIdx + 1];
+          // Do not navigate to protected routes when user is not logged in
+          const user = useAuthStore.getState().user;
+          if ((nextPage === 'form' || nextPage === 'plan') && !user) {
+            if (fullFlow) endFullFlow();
+            trackEvent('tour_completed', {});
+            endTour();
+            return;
+          }
           const route = PAGE_ROUTES[nextPage];
           endTour();
           navigate(route);

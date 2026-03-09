@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import useTourStore from '../../stores/tourStore';
 import useAuthStore from '../../stores/authStore';
-import { getPageSteps, getPageFeatures, PAGE_ROUTES } from './tourRegistry';
+import { getPageSteps, getPageFeatures, getHomeOnlySteps, PAGE_ROUTES } from './tourRegistry';
 
 export default function TourMenu() {
   const showMenu = useTourStore((s) => s.showMenu);
@@ -12,6 +12,7 @@ export default function TourMenu() {
   const toursSeen = useTourStore((s) => s.toursSeen);
   const markPageSeen = useTourStore((s) => s.markPageSeen);
   const updateProfile = useAuthStore((s) => s.updateProfile);
+  const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,6 +32,12 @@ export default function TourMenu() {
 
   const handleFullTour = useCallback(() => {
     if (!page) return;
+    hideTourMenu();
+    if (page === 'home' && !user) {
+      // Logged-out on home: home-only tour, no navigation to /new or /plan/demo
+      startTour('home', getHomeOnlySteps());
+      return;
+    }
     startFullFlow();
     if (!isOnPageFor('home')) {
       navigate(PAGE_ROUTES.home);
@@ -42,7 +49,7 @@ export default function TourMenu() {
       const steps = getPageSteps('home');
       startTour('home', steps);
     }
-  }, [page, startTour, startFullFlow, navigate, isOnPageFor]);
+  }, [page, user, startTour, startFullFlow, navigate, isOnPageFor, hideTourMenu]);
 
   const handleFeatureTour = useCallback(
     (featureId) => {

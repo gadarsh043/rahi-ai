@@ -3,13 +3,14 @@ import posthog from 'posthog-js';
 let initialized = false;
 
 /**
- * Initialize PostHog. Safe to call multiple times. Skips if VITE_POSTHOG_KEY is missing.
+ * Initialize PostHog. Safe to call multiple times.
+ * Skips if VITE_POSTHOG_KEY is missing or in local dev (Vite DEV).
  */
 export function initPosthog() {
   if (initialized) return;
   const key = import.meta.env.VITE_POSTHOG_KEY;
   const host = import.meta.env.VITE_POSTHOG_HOST;
-  if (!key) return;
+  if (!key || import.meta.env.DEV) return;
   posthog.init(key, {
     api_host: host || 'https://us.i.posthog.com',
     autocapture: true,

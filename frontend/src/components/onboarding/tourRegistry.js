@@ -203,6 +203,23 @@ export function getPageSteps(page, unseenOnly = null) {
 }
 
 /**
+ * Home-only steps (no navigation to /new or /plan/demo).
+ * Used for logged-out users on home page. Ends with "Sign in to start planning."
+ */
+export function getHomeOnlySteps() {
+  const steps = getPageSteps('home');
+  return [
+    ...steps,
+    {
+      element: '[data-tour="home-cta"]',
+      text: 'Sign in to start planning.',
+      position: 'above',
+      featureId: 'home-sign-in',
+    },
+  ];
+}
+
+/**
  * Get features for the tour menu on a specific page.
  */
 export function getPageFeatures(page) {
