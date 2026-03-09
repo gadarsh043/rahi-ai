@@ -266,6 +266,10 @@ Step 5: Pace              Step 7: Interests
 
 **On tap:** Prompt box expands to full-screen editable text area with "Generate" button.
 
+**Join a Trip (invite code):**  
+- Below the primary "Plan My Trip" CTA on the home hero and again in the bottom CTA card, show a small inline text link: "Have an invite code? Join a trip →".  
+- Tapping it expands an inline 6-character code input + "Join" button (no full-screen modal or scrim), keeping the experience lightweight on mobile.
+
 ---
 
 ### Page 2: Plan View — Mobile (THE CRITICAL ONE)

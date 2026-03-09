@@ -536,7 +536,7 @@ Handles `checkout.session.completed` → updates `trips_remaining`.
 
 **Center Content:** No mode tabs. Pure itinerary-focused conversational input.
 
-**"Join a Trip" link:** Below main input: "Have an invite code? Join a trip →"
+**"Join a Trip" link:** Shown on the home hero and in the bottom CTA card as an inline link → compact 6-character code field: "Have an invite code? Join a trip →"
 
 **Interactive Selectors (sequential, one at a time, animate in/out):**
 

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { MiniTripPreview, FEATURES, HOW_IT_WORKS, fadeUp } from './FeatureMockups';
+import JoinTrip from './JoinTrip';
 
 const DESTINATIONS = [
   { city: 'Tokyo', flag: '\u{1F1EF}\u{1F1F5}' },
@@ -83,11 +84,23 @@ export default function LandingSection({ onStart }) {
                 Tell us where you're going. We fetch verified restaurants, hotels, and attractions —
                 then build a day-by-day itinerary you can customize with AI chat.
               </p>
-              <div className="mt-8 flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4">
-                <button type="button" onClick={onStart} className="bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-8 py-3.5 text-base font-semibold shadow-[0_4px_20px_-2px_rgba(249,115,22,0.5)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer" data-tour="home-cta">
-                  Plan My Trip
-                </button>
-                <span className="text-sm text-[var(--text-muted)]">Free &middot; No sign up to start</span>
+              <div className="mt-8 flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                  <button
+                    type="button"
+                    onClick={onStart}
+                    className="bg-brand-500 hover:bg-brand-600 text-white rounded-xl px-8 py-3.5 text-base font-semibold shadow-[0_4px_20px_-2px_rgba(249,115,22,0.5)] hover:-translate-y-0.5 active:scale-[0.97] transition-all cursor-pointer"
+                    data-tour="home-cta"
+                  >
+                    Plan My Trip
+                  </button>
+                  <span className="text-sm text-[var(--text-muted)]">
+                    Free &middot; No sign up to start
+                  </span>
+                </div>
+                <div className="flex justify-center lg:justify-start">
+                  <JoinTrip />
+                </div>
               </div>
             </motion.div>
             <motion.div className="shrink-0 relative" initial={{ opacity: 0, y: 20, rotate: -2 }} animate={{ opacity: 1, y: 0, rotate: -2 }} transition={{ duration: 0.7, delay: 0.3 }}>
@@ -163,6 +176,9 @@ export default function LandingSection({ onStart }) {
             Plan My Trip
           </button>
           <p className="mt-4 text-xs text-[var(--text-muted)]">5 free trips &middot; No credit card required</p>
+          <div className="mt-2 flex justify-center">
+            <JoinTrip />
+          </div>
         </motion.div>
       </section>
 
