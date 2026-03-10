@@ -689,13 +689,14 @@ After every set of changes, Claude MUST:
 2. **Update PROJECT_SPEC.md** — Keep the project spec in sync with actual implementation (auth flow, sidebar behavior, onboarding, navigation patterns)
 3. **Update MWEB_UI_SPEC.md** — Keep the mobile spec in sync (navigation changes, sidebar drawer behavior, topbar changes)
 4. **Update .cursorrules** — Keep the rules in sync with the ongoing project
-5. **Learn from bugs** — When a bug is found and fixed, document the root cause pattern so it's not repeated:
+5. **Update README.md** — Keep readme in sync with all changes for any new devloper during onboard
+6. **Learn from bugs** — When a bug is found and fixed, document the root cause pattern so it's not repeated:
    - State persistence issues → always persist critical UI state to localStorage
    - Auth leaks → always use real token first, dev fallback only as last resort
    - Redundant UI → single source of truth for each action (settings, theme, credits, logout)
    - Stale data → re-fetch when component becomes visible, not just on mount
-6. **Update memory** — Write patterns and fixes to auto-memory so future sessions benefit
-7. **Update Roadmap** — After every feature ship, update `src/data/roadmapFeatures.js`:
+7. **Update memory** — Write patterns and fixes to auto-memory so future sessions benefit
+8. **Update Roadmap** — After every feature ship, update `src/data/roadmapFeatures.js`:
    - Move the shipped feature from its current category to `shipped` with a `shippedDate` (month + year)
    - Move any unfinished `building` items back to `upcoming`
    - Promote the next 1-2 highest-priority `upcoming` items to `building`

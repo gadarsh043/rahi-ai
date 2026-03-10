@@ -6,6 +6,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Heart, Check } from 'lucide-react';
 import useAuthStore from '../stores/authStore';
 import roadmapFeatures from '../data/roadmapFeatures';
+import { apiGet, apiPost } from '../services/api';
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -184,6 +185,7 @@ function FeatureCard({
   item,
   side,
   hearted,
+  heartCount,
   onHeart,
   isLoggedIn,
   onLoginRequired,
@@ -202,7 +204,7 @@ function FeatureCard({
     setTimeout(() => setAnimating(false), 300);
   };
 
-  const count = (item.hearts ?? 0) + (hearted ? 1 : 0);
+  const count = heartCount;
 
   return (
     <div
@@ -276,24 +278,70 @@ export default function RoadmapPage() {
   const { user } = useAuthStore();
   const isLoggedIn = !!user;
 
-  const [hearts, setHearts] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('rahify-roadmap-hearts') || '{}');
-    } catch {
-      return {};
-    }
-  });
-
+  const [heartCounts, setHeartCounts] = useState({});
+  const [userHearts, setUserHearts] = useState(() => new Set());
   const [showLoginToast, setShowLoginToast] = useState(false);
   const [pathData, setPathData] = useState({ fullPath: '', buildingPath: '' });
 
-  const toggleHeart = useCallback((featureId) => {
-    setHearts((prev) => {
-      const next = { ...prev, [featureId]: !prev[featureId] };
-      try { localStorage.setItem('rahify-roadmap-hearts', JSON.stringify(next)); } catch {}
+  // Fetch counts + user hearts on mount
+  useEffect(() => {
+    async function fetchHearts() {
+      try {
+        const data = await apiGet('/roadmap/hearts');
+        setHeartCounts(data.counts || {});
+        setUserHearts(new Set(data.user_hearts || []));
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch roadmap hearts:', err);
+        // Fallback to localStorage for user hearts only
+        try {
+          const local = JSON.parse(localStorage.getItem('rahify-roadmap-hearts') || '{}');
+          const ids = Object.keys(local).filter((k) => local[k]);
+          setUserHearts(new Set(ids));
+        } catch {
+          // ignore
+        }
+      }
+    }
+    fetchHearts();
+  }, []);
+
+  // Toggle — optimistic UI then API
+  const toggleHeart = useCallback(async (featureId) => {
+    const wasHearted = userHearts.has(featureId);
+
+    // Optimistic userHearts
+    setUserHearts((prev) => {
+      const next = new Set(prev);
+      if (wasHearted) next.delete(featureId);
+      else next.add(featureId);
       return next;
     });
-  }, []);
+
+    // Optimistic counts
+    setHeartCounts((prev) => ({
+      ...prev,
+      [featureId]: Math.max(0, (prev[featureId] || 0) + (wasHearted ? -1 : 1)),
+    }));
+
+    // LocalStorage fallback
+    try {
+      const local = JSON.parse(localStorage.getItem('rahify-roadmap-hearts') || '{}');
+      local[featureId] = !wasHearted;
+      localStorage.setItem('rahify-roadmap-hearts', JSON.stringify(local));
+    } catch {
+      // ignore
+    }
+
+    // API call
+    try {
+      const data = await apiPost(`/roadmap/hearts/${featureId}`);
+      setHeartCounts((prev) => ({ ...prev, [featureId]: data.count }));
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to toggle heart:', err);
+    }
+  }, [userHearts]);
 
   const handleLoginRequired = useCallback(() => {
     setShowLoginToast(true);
@@ -448,7 +496,8 @@ export default function RoadmapPage() {
                   key={item.id}
                   item={item}
                   side={getSide(idx)}
-                  hearted={!!hearts[item.id]}
+                  hearted={userHearts.has(item.id)}
+                  heartCount={heartCounts[item.id] || 0}
                   onHeart={toggleHeart}
                   isLoggedIn={isLoggedIn}
                   onLoginRequired={handleLoginRequired}
@@ -468,7 +517,8 @@ export default function RoadmapPage() {
                   key={item.id}
                   item={item}
                   side={getSide(idx)}
-                  hearted={!!hearts[item.id]}
+                  hearted={userHearts.has(item.id)}
+                  heartCount={heartCounts[item.id] || 0}
                   onHeart={toggleHeart}
                   isLoggedIn={isLoggedIn}
                   onLoginRequired={handleLoginRequired}

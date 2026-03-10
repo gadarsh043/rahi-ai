@@ -1,5 +1,9 @@
 import { apiGet, apiPost, apiSSE } from './apiClient';
 
+// Re-export low-level helpers so feature pages (like Roadmap) can call
+// lightweight endpoints without importing apiClient directly.
+export { apiGet, apiPost } from './apiClient';
+
 export async function generateTrip(params, onEvent) {
   await apiSSE('/generate', params, onEvent, { context: 'generate' });
 }
