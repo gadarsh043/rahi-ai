@@ -121,7 +121,7 @@
 │                  Hosted on Netlify                        │
 │                                                          │
 │  Pages: / | /login | /new | /plan/:id | /trip/:id        │
-│         /settings | /explore | /explore/:slug            │
+│         /settings | /explore | /explore/:slug | /roadmap  │
 │  Auth: Supabase JS Client (Google OAuth)                 │
 │  Sidebar: collapsible, chats + saved trips               │
 │  TopBar: Right Now · My Plans · Theme · Profile          │
@@ -680,6 +680,28 @@ Each selection → auto-fills prompt text → selector animates out → next app
 │ └─────────┘ └─────────┘ └───────────┘  │
 └─────────────────────────────────────────┘
 ```
+
+---
+
+### Page 7: Roadmap (`/roadmap`) — PUBLIC
+
+**Access:** URL-only (`/roadmap`). No navigation entry point — discoverable by link or direct URL.
+
+**Layout:** Single scrollable page. Hero + four zones connected by a zigzag SVG path.
+
+**Zones (top to bottom):**
+- **🚀 Shipped** — completed features. Muted cards with green checkmark badge, "Shipped {date}" label.
+- **🔨 Building Now** — in-progress features. Orange-bordered cards with pulsing dot, glowing path section.
+- **💡 Up Next** — planned features. Normal cards with heart button + count. Login required to vote.
+- **🔮 Exploring** — ideas under consideration. Faded cards with hearts. No connecting path (cards float).
+
+**Path:** One continuous dashed orange SVG path from Shipped through Building through Up Next. Path fades before Exploring. Computed from real card positions via `useRef` + `ResizeObserver`, not hardcoded. On mobile, replaced by a subtle vertical dashed line.
+
+**Hearts:** Toggle per feature per user. Stored in localStorage (key: `rahify-roadmap-hearts`). Future: Supabase `roadmap_hearts` table with `UNIQUE(feature_id, user_id)`.
+
+**Data:** Static `src/data/roadmapFeatures.js`. Updated as part of the Iteration Learning Protocol after every feature ship.
+
+**No dates** on upcoming features. No version numbers. No pricing/payment features shown.
 
 ---
 

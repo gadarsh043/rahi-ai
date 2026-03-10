@@ -15,6 +15,7 @@ import PrivacyPage from './pages/PrivacyPage';
 import TermsPage from './pages/TermsPage';
 import ExplorePage from './pages/ExplorePage';
 import ExploreDestinationPage from './pages/ExploreDestinationPage';
+import RoadmapPage from './pages/RoadmapPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import useAuthStore from './stores/authStore';
 import useUIStore from './stores/uiStore';
@@ -81,6 +82,16 @@ export default function App() {
                   element={(
                     <ErrorBoundary>
                       <ExploreDestinationPage />
+                    </ErrorBoundary>
+                  )}
+                />
+
+                {/* Roadmap (public) */}
+                <Route
+                  path="/roadmap"
+                  element={(
+                    <ErrorBoundary>
+                      <RoadmapPage />
                     </ErrorBoundary>
                   )}
                 />

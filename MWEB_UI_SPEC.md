@@ -547,6 +547,17 @@ Full-screen bottom sheet. Cards stack vertically (not side-by-side).
 
 ---
 
+### Page 7: Roadmap — Mobile (`/roadmap`)
+
+- No zigzag path — replaced by subtle vertical dashed line (CSS background) running down center
+- Cards centered, single column (max-w-[360px])
+- Zone headers centered
+- Heart buttons: 44×44px touch target
+- Bottom padding accounts for BottomNav (56px + safe area)
+- Login toast: fixed top-20 right-6, auto-dismiss 2.5s
+
+---
+
 ## 5. Component-by-Component Mobile Behavior
 
 ### Place Cards

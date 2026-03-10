@@ -109,6 +109,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - GeneratingScreen: fallback facts shown immediately, async fetch for real destination facts
 - Credits UI: amber warning banner in PromptBox when 0 credits, "Request more" link in profile dropdown
 - Generation error UX: if Supabase save fails during `/generate`, backend emits an `error` SSE (not `done`), and PlanPage shows a full-screen dark overlay with a prominent "Retry" button so users don't miss it
+- Public roadmap page (`/roadmap`) with ref-measured SVG zigzag path, four zones (Shipped/Building Now/Up Next/Exploring), heart votes (localStorage), login-gated voting with toast, responsive (zigzag desktop / vertical mobile), no connecting path in Exploring zone
 
 ### Deployment (Live)
 - **Frontend:** Netlify (static SPA, `frontend/dist`) — rahify.com
@@ -352,7 +353,8 @@ rahify/
 │   │   │   ├── SettingsPage.jsx
 │   │   │   ├── AuthPage.jsx
 │   │   │   ├── ExplorePage.jsx              ← /explore SEO gallery
-│   │   │   └── ExploreDestinationPage.jsx   ← /explore/:slug SEO landing pages
+│   │   │   ├── ExploreDestinationPage.jsx   ← /explore/:slug SEO landing pages
+│   │   │   └── RoadmapPage.jsx              ← /roadmap public roadmap (URL-only)
 │   │   ├── hooks/
 │   │   ├── stores/
 │   │   │   ├── authStore.js
@@ -363,7 +365,8 @@ rahify/
 │   │   │   ├── api.js             ← apiGet, apiPost, apiSSE with error handling
 │   │   │   └── supabase.js
 │   │   ├── data/
-│   │   │   └── exploreDestinations.js ← static SEO content for /explore/:slug
+│   │   │   ├── exploreDestinations.js ← static SEO content for /explore/:slug
+│   │   │   └── roadmapFeatures.js     ← shipped/building/upcoming/exploring (updated per Iteration Learning Protocol)
 │   │   ├── utils/
 │   │   │   ├── constants.js
 │   │   │   ├── formatCurrency.js
@@ -582,6 +585,9 @@ Floating ☰ opens overlay sidebar drawer (not inline)
  - PostHog dev behavior: analytics are disabled in local Vite dev (`import.meta.env.DEV`) and when `VITE_POSTHOG_KEY` is unset, to avoid noisy local data and adblock errors.
  - Explore SEO pages: `/explore` gallery and `/explore/:slug` landing pages (starting with Paris) are public and crawlable, powered by `exploreDestinations.js` and lucide-react icons.
  - SEO foundation: static sitemap.xml + robots.txt, site-wide meta tags, Open Graph + Twitter tags, JSON-LD (WebApplication + Organization), and a `<noscript>` fallback in `index.html`. Prerendering is deferred until the build pipeline supports puppeteer.
+ - Roadmap page: public at /roadmap, URL-only access (no nav entry). Ref-measured SVG zigzag path, four zones (Shipped/Building/Up Next/Exploring), heart votes per feature (localStorage → Supabase later). No dates on upcoming features. | Mar 9
+ - Roadmap data: static `src/data/roadmapFeatures.js`, updated as part of Iteration Learning Protocol. No payment/pricing features shown. | Mar 9
+ - Roadmap path: single SVG with `useRef` + `ResizeObserver` measuring real card positions. Individual SVG segments between cards look choppy — always use one continuous path. | Mar 9
 
 ---
 
@@ -682,12 +688,17 @@ After every set of changes, Claude MUST:
 1. **Update CLAUDE.md** — Reflect new architecture, decisions, and patterns in the relevant sections (Current State, Navigation Architecture, Key Decisions Log, etc.)
 2. **Update PROJECT_SPEC.md** — Keep the project spec in sync with actual implementation (auth flow, sidebar behavior, onboarding, navigation patterns)
 3. **Update MWEB_UI_SPEC.md** — Keep the mobile spec in sync (navigation changes, sidebar drawer behavior, topbar changes)
-3. **Update .cursorrules** — Keep the rules in sync with the ongoing project
-4. **Learn from bugs** — When a bug is found and fixed, document the root cause pattern so it's not repeated:
+4. **Update .cursorrules** — Keep the rules in sync with the ongoing project
+5. **Learn from bugs** — When a bug is found and fixed, document the root cause pattern so it's not repeated:
    - State persistence issues → always persist critical UI state to localStorage
    - Auth leaks → always use real token first, dev fallback only as last resort
    - Redundant UI → single source of truth for each action (settings, theme, credits, logout)
    - Stale data → re-fetch when component becomes visible, not just on mount
-5. **Update memory** — Write patterns and fixes to auto-memory so future sessions benefit
+6. **Update memory** — Write patterns and fixes to auto-memory so future sessions benefit
+7. **Update Roadmap** — After every feature ship, update `src/data/roadmapFeatures.js`:
+   - Move the shipped feature from its current category to `shipped` with a `shippedDate` (month + year)
+   - Move any unfinished `building` items back to `upcoming`
+   - Promote the next 1-2 highest-priority `upcoming` items to `building`
+   - This is mandatory, same priority as updating specs
 
 This is mandatory. Specs that drift from implementation cause confusion and regressions.

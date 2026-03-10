@@ -344,6 +344,15 @@ select {
   animation: slideDown 0.2s ease-out;
 }
 
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeSlideIn {
+  animation: fadeSlideIn 0.2s ease-out;
+}
+
 /* ================================
    Onboarding Tours (intro.js)
    ================================ */
