@@ -44,7 +44,7 @@ Always read `CLAUDE.md` in the project root before making any changes. It has th
 
 ## Roadmap
 - Public roadmap at `/roadmap` (URL-only, no nav entry). Data: `src/data/roadmapFeatures.js`.
-- After every feature ship, update `roadmapFeatures.js` per Iteration Learning Protocol (CLAUDE.md): move shipped to `shipped` with `shippedDate`, roll unfinished `building` to `upcoming`, promote 1-2 `upcoming` to `building`.
+- After every feature ship, update `roadmapFeatures.js` per Iteration Learning Protocol (CLAUDE.md): move that feature to `shipped` with a `shippedDate`, and adjust `building`/`upcoming` as needed so they reflect what is actually in progress.
 
 ## Analytics
 - Use `posthog-js` via `src/services/posthog.js` (no inline PostHog setup in components).

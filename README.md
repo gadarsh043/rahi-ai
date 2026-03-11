@@ -17,7 +17,7 @@ Enter trip details → get personalized itineraries with real places, real fligh
 - **Approach A — places first:** Rahify fetches real Google Places data **before** asking the AI to plan, so every suggestion starts from verified places.
 - **Zero hallucination focus:** Real photos, ratings, addresses, and Maps links from second one, not invented venues.
 - **Structured, not chatty:** A full plan view with tabs, timelines, and an interactive map — not just a chat transcript.
-- **Grounded travel data:** Real flight options via SerpAPI, real-world costs, and visa/essentials guidance in one flow.
+- **Grounded travel data:** Real flight options via SerpAPI, formula-based costs from actual place data, and visa/essentials guidance that reads your exact itinerary.
 
 ---
 
@@ -50,7 +50,7 @@ Enter trip details → get personalized itineraries with real places, real fligh
 | **Database/Auth** | Supabase (PostgreSQL + Auth + Storage) | Google OAuth only, RLS-guarded trip and profile data. |
 | **AI** | Groq (Llama 3 70B), model-agnostic wrapper | Designed to swap to Claude easily without touching the frontend. |
 | **Maps** | Leaflet + OpenStreetMap | Free, no API key for map tiles. |
-| **Places** | Google Places API (New) | Real place data, photos, ratings, opening hours. |
+| **Places** | Google Places API (New) | Real place data, photos, ratings, opening hours, deduplicated and sorted by budget tier. |
 | **Flights** | SerpAPI (Google Flights) | Cached flight search with 10‑minute cooldown. |
 | **Geocoding** | Photon (Komoot) | Free, worldwide geocoding for maps and “Right Now”. |
 | **PDF** | ReportLab | Server-side PDF generation with Rahify branding. |

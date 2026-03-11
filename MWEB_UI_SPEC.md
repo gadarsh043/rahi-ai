@@ -274,7 +274,7 @@ Step 5: Pace              Step 7: Interests
 
 ### Page 2: Plan View — Mobile (THE CRITICAL ONE)
 
-This is where desktop's split-panel layout completely transforms.
+This is where desktop's split-panel layout completely transforms, and where the V2 generation pipeline streams progress over SSE.
 
 **Desktop:** Left content (55%) + Right map (45%) side by side  
 **Mobile:** Full-width stacked — content with toggle-able map
@@ -308,6 +308,16 @@ This is where desktop's split-panel layout completely transforms.
 │ 🗺️ Map                      │  ← map toggle (floating or in bar)
 └─────────────────────────────┘
 ```
+
+#### Loading Screen for Generation V2
+
+When `/generate` is running, the mobile plan view shows a dedicated loading state before the full itinerary is ready:
+
+- Top shows **destination and days** plus a short status message driven by `status` SSE events:
+  - "Designing your trip..." (skeleton phase)
+  - "Planning days 1–5..." / "Planning days 6–10..." (chunk phases).
+- As `itinerary_day` / `itinerary_chunk` events arrive, days fade into the timeline tab one by one (no blocking spinner for the whole page).
+- Existing V1 trips (saved data) skip this and render the full plan directly.
 
 #### The Map Problem (Mobile) — Solved with Bottom Sheet
 
