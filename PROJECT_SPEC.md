@@ -22,7 +22,7 @@
 12. [Milestone Breakdown](#12-milestone-breakdown)
 13. [External APIs & Costs](#13-external-apis--costs)
 14. [Folder Structure](#14-folder-structure)
-15. [Styling Architecture (SCSS Modules)](#15-styling-architecture-scss-modules)
+15. [Styling Architecture (Tailwind CSS v4)](#15-styling-architecture-tailwind-css)
 16. [Testing & Dev Environment](#16-testing--dev-environment)
 17. [Pro Tool Shortcuts](#17-pro-tool-shortcuts)
 18. [V2-V5 Feature Backlog](#18-v2-v5-feature-backlog)
@@ -65,7 +65,7 @@
 | 17 | **"My Trip" Page `/trip/:id`.** "Save as My Trip" freezes itinerary. Same PlanView in `saved` mode. PDF download, share code, affiliate links, checklist. Shareable via `?shared=CODE`. | P0 |
 | 18 | **Downloadable PDF** (on My Trip only). Itinerary, costs, visa, Travel Essentials (language, emergency, SIM, tips, plugs, timezone, water). | P0 |
 | 19 | **Dark/Light Mode.** Visible sun/moon icon in topbar. Persistent via localStorage. | P0 |
-| 20 | **Responsive Web + mWeb.** Built together. SCSS breakpoints. Native app = later. | P0 |
+| 20 | **Responsive Web + mWeb.** Built together with Tailwind responsive utilities. Native app = later. | P0 |
 | 21 | **Onboarding Tutorial.** Custom tour system (TourOverlay, TourPrompt, TourMenu, tourRegistry, tourStore) with brand-styled tooltips. Persisted to localStorage + profile. Home-only tour works for logged-out users; full flow (home → form → plan) runs for logged-in users. Replay from profile dropdown "Replay Tour". | P0 |
 | 22 | **SEO Explore Pages.** Public `/explore` gallery and `/explore/:slug` destination landing pages (starting with Paris) backed by static content (`exploreDestinations.js`), optimized meta tags, and structured data for search. | P1 |
 | 23 | **Share Trip (Read-Only).** 6-char invite code. Same `/plan/:id?shared=CODE` in read-only mode. Viewer submits suggestions. Viewer can fork. Owner sees suggestion badges per trip (in sidebar + plan header). | P1 |
@@ -709,253 +709,11 @@ Each selection → auto-fills prompt text → selector animates out → next app
 
 ### Brand: Sunset Orange 🧡
 
-> **Note:** The SCSS variables and mixins in this section reflect the original design approach.  
-> The live app now uses **Tailwind CSS v4** with tokens defined in `frontend/src/index.css` (see `CLAUDE.md`).  
-> Use this section as conceptual reference only; do **not** reintroduce SCSS.
+Design tokens live in `frontend/src/index.css`:
 
-**SCSS Variables (`_variables.scss`):**
-
-```scss
-// ==================
-// BRAND COLORS
-// ==================
-$brand-50:  #FFF7ED;
-$brand-100: #FFEDD5;
-$brand-200: #FED7AA;
-$brand-300: #FDBA74;
-$brand-400: #FB923C;
-$brand-500: #F97316;  // PRIMARY
-$brand-600: #EA580C;
-$brand-700: #C2410C;
-$brand-800: #9A3412;
-$brand-900: #7C2D12;
-$brand-950: #431407;
-
-// ==================
-// LIGHT THEME
-// ==================
-$light-bg:              #FFFFFF;
-$light-surface:         #F9FAFB;
-$light-surface-hover:   #F3F4F6;
-$light-border:          #E5E7EB;
-$light-text-primary:    #111827;
-$light-text-secondary:  #6B7280;
-$light-text-muted:      #9CA3AF;
-
-// ==================
-// DARK THEME
-// ==================
-$dark-bg:               #0F172A;
-$dark-surface:          #1E293B;
-$dark-surface-hover:    #334155;
-$dark-border:           #334155;
-$dark-text-primary:     #F8FAFC;
-$dark-text-secondary:   #94A3B8;
-$dark-text-muted:       #64748B;
-
-// ==================
-// SEMANTIC
-// ==================
-$success:   #10B981;
-$warning:   #F59E0B;
-$error:     #EF4444;
-$info:      #3B82F6;
-
-// ==================
-// MAP MARKERS
-// ==================
-$marker-eat:       #EF4444; // red
-$marker-stay:      #3B82F6; // blue
-$marker-go:        #10B981; // green
-$marker-activity:  #8B5CF6; // purple
-$marker-cafe:      #F59E0B; // amber
-$marker-outdoor:   #14B8A6; // teal
-
-// ==================
-// BREAKPOINTS
-// ==================
-$mobile:  480px;
-$tablet:  768px;
-$desktop: 1024px;
-$wide:    1280px;
-
-// ==================
-// LAYOUT
-// ==================
-$sidebar-collapsed: 60px;
-$sidebar-expanded:  280px;
-$topbar-height:     56px;
-$map-panel-width:   45%;
-$content-panel-width: 55%;
-
-// ==================
-// TYPOGRAPHY
-// ==================
-$font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-$font-mono:   'JetBrains Mono', 'Fira Code', monospace;
-
-$font-xs:   0.75rem;   // 12px
-$font-sm:   0.875rem;  // 14px
-$font-base: 1rem;      // 16px
-$font-lg:   1.125rem;  // 18px
-$font-xl:   1.25rem;   // 20px
-$font-2xl:  1.5rem;    // 24px
-$font-3xl:  1.875rem;  // 30px
-
-// ==================
-// SPACING
-// ==================
-$space-1:  0.25rem;  // 4px
-$space-2:  0.5rem;   // 8px
-$space-3:  0.75rem;  // 12px
-$space-4:  1rem;     // 16px
-$space-5:  1.25rem;  // 20px
-$space-6:  1.5rem;   // 24px
-$space-8:  2rem;     // 32px
-$space-10: 2.5rem;   // 40px
-$space-12: 3rem;     // 48px
-
-// ==================
-// BORDERS & SHADOWS
-// ==================
-$radius-sm:  6px;
-$radius-md:  8px;
-$radius-lg:  12px;
-$radius-xl:  16px;
-$radius-full: 9999px;
-
-$shadow-sm:  0 1px 2px rgba(0, 0, 0, 0.05);
-$shadow-md:  0 4px 6px rgba(0, 0, 0, 0.07);
-$shadow-lg:  0 10px 15px rgba(0, 0, 0, 0.1);
-$shadow-xl:  0 20px 25px rgba(0, 0, 0, 0.1);
-
-// ==================
-// TRANSITIONS
-// ==================
-$transition-fast:   150ms ease;
-$transition-normal: 250ms ease;
-$transition-slow:   350ms ease;
-```
-
-**SCSS Mixins (`_mixins.scss`):**
-
-```scss
-@import 'variables';
-
-// Responsive
-@mixin mobile  { @media (max-width: $tablet - 1) { @content; } }
-@mixin tablet  { @media (min-width: $tablet) and (max-width: $desktop - 1) { @content; } }
-@mixin desktop { @media (min-width: $desktop) { @content; } }
-@mixin wide    { @media (min-width: $wide) { @content; } }
-
-// Theme-aware
-@mixin light { :global(.light) & { @content; } }
-@mixin dark  { :global(.dark) & { @content; } }
-
-// Card pattern
-@mixin card {
-  border-radius: $radius-lg;
-  border: 1px solid $light-border;
-  background: $light-surface;
-  box-shadow: $shadow-sm;
-  transition: box-shadow $transition-fast;
-
-  @include dark {
-    border-color: $dark-border;
-    background: $dark-surface;
-  }
-
-  &:hover {
-    box-shadow: $shadow-md;
-  }
-}
-
-// Button base
-@mixin button-primary {
-  background: $brand-500;
-  color: white;
-  border: none;
-  border-radius: $radius-md;
-  padding: $space-2 $space-4;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background $transition-fast;
-
-  &:hover { background: $brand-600; }
-
-  @include dark {
-    background: $brand-400;
-    &:hover { background: $brand-500; }
-  }
-}
-
-// Text colors
-@mixin text-primary {
-  color: $light-text-primary;
-  @include dark { color: $dark-text-primary; }
-}
-
-@mixin text-secondary {
-  color: $light-text-secondary;
-  @include dark { color: $dark-text-secondary; }
-}
-
-// Background
-@mixin bg-page {
-  background: $light-bg;
-  @include dark { background: $dark-bg; }
-}
-
-@mixin bg-surface {
-  background: $light-surface;
-  @include dark { background: $dark-surface; }
-}
-
-// Scrollbar
-@mixin custom-scrollbar {
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-track { background: transparent; }
-  &::-webkit-scrollbar-thumb {
-    background: $light-text-muted;
-    border-radius: $radius-full;
-    @include dark { background: $dark-text-muted; }
-  }
-}
-
-// Truncate
-@mixin truncate($lines: 1) {
-  @if $lines == 1 {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  } @else {
-    display: -webkit-box;
-    -webkit-line-clamp: $lines;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-}
-
-// Pill toggle
-@mixin pill {
-  display: inline-flex;
-  align-items: center;
-  padding: $space-1 $space-3;
-  border-radius: $radius-full;
-  font-size: $font-sm;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all $transition-fast;
-  border: 1px solid $light-border;
-  @include dark { border-color: $dark-border; }
-
-  &.active {
-    background: $brand-500;
-    color: white;
-    border-color: $brand-500;
-  }
-}
-```
+- Brand palette uses Tailwind’s `brand-*` theme variables (e.g. `brand-500 = #F97316`).
+- Light/dark surfaces and text use CSS vars (`--bg`, `--surface`, `--border`, `--text-primary`, etc.) with dark mode controlled by `.dark` on `<html>`.
+- Components consume tokens via Tailwind utility classes, e.g. `bg-[var(--surface)]`, `text-[var(--text-primary)]`, `border-[var(--border)]`.
 
 ---
 
@@ -1028,8 +786,8 @@ Prompts include:
 |------|------|
 | Supabase: tables, RLS, Google OAuth | 1 |
 | FastAPI scaffold + Supabase Python client + CORS | 1 |
-| React + Vite + SCSS setup + React Router + Zustand | 1 |
-| SCSS variables, mixins, global styles, theme system | 0.5 |
+| React + Vite + Tailwind setup + React Router + Zustand | 1 |
+| Tailwind theme tokens + global styles + dark mode system | 0.5 |
 | Auth: Google login + protected routes | 1 |
 | Profile/Settings page | 1 |
 | TopBar component (Right Now, My Plans, Theme, Profile) | 0.5 |
@@ -1090,7 +848,7 @@ Prompts include:
 | Travel Quiz | 1 |
 | "Join Trip" entry (invite code input on home) | 0.5 |
 | Loading states, error handling, retry, toasts | 1 |
-| Mobile responsive polish (all SCSS breakpoints) | 1 |
+| Mobile responsive polish (Tailwind responsive utilities) | 1 |
 | SEO (meta tags, OG images, sitemap, robots.txt, structured data) | 0.5 |
 
 ---
@@ -1210,9 +968,9 @@ rahify/
 
 ---
 
-## 15. Styling Architecture (Tailwind CSS)
+## 15. Styling Architecture (Tailwind CSS v4)
 
-Rahify’s frontend uses **Tailwind CSS v4** (no SCSS, no CSS Modules, no inline `style={{}}`) with:
+Rahify’s frontend uses **Tailwind CSS v4** (no CSS Modules, no inline `style={{}}`) with:
 
 - `@tailwindcss/vite` configured in `vite.config.js`.
 - A single `index.css` that:
@@ -1222,8 +980,6 @@ Rahify’s frontend uses **Tailwind CSS v4** (no SCSS, no CSS Modules, no inline
   - Adds custom utilities like `glass`, `glass-dark`, `glass-strong`, `glass-strong-dark`, and `shadow-brand`.
 - Components styled exclusively with Tailwind utility classes using theme variables (e.g. `bg-[var(--surface)]`, `text-[var(--text-primary)]`, `border-[var(--border)]`).
 - Typography and spacing patterns (Hero, Section, Card, Body, Caption, Label) implemented via Tailwind classes described in `CLAUDE.md`.
-
-Any SCSS-related content in this spec is historical and should not be reintroduced into the codebase.
 
 ---
 
@@ -1273,7 +1029,7 @@ python scripts/seed.py --user test@gmail.com --trip "dallas_7day"
 | Phase | Tool | Time Saved |
 |-------|------|-----------|
 | UI Design | Figma + Stitch AI | 2-3 days |
-| Component gen | v0.dev (convert to SCSS after) | 2-3 days |
+| Component gen | v0.dev (convert to Tailwind patterns after) | 2-3 days |
 | Auth | Supabase Google OAuth | 3-4 days |
 | DB | Supabase dashboard | 2 days |
 | API Docs | FastAPI /docs auto | 1 day |
@@ -1306,7 +1062,7 @@ AR previews, Automated booking engine, AI micro-experiences, Multi-destination p
 | Decision | Date |
 |----------|------|
 | Google OAuth only (no email/password) | Feb 26 |
-| Tailwind CSS v4 (no SCSS, no inline CSS) | Feb 26 |
+| Tailwind CSS v4 (no CSS Modules, no inline CSS) | Feb 26 |
 | Left collapsible sidebar for chats + plans | Feb 26 |
 | TopBar: Right Now · My Plans · Theme · Profile | Feb 26 |
 | No floating action buttons | Feb 26 |
