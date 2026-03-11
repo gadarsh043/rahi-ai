@@ -46,3 +46,6 @@ frontend/public/splash/
 NEXT_STEPS.md
 Future_Reference.pdf
 UI_Document.md
+cursor_v2_prompt.md
+IMPLEMENTATION_GUIDE.md
+itinerary_v2_prompts.py

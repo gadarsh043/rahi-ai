@@ -94,6 +94,9 @@ export default function PlanPage() {
   const [lastGenerateParams, setLastGenerateParams] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatingCity, setGeneratingCity] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
+  const [plannedDaysCount, setPlannedDaysCount] = useState(0);
+  const [totalDays, setTotalDays] = useState(0);
   const hasStartedGenRef = useRef(false);
 
   const loadExistingTrip = useCallback(
@@ -144,6 +147,9 @@ export default function PlanPage() {
       setLoading(true);
       setIsGenerating(true);
       setGeneratingCity(params.destination_city || '');
+      setStatusMessage('');
+      setPlannedDaysCount(0);
+      setTotalDays(params.num_days || 0);
       setLoadingMessage('Finding the best places for your trip...');
        setGenError(false);
        setLastGenerateParams(params);
@@ -152,6 +158,20 @@ export default function PlanPage() {
         await generateTrip(params, (event, data) => {
           if (event === 'status' && data?.message) {
             setLoadingMessage(data.message);
+            setStatusMessage(data.message);
+          }
+          if (event === 'skeleton' && Array.isArray(data?.skeleton)) {
+            // Use skeleton length as a more accurate total days if available
+            const skeletonDays = data.skeleton.length;
+            if (skeletonDays > 0) {
+              setTotalDays(skeletonDays);
+            }
+          }
+          if (event === 'itinerary_chunk' && Array.isArray(data?.days)) {
+            setPlannedDaysCount((prev) => prev + data.days.length);
+          }
+          if (event === 'itinerary' && Array.isArray(data?.days)) {
+            setPlannedDaysCount(data.days.length);
           }
           if (event === 'error') {
             setGenError(true);
@@ -317,6 +337,9 @@ export default function PlanPage() {
         <GeneratingScreen
           destinationCity={generatingCity}
           isGenerating={isGenerating}
+          statusMessage={statusMessage}
+          plannedDays={plannedDaysCount}
+          totalDays={totalDays}
         />
       );
     }

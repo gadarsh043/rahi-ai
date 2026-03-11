@@ -12,7 +12,7 @@ from app.services.chat_engine import (
     format_day_schedule,
 )
 from app.utils.supabase_client import get_supabase
-from app.prompts.chat import CHAT_SYSTEM, build_chat_context
+from app.prompts.chat import CHAT_SYSTEM, CHAT_USER_TEMPLATE, build_chat_context
 
 router = APIRouter()
 
@@ -490,16 +490,20 @@ async def handle_general_chat(message: str, trip: dict, places: list) -> dict:
         [f"- {p['name']} (ID: {p['google_place_id']}, {p['category']})" for p in not_in]
     )
 
-    from app.prompts.chat import CHAT_SYSTEM
-
-    context = (
-        f"Trip: {trip['origin_city']} → {trip['destination_city']}, {get_actual_days(trip)} days.\n\n"
-        f"{places_text}\n\n"
-        f"User: {message}"
+    user_prompt = CHAT_USER_TEMPLATE.format(
+        destination_city=trip.get("destination_city", "the destination"),
+        num_days=get_actual_days(trip),
+        travel_group=trip.get("travel_group", "solo"),
+        pace=trip.get("pace", "moderate"),
+        budget_vibe=trip.get("budget_vibe", "$$"),
+        itinerary_snapshot="",
+        available_places=places_text,
+        chat_history="",
+        message=message,
     )
 
     try:
-        raw = await llm.json_completion(CHAT_SYSTEM, context)
+        raw = await llm.json_completion(CHAT_SYSTEM, user_prompt)
         data = json.loads(raw)
         return {
             "type": "execute",

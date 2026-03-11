@@ -17,7 +17,7 @@ class LLMService:
             self.model = ""
 
     async def stream_completion(
-        self, system_prompt: str, user_prompt: str
+        self, system_prompt: str, user_prompt: str, max_tokens: int = 4000
     ) -> AsyncGenerator[str, None]:
         """Stream text chunks from LLM."""
         if self.provider == "groq" and self.client:
@@ -29,14 +29,16 @@ class LLMService:
                 ],
                 stream=True,
                 temperature=0.7,
-                max_tokens=4000,
+                max_tokens=max_tokens,
             )
             async for chunk in stream:
                 delta = chunk.choices[0].delta.content
                 if delta:
                     yield delta
 
-    async def completion(self, system_prompt: str, user_prompt: str) -> str:
+    async def completion(
+        self, system_prompt: str, user_prompt: str, max_tokens: int = 4000
+    ) -> str:
         """Non-streaming completion. Returns full text."""
         if self.provider == "groq" and self.client:
             resp = await self.client.chat.completions.create(
@@ -46,10 +48,19 @@ class LLMService:
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.7,
-                max_tokens=4000,
+                max_tokens=max_tokens,
             )
             return resp.choices[0].message.content
         return ""
+
+    async def generate(
+        self, system: str, user: str, max_tokens: int = 4000
+    ) -> str:
+        """
+        Generic generate helper for the V2 pipeline.
+        Used for skeleton, chunked itinerary, and essentials calls.
+        """
+        return await self.completion(system, user, max_tokens=max_tokens)
 
     async def chat_completion(
         self, system_prompt: str, messages: list[dict], user_prompt: str

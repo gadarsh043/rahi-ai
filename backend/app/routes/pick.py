@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 
 from app.dependencies import get_current_user
 from app.models.trip import PickRequest
-from app.prompts.itinerary import ITINERARY_SYSTEM, build_itinerary_prompt
+from app.prompts.itinerary import ITINERARY_SYSTEM_V1, build_itinerary_prompt_v1
 from app.services.llm_service import get_llm
 from app.utils.supabase_client import get_supabase
 import json
@@ -131,8 +131,8 @@ async def pick_stream(trip_id: str, req: PickRequest, user: dict):
         "end_date": trip.get("end_date"),
     }
 
-    prompt = build_itinerary_prompt(selected_places, params)
-    response = await llm.json_completion(ITINERARY_SYSTEM, prompt)
+    prompt = build_itinerary_prompt_v1(selected_places, params)
+    response = await llm.json_completion(ITINERARY_SYSTEM_V1, prompt)
 
     try:
         itinerary_data = json.loads(response)

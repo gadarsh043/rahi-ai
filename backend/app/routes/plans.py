@@ -408,7 +408,10 @@ async def download_pdf(trip_id: str, user=Depends(get_current_user)) -> Response
 async def rebuild_itinerary(trip_id: str, user=Depends(get_current_user)):
     from app.services.llm_service import get_llm
     from app.services.places_service import format_places_lean
-    from app.prompts.itinerary import ITINERARY_SYSTEM_LEAN, build_itinerary_prompt_lean
+    from app.prompts.itinerary import (
+        ITINERARY_SYSTEM_LEAN_V1,
+        build_itinerary_prompt_lean_v1,
+    )
     import json
 
     supabase = get_supabase()
@@ -536,8 +539,8 @@ JSON only: {{"day_number":{day_num},"title":"Day title","activities":[{{"time":"
         "end_date": trip.get("end_date"),
     }
 
-    prompt = build_itinerary_prompt_lean(lean_places, params)
-    response = await llm.json_completion(ITINERARY_SYSTEM_LEAN, prompt)
+    prompt = build_itinerary_prompt_lean_v1(lean_places, params)
+    response = await llm.json_completion(ITINERARY_SYSTEM_LEAN_V1, prompt)
 
     try:
         itinerary_data = json.loads(response)

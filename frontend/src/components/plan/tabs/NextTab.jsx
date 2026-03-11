@@ -14,8 +14,18 @@ export default function NextTab() {
   const visaValidity = visaInfoRaw.validity || '';
   const visaProcessing = visaInfoRaw.processing || '';
   const visaWarnings = visaInfoRaw.warnings || [];
+  const domesticNote =
+    visaInfoRaw.domestic_note || visaInfoRaw.domesticNote || '';
 
-  const initialChecklist = (visaInfoRaw.checklist || []).map((item, index) => {
+  const documentsChecklistRaw =
+    essentialsRaw.documents_checklist || essentialsRaw.documentsChecklist || [];
+
+  const combinedChecklist = [
+    ...(visaInfoRaw.checklist || []),
+    ...(documentsChecklistRaw || []),
+  ];
+
+  const initialChecklist = combinedChecklist.map((item, index) => {
     if (typeof item === 'string') {
       return { id: `ck-${index}`, text: item, checked: false };
     }
@@ -48,6 +58,26 @@ export default function NextTab() {
           .filter(Boolean)
           .join(', ')
       : '';
+
+  const weatherRaw = essentialsRaw.weather || {};
+  const weatherNote =
+    essentialsRaw.weather_note ||
+    essentialsRaw.weatherNote ||
+    weatherRaw.note ||
+    '';
+  const weatherPack = Array.isArray(weatherRaw.pack) ? weatherRaw.pack : [];
+  const weatherWarnings = Array.isArray(weatherRaw.warnings)
+    ? weatherRaw.warnings
+    : [];
+
+  const seasonalAlerts =
+    Array.isArray(essentialsRaw.seasonal_alerts) ||
+    Array.isArray(essentialsRaw.seasonalAlerts)
+      ? (essentialsRaw.seasonal_alerts || essentialsRaw.seasonalAlerts || [])
+      : [];
+
+  const dressCodeRaw =
+    essentialsRaw.dress_code || essentialsRaw.dressCode || null;
 
   const essentialsCards = [
     {
@@ -93,12 +123,7 @@ export default function NextTab() {
     {
       icon: '🌡',
       label: 'Weather',
-      value: essentialsRaw.weather_note || essentialsRaw.weatherNote || '',
-    },
-    {
-      icon: '👔',
-      label: 'Dress Code',
-      value: essentialsRaw.dress_code || essentialsRaw.dressCode || '',
+      value: weatherNote,
     },
   ].filter((card) => card.value);
 
@@ -109,7 +134,19 @@ export default function NextTab() {
         <h2 className="text-lg font-bold text-[var(--text-primary)]">
           Visa &amp; Entry
         </h2>
-        {visaRequired === null && !visaType && !visaValidity && !visaProcessing ? (
+        {domesticNote ? (
+          <div className="space-y-2">
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600">
+              Domestic trip
+            </span>
+            <p className="text-sm text-[var(--text-secondary)]">
+              {domesticNote}
+            </p>
+          </div>
+        ) : visaRequired === null &&
+          !visaType &&
+          !visaValidity &&
+          !visaProcessing ? (
           <p className="text-sm text-[var(--text-secondary)]">
             Visa information is not available for this trip. Please check with the embassy
             or official government website for the latest requirements.
@@ -211,6 +248,111 @@ export default function NextTab() {
                 <p className="text-xs text-[var(--text-secondary)]">
                   {card.value}
                 </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Weather packing + alerts */}
+          {(weatherNote ||
+            (weatherPack && weatherPack.length > 0) ||
+            (weatherWarnings && weatherWarnings.length > 0)) && (
+            <div className="mt-3 border border-[var(--border)] rounded-xl p-3 bg-[var(--surface)] space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🌡</span>
+                <span className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wide">
+                  Weather &amp; Packing
+                </span>
+              </div>
+              {weatherNote && (
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {weatherNote}
+                </p>
+              )}
+              {weatherPack && weatherPack.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    What to pack
+                  </p>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {weatherPack.map((item) => (
+                      <li
+                        key={item}
+                        className="text-xs text-[var(--text-secondary)]"
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {weatherWarnings && weatherWarnings.length > 0 && (
+                <div className="space-y-1">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Weather warnings
+                  </p>
+                  <div className="space-y-1">
+                    {weatherWarnings.map((w) => (
+                      <div
+                        key={w}
+                        className="text-xs px-2 py-1.5 rounded-lg bg-amber-500/10 text-amber-700 border border-amber-500/30"
+                      >
+                        {w}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Dress code (per-day or single) */}
+          {dressCodeRaw && (
+            <div className="mt-3 border border-[var(--border)] rounded-xl p-3 bg-[var(--surface)] space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">👔</span>
+                <span className="text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wide">
+                  Dress Code
+                </span>
+              </div>
+              {Array.isArray(dressCodeRaw) ? (
+                <div className="space-y-1">
+                  {dressCodeRaw.map((item) => (
+                    <div
+                      key={item.day}
+                      className="flex gap-3 py-1.5 border-t border-[var(--border)] first:border-t-0"
+                    >
+                      <span className="text-[11px] font-semibold text-brand-500 whitespace-nowrap">
+                        Day {item.day}
+                      </span>
+                      <p className="text-xs text-[var(--text-secondary)]">
+                        {item.suggestion}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-[var(--text-secondary)]">
+                  {dressCodeRaw}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Section 4: Seasonal Alerts */}
+      {seasonalAlerts && seasonalAlerts.length > 0 && (
+        <section className="space-y-3">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+            Seasonal Alerts
+          </h3>
+          <div className="space-y-2">
+            {seasonalAlerts.map((alert, idx) => (
+              <div
+                key={idx}
+                className="text-xs px-3 py-2 rounded-lg bg-amber-500/10 text-amber-700 border border-amber-500/30"
+              >
+                {alert}
               </div>
             ))}
           </div>
