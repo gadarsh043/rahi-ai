@@ -1,5 +1,6 @@
 import asyncio
 import json
+import re
 import traceback
 import uuid
 
@@ -40,6 +41,24 @@ from app.services.places_service import (
 )
 from app.utils.iata_codes import resolve_iata
 from app.utils.supabase_client import get_supabase
+
+def build_fallback_skeleton(params: dict) -> list:
+    """Generate a basic skeleton without AI if all LLM calls fail."""
+    num_days = params.get('num_days', 7)
+    dest = params.get('destination_city', 'the city')
+    days = []
+    for d in range(1, num_days + 1):
+        if d == 1:
+            days.append({"day": d, "title": f"Arrival in {dest}", "type": "arrival", "neighborhood": "city center", "notes": "settle in, explore nearby"})
+        elif d == num_days:
+            days.append({"day": d, "title": "Departure Day", "type": "departure", "neighborhood": "hotel area", "notes": "pack up and head to airport"})
+        elif d % 6 == 0 and num_days > 6:
+            days.append({"day": d, "title": "Recharge Day", "type": "rest", "neighborhood": "hotel area", "notes": "easy day"})
+        elif d in [3, 4] and num_days >= 5:
+            days.append({"day": d, "title": f"Day Trip from {dest}", "type": "day_trip", "neighborhood": "nearby", "notes": "explore outside the city"})
+        else:
+            days.append({"day": d, "title": f"Exploring {dest}", "type": "full", "neighborhood": "city center", "notes": ""})
+    return days
 
 router = APIRouter()
 
@@ -176,45 +195,59 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
         # ── Phase 2: Skeleton generation ──
         params = req.model_dump()
 
-        def _safe_json_loads(text: str) -> dict:
-            """Best-effort JSON parsing that tolerates markdown fences."""
+        def parse_skeleton_json(raw: str) -> dict:
+            if not raw:
+                return {}
+            text = raw.strip()
+            
+            # Strip markdown fences
+            text = re.sub(r'^```(?:json)?\s*', '', text)
+            text = re.sub(r'\s*```$', '', text)
+            
+            # Strip any preamble before the first {
+            idx = text.find('{')
+            if idx > 0:
+                text = text[idx:]
+            
+            # Strip any text after the last }
+            idx = text.rfind('}')
+            if idx >= 0:
+                text = text[:idx + 1]
+            
             try:
-                # Strip markdown fences if present
-                cleaned = text.strip()
-                if cleaned.startswith("```"):
-                    cleaned = cleaned.strip("`")
-                    # After stripping backticks, try to find first brace
-                start = cleaned.find("{")
-                end = cleaned.rfind("}") + 1
-                if start != -1 and end > start:
-                    cleaned = cleaned[start:end]
-                return json.loads(cleaned)
-            except Exception:
+                return json.loads(text)
+            except json.JSONDecodeError:
                 return {}
 
-        try:
-            skeleton_raw = await llm.generate(
-                system=SKELETON_SYSTEM,
-                user=build_skeleton_prompt(params),
-                max_tokens=800,
-            )
-            skeleton_parsed = _safe_json_loads(skeleton_raw)
-            skeleton = skeleton_parsed.get("skeleton", []) or []
-            if not skeleton:
-                raise ValueError("Initial generation returned invalid or empty JSON")
-        except Exception:
-            # Fallback: try JSON mode once
+        # Skeleton generation with retry
+        skeleton_data = None
+        for attempt in range(3):
+            raw = ""
             try:
-                skeleton_json = await llm.json_completion(
-                    SKELETON_SYSTEM, build_skeleton_prompt(params)
+                if attempt > 0:
+                    await asyncio.sleep(3)  # wait before retry
+                
+                raw = await llm.generate(
+                    system=SKELETON_SYSTEM,
+                    user=build_skeleton_prompt(params) + "\n\nRespond with ONLY the JSON object. No explanation, no preamble, no markdown fences. Start your response with {",
+                    max_tokens=800,
                 )
-                skeleton_parsed = _safe_json_loads(skeleton_json)
-                skeleton = skeleton_parsed.get("skeleton", []) or []
-            except Exception:
-                skeleton = []
+                parsed = parse_skeleton_json(raw)
+                skeleton_list = parsed.get("skeleton", [])
+                
+                if skeleton_list and len(skeleton_list) > 0:
+                    skeleton_data = skeleton_list
+                    break
+            except Exception as e:
+                print(f"Skeleton attempt {attempt + 1} failed: {e}")
+                print(f"Skeleton raw response (attempt {attempt + 1}): {raw[:500]}")
+                continue
 
-        if not skeleton:
-            raise RuntimeError("Failed to generate trip skeleton.")
+        if not skeleton_data:
+            # Last resort: build a basic skeleton without AI
+            skeleton_data = build_fallback_skeleton(params)
+
+        skeleton = skeleton_data
 
         # New SSE event: skeleton
         yield sse_event("skeleton", {"skeleton": skeleton})
@@ -232,6 +265,10 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
         context_handoff = ""
 
         for chunk_index, chunk_days in enumerate(chunks):
+            # Delay between chunks to avoid Groq rate limiting
+            if chunk_index > 0:
+                await asyncio.sleep(2)
+                
             # Status update per chunk (existing status event)
             yield sse_event(
                 "status",
@@ -257,7 +294,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                         ),
                         max_tokens=3500,
                     )
-                    chunk_result = _safe_json_loads(chunk_raw)
+                    chunk_result = parse_skeleton_json(chunk_raw)
                     if chunk_result.get("itinerary"):
                         break
                 except Exception as e:
@@ -473,12 +510,13 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
         essentials_data: dict = {}
         try:
             itinerary_summary = build_itinerary_summary(all_days)
+            await asyncio.sleep(2)
             essentials_raw = await llm.generate(
                 system=ESSENTIALS_SYSTEM,
                 user=build_essentials_prompt(params, itinerary_summary),
                 max_tokens=2000,
             )
-            essentials_data = _safe_json_loads(essentials_raw)
+            essentials_data = parse_skeleton_json(essentials_raw)
             if not essentials_data:
                 raise RuntimeError("Empty essentials response")
         except Exception:
