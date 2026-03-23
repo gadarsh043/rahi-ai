@@ -37,7 +37,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - Phase 0: skeleton call designs trip structure only (arrival/departure, rest days, day trips, neighborhoods)
   - Phase 1-N: detail chunks (4-5 days per chunk) with durations, realistic timing buffers, and enforced interest mixing
   - Phase 3: enrichment after itinerary is complete (formula-based costs, transport, AI essentials with per-day dress code)
-  - Packed days rule: relaxed=5-6, moderate=6-7, active=8-9 activities per full day (food not counted)
+  - Packed days rule: relaxed=5-6, moderate=6-7, active=8-9 activities per full day (food not counted). Pace is strictly single-select.
   - Food = pit stops (45–60 minutes), max 1 lunch + 1 dinner per day
   - Day trips scaled by trip length, placed mid-trip only
   - Evenings go past 9pm for non-family trips; family trips end by 9pm and never include nightlife
@@ -46,6 +46,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Plan View with tab-based navigation (7 tabs)
 - All tabs: Eat, Stay, Go, Trip (timeline), Flight, Costs, Next
 - Timeline hover tooltips: place photo, rating, category, price, address on hover (smart positioning)
+- Timeline rendering: dates parsed manually in local timezone to prevent UTC offsets shifting "Day 1" backwards
 - Timeline day alerts: ⓘ icon on day headers for holidays/events/seasonal warnings (LLM-generated day_alert field, hover tooltip)
 - Timeline click-to-locate: click activity → geocode via Photon → show on map or open Google Maps
 - Interactive map (Leaflet + OSM, color-coded markers, route polylines, MapMessageCard overlay)
@@ -60,6 +61,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Right Now modal (geolocation → nearby places, 3 tabs)
 - Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner + Google Flights deep links)
   - Custom header with inline date pickers (pill-based DatePillPicker dropdown)
+  - FlightCard dynamically displays both per-person and total price when travelers > 1 (e.g. "$1,200/person · $2,400 total")
   - One-way / Round-trip toggle
   - Smart date defaults: depart = tripStart-1, return = tripEnd
   - Date bounds: Out = max(today, tripStart-5) to tripStart-1. Return = tripEnd to tripEnd+4
@@ -102,6 +104,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - "Replay Tour" in the profile dropdown always navigates to `/` and then starts the full flow for logged-in users
 - Light mode default (Tailwind + CSS variables, theme persisted to localStorage)
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
+  - Mobile experience is temporarily gated via `MobileGate` component (< 768px) prompting users to use desktop.
 - Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
 - Credits: 5 free trips, email adarsh@rahify.com for more (no payment platform yet). Credits deducted after successful trip generation.
 - Public home page: new users see full trip form, login required before form filling (/new is ProtectedRoute)
@@ -577,6 +580,8 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Flight date defaults: depart = tripStart-1 (arrive day before trip), return = tripEnd. Bounds: depart max(today, tripStart-5)→tripStart-1, return tripEnd→tripEnd+4
 - Flight badges: Best (from SerpAPI tag), Cheapest (lowest price), Fastest (shortest duration) — orange/green/blue pills
 - Flight deep links: Skyscanner (/flights/dfw/sea/260310/260317/) + Google Flights (?q=Flights from Dallas to Seattle on 2026-03-10 return 2026-03-17)
+- System Prompts: Prompts containing literal JSON examples strictly use Python `f-strings` rather than `.format()` to prevent string interpolation crashes.
+- LLM JSON Parsing: `generate_stream` strictly asserts `skeleton` output isn't empty after `_safe_json_loads` silently captures errors, so the graceful `json_completion` fallback actually triggers on bad JSON.
 - Geocode fallback UX: MapMessageCard on map with 10s countdown → auto-opens Google Maps, cancel button. Replaces invisible toast.
 - Map interactions: PlaceCard/Timeline click → focusPlace (existing places) or setMapMessage (geocoded/temporary)
 - LazySection: hideHeader prop for tabs that render their own header (e.g., flight tab)

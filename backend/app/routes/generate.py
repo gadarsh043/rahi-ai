@@ -100,6 +100,19 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
     transport_data: dict | None = None
 
     try:
+        # Pace validation and mapping
+        valid_paces = {'relaxed', 'moderate', 'active', 'intense'}
+        raw_pace = (req.pace or "").lower()
+        if raw_pace not in valid_paces:
+            if "relaxed" in raw_pace and "active" in raw_pace:
+                req.pace = "moderate"
+            elif "active" in raw_pace or "intense" in raw_pace:
+                req.pace = "active"
+            elif "relaxed" in raw_pace:
+                req.pace = "relaxed"
+            else:
+                req.pace = "moderate"
+
         # ── Phase 0: Initial status ──
         yield sse_event(
             "status",
@@ -187,8 +200,9 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
             )
             skeleton_parsed = _safe_json_loads(skeleton_raw)
             skeleton = skeleton_parsed.get("skeleton", []) or []
+            if not skeleton:
+                raise ValueError("Initial generation returned invalid or empty JSON")
         except Exception:
-            traceback.print_exc()
             # Fallback: try JSON mode once
             try:
                 skeleton_json = await llm.json_completion(

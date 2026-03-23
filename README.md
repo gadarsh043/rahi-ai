@@ -36,7 +36,7 @@ Enter trip details → get personalized itineraries with real places, real fligh
 | **Sharing** | Share trips via invite code, with viewer suggestions and ability to fork into their own plan. |
 | **PDF** | Rahify-branded PDF export: itinerary, costs, visa info, packing checklist, phrases, and essentials. |
 | **Appearance** | Dark/light mode with a warm, editorial feel. |
-| **PWA** | Installable PWA (Add to Home Screen) with mobile-first layout. |
+| **PWA** | Installable PWA (Add to Home Screen). Currently feature-gated on mobile devices with a "Coming Soon" screen while desktop gets optimized. |
 | **Right Now** | “Right Now” modal for nearby places based on live location (eat / stay / go). |
 
 ---

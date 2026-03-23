@@ -338,16 +338,14 @@ async def handle_llm_fallback(
     trip_context = build_chat_context(trip, places)
     dest = trip.get("destination_city", "the destination")
 
-    system_prompt = CHAT_SYSTEM.format(
-        trip_context=trip_context,
-        destination_city=dest,
-        mutation_instructions=(
-            "You're chatting — answer naturally. Share opinions, tips, honest takes.\n"
-            "If they want actual changes (add/remove/swap), describe what you'd do "
-            "but don't output JSON — the backend handles that.\n"
-            "Most messages are just conversation. Respond like a friend, not a tool."
-        ),
+    mutation_instructions = (
+        "You're chatting — answer naturally. Share opinions, tips, honest takes.\n"
+        "If they want actual changes (add/remove/swap), describe what you'd do "
+        "but don't output JSON — the backend handles that.\n"
+        "Most messages are just conversation. Respond like a friend, not a tool."
     )
+
+    system_prompt = f"{CHAT_SYSTEM}\n\nTrip Context ({dest}):\n{trip_context}\n\n{mutation_instructions}"
 
     # Build history for multi-turn context
     history = []

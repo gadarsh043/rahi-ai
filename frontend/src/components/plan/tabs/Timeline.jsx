@@ -122,7 +122,10 @@ function ActivityItem({ activity, dayNumber, actIndex, places, destinationCity }
 
 function getDayDate(startDate, dayNumber) {
   if (!startDate) return null;
-  const d = new Date(startDate);
+  // Parse YYYY-MM-DD strictly in local time to avoid UTC timezone offsets shifting it a day back
+  const datePart = startDate.split('T')[0];
+  const [year, month, day] = datePart.split('-').map(Number);
+  const d = new Date(year, month - 1, day);
   d.setDate(d.getDate() + (dayNumber - 1));
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }

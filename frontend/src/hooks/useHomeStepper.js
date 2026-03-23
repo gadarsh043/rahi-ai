@@ -53,7 +53,7 @@ function canProceedForStep(step, formData) {
     case 3:
       return formData.travelGroup != null;
     case 4:
-      return Array.isArray(formData.pace) && formData.pace.length > 0;
+      return Array.isArray(formData.pace) ? formData.pace.length > 0 : !!formData.pace;
     case 5:
       return formData.budgetVibe != null;
     case 6:

@@ -189,12 +189,6 @@ export default function GeneratingScreen({
             {displayProgress}%
           </span>
         </div>
-
-        {showDayProgress && (
-          <p className="mt-2 text-[11px] text-[var(--text-muted)]">
-            Planning days {1}-{plannedDays} of {totalDays}...
-          </p>
-        )}
       </div>
     </div>
   );

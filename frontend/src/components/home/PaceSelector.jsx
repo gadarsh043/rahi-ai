@@ -8,25 +8,24 @@ const PACE_OPTIONS = [
 ];
 
 export default function PaceSelector({ value, onChange }) {
-  const selected = Array.isArray(value) ? value : (value ? [value] : []);
+  // Support legacy array format but default to string comparison
+  const selectedId = Array.isArray(value) ? value[0] : value;
 
-  const toggle = (id) => {
-    if (selected.includes(id)) {
-      onChange(selected.filter((v) => v !== id));
-    } else {
-      onChange([...selected, id]);
-    }
+  const handleSelect = (id) => {
+    // If clicking the already selected one, optionally clear it, or just keep it selected
+    // Since it's radio behavior, we can just set it
+    onChange(id);
   };
 
   return (
     <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto">
       {PACE_OPTIONS.map((option) => {
-        const isSelected = selected.includes(option.id);
+        const isSelected = selectedId === option.id;
         return (
           <motion.button
             key={option.id}
             type="button"
-            onClick={() => toggle(option.id)}
+            onClick={() => handleSelect(option.id)}
             whileTap={{ scale: 0.97 }}
             whileHover={{ y: -2 }}
             transition={{ type: 'spring', stiffness: 400, damping: 25 }}

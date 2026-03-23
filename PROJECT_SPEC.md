@@ -56,7 +56,7 @@
 | 8 | **Tab: About Your Trip.** Day-by-day vertical timeline. Streamed narrative + structured activities with times, places, transport between stops. | P0 |
 | 9 | **Tab: Costs & Spending.** Estimated during planning, final on "My Trip." Breakdown: accommodation, food, activities, transport, daily avg, total, per-person. Currency selector (searchable dropdown, common currencies pinned top). | P0 |
 | 10 | **Tab: What's Next.** Visa info, passport validity, booking priority, document checklist (checkboxes). **Travel Essentials:** emergency numbers, tipping, power plugs, SIM advice, water safety, timezone, currency info. Credit card reference (hardcoded top 10, checkbox → static tips). | P0 |
-| 11 | **Tab: Flight/Travel Details.** AI decides transport mode. Flights via SerpAPI (cached, 10-min refresh cooldown). Custom header: "Flights" + [Round trip/One way] + pill-based date pickers + Search. Route + freshness + Refresh on subtitle row. Best/Cheapest/Fastest badges. Deep links: Skyscanner (round-trip URLs) + Google Flights (natural language query). Date defaults: depart=tripStart-1, return=tripEnd. Bounds: Out=max(today,tripStart-5)→tripStart-1, Return=tripEnd→tripEnd+4. Backend refresh-flights accepts custom dates. | P0 |
+| 11 | **Tab: Flight/Travel Details.** AI decides transport mode. Flights via SerpAPI (cached, 10-min refresh cooldown). FlightCard displays per-person and total price for groups > 1. Custom header: "Flights" + [Round trip/One way] + pill-based date pickers + Search. Route + freshness + Refresh on subtitle row. Best/Cheapest/Fastest badges. Deep links: Skyscanner (round-trip URLs) + Google Flights (natural language query). Date defaults: depart=tripStart-1, return=tripEnd. Bounds: Out=max(today,tripStart-5)→tripStart-1, Return=tripEnd→tripEnd+4. Backend refresh-flights accepts custom dates. | P0 |
 | 12 | **Interactive Map (Leaflet + OSM).** Right panel. Color-coded markers (🔴eat, 🔵stay, 🟢go, 🟡activity, 🟠cafe, 🩵outdoor). Click → popup. Route polylines on trip tab, flight arc on flight tab. MapMessageCard overlay for geocode fallback (10s countdown → auto-open Google Maps). Temporary markers via mapMessage state. Mobile: full-screen overlay toggled by floating map button. | P0 |
 | 13 | **AI Chatbot.** Text input + Send button only. Modify current itinerary. Context-aware to current plan. | P0 |
 | 14 | **"Let's Pick" Button.** Opens fullscreen popup: all fetched places by category. Pre-selected = in itinerary. Uncheck to remove, check to add. Google links. "Add Custom" → paste URL + label → AI adjusts. "Let's Pick" and chat are independent actions. | P0 |
@@ -65,7 +65,7 @@
 | 17 | **"My Trip" Page `/trip/:id`.** "Save as My Trip" freezes itinerary. Same PlanView in `saved` mode. PDF download, share code, affiliate links, checklist. Shareable via `?shared=CODE`. | P0 |
 | 18 | **Downloadable PDF** (on My Trip only). Itinerary, costs, visa, Travel Essentials (language, emergency, SIM, tips, plugs, timezone, water). | P0 |
 | 19 | **Dark/Light Mode.** Visible sun/moon icon in topbar. Persistent via localStorage. | P0 |
-| 20 | **Responsive Web + mWeb.** Built together with Tailwind responsive utilities. Native app = later. | P0 |
+| 20 | **Responsive Web + mWeb.** Built together with Tailwind responsive utilities. Native app = later. Currently feature-gated on mobile screens (< 768px) with a `MobileGate` showing "Coming Soon". | P0 |
 | 21 | **Onboarding Tutorial.** Custom tour system (TourOverlay, TourPrompt, TourMenu, tourRegistry, tourStore) with brand-styled tooltips. Persisted to localStorage + profile. Home-only tour works for logged-out users; full flow (home → form → plan) runs for logged-in users. Replay from profile dropdown "Replay Tour". | P0 |
 | 22 | **SEO Explore Pages.** Public `/explore` gallery and `/explore/:slug` destination landing pages (starting with Paris) backed by static content (`exploreDestinations.js`), optimized meta tags, and structured data for search. | P1 |
 | 23 | **Share Trip (Read-Only).** 6-char invite code. Same `/plan/:id?shared=CODE` in read-only mode. Viewer submits suggestions. Viewer can fork. Owner sees suggestion badges per trip (in sidebar + plan header). | P1 |
@@ -571,7 +571,7 @@ Handles `checkout.session.completed` → updates `trips_remaining`.
 | 2 | Where to? | City autocomplete (Photon) |
 | 3 | When? | Date range picker OR "I'm flexible" toggle |
 | 4 | How long? | Duration slider 1-30 days (if flexible) |
-| 5 | Pace? | 4 emoji cards: Relaxed 😎, Moderate 🌿, Active 🤸, Intense 🔥 |
+| 5 | Pace? | 4 emoji cards: Relaxed 😎, Moderate 🌿, Active 🤸, Intense 🔥 (single select) |
 | 6 | Budget vibe? | 4 cards: $ (Budget), $$ (Comfortable), $$$ (Premium), $$$$ (Luxury) |
 | 7 | What are you into? | 15 pill toggles (multi-select): Food & Drinks, Nature, History, Museums, Nightlife, Shopping, Hiking, Beaches, Art, Live Music, Parks, Sightseeing, Adventure, Photography, Local Markets |
 | 8 | Where to stay? | 3 cards: Hotel, Hostel, Apartment |
