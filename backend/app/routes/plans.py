@@ -412,6 +412,7 @@ async def rebuild_itinerary(trip_id: str, user=Depends(get_current_user)):
         ITINERARY_SYSTEM_LEAN_V1,
         build_itinerary_prompt_lean_v1,
     )
+    from app.routes.generate import parse_skeleton_json
     import json
 
     supabase = get_supabase()
@@ -493,10 +494,13 @@ Places for this day:
 JSON only: {{"day_number":{day_num},"title":"Day title","activities":[{{"time":"10:00","type":"food|attraction|hotel|free","title":"Name","detail":"2-3 sentences","place_id":"id"}}]}}"""
 
             try:
-                raw = await llm.json_completion(
-                    "Rewrite one day of a travel itinerary. JSON only.", prompt
+                raw = await llm.generate(
+                    "Rewrite one day of a travel itinerary. JSON only.",
+                    prompt + "\n\nRespond with ONLY the JSON object. No explanation, no preamble, no markdown fences. Start your response with {"
                 )
-                new_day = json.loads(raw)
+                new_day = parse_skeleton_json(raw)
+                if not new_day:
+                    raise Exception("Failed to parse")
                 replaced = False
                 for i, d in enumerate(patched_days):
                     if d.get("day_number") == day_num:
@@ -539,13 +543,13 @@ JSON only: {{"day_number":{day_num},"title":"Day title","activities":[{{"time":"
         "end_date": trip.get("end_date"),
     }
 
-    prompt = build_itinerary_prompt_lean_v1(lean_places, params)
-    response = await llm.json_completion(ITINERARY_SYSTEM_LEAN_V1, prompt)
+    prompt = build_itinerary_prompt_lean_v1(lean_places, params) + "\n\nRespond with ONLY the JSON object. No explanation, no preamble, no markdown fences. Start your response with {"
+    response = await llm.generate(ITINERARY_SYSTEM_LEAN_V1, prompt)
 
-    try:
-        itinerary_data = json.loads(response)
-        supabase.table("trips").update({"itinerary": itinerary_data}).eq("id", trip_id).execute()
-        return {"itinerary": itinerary_data, "message": "Full itinerary rebuilt!", "mode": "full"}
-    except json.JSONDecodeError:
+    itinerary_data = parse_skeleton_json(response)
+    if not itinerary_data:
         raise HTTPException(status_code=500, detail="Failed to parse itinerary")
+        
+    supabase.table("trips").update({"itinerary": itinerary_data}).eq("id", trip_id).execute()
+    return {"itinerary": itinerary_data, "message": "Full itinerary rebuilt!", "mode": "full"}
 

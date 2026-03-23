@@ -98,7 +98,7 @@
 | **PDF** | ReportLab (Python) | Server-side, Rahify-branded |
 | **Payments** | LemonSqueezy (planned). Currently email-based credits | adarsh@rahify.com |
 | **Storage** | Supabase Storage | Avatars |
-| **Frontend Host** | Netlify | Free |
+| **Frontend Host** | Netlify | Free, with cache-busting `_headers` |
 | **Backend Host** | Railway | $5/mo hobby plan |
 | **Domain** | Porkbun (rahify.com) | DNS via Netlify |
 | **Onboarding** | Custom tour system (TourOverlay, tourRegistry) | Replaced intro.js |

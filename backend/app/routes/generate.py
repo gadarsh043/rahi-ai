@@ -42,6 +42,31 @@ from app.services.places_service import (
 from app.utils.iata_codes import resolve_iata
 from app.utils.supabase_client import get_supabase
 
+def parse_skeleton_json(raw: str) -> dict:
+    if not raw:
+        return {}
+    text = raw.strip()
+    
+    # Strip markdown fences
+    text = re.sub(r'^```(?:json)?\s*', '', text)
+    text = re.sub(r'\s*```$', '', text)
+    
+    # Strip any preamble before the first {
+    idx = text.find('{')
+    if idx > 0:
+        text = text[idx:]
+    
+    # Strip any text after the last }
+    idx = text.rfind('}')
+    if idx >= 0:
+        text = text[:idx + 1]
+    
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+
+
 def build_fallback_skeleton(params: dict) -> list:
     """Generate a basic skeleton without AI if all LLM calls fail."""
     num_days = params.get('num_days', 7)
@@ -194,30 +219,6 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
 
         # ── Phase 2: Skeleton generation ──
         params = req.model_dump()
-
-        def parse_skeleton_json(raw: str) -> dict:
-            if not raw:
-                return {}
-            text = raw.strip()
-            
-            # Strip markdown fences
-            text = re.sub(r'^```(?:json)?\s*', '', text)
-            text = re.sub(r'\s*```$', '', text)
-            
-            # Strip any preamble before the first {
-            idx = text.find('{')
-            if idx > 0:
-                text = text[idx:]
-            
-            # Strip any text after the last }
-            idx = text.rfind('}')
-            if idx >= 0:
-                text = text[:idx + 1]
-            
-            try:
-                return json.loads(text)
-            except json.JSONDecodeError:
-                return {}
 
         # Skeleton generation with retry
         skeleton_data = None

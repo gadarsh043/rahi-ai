@@ -272,6 +272,7 @@ Dates: {params.get('start_date', 'flexible')} to {params.get('end_date', 'flexib
 7. Is each place used only ONCE? No franchise repeats?
 8. For rest days: light schedule (start 10-11am, 1-2 activities + dinner).
 9. For arrival/departure: light schedule per skeleton notes.
+10. Count how many times each place appears. If ANY place appears more than once — remove the duplicate and replace with a different place. This includes "free" activities like "Live Music at Covent Garden" — if it appears on Day 2, it cannot appear on Day 4.
 
 {narrative_note}
 

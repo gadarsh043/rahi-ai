@@ -581,7 +581,9 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Flight badges: Best (from SerpAPI tag), Cheapest (lowest price), Fastest (shortest duration) — orange/green/blue pills
 - Flight deep links: Skyscanner (/flights/dfw/sea/260310/260317/) + Google Flights (?q=Flights from Dallas to Seattle on 2026-03-10 return 2026-03-17)
 - System Prompts: Prompts containing literal JSON examples strictly use Python `f-strings` rather than `.format()` to prevent string interpolation crashes.
-- LLM JSON Parsing: `generate_stream` strictly asserts `skeleton` output isn't empty after `_safe_json_loads` silently captures errors, so the graceful `json_completion` fallback actually triggers on bad JSON.
+- LLM JSON Parsing: The 8B model struggles with Groq's `response_format: {"type": "json_object"}`. We now use a robust `parse_skeleton_json` parser combined with strict prompt suffixes (`JSON only. No preamble. Start with {`) instead of native JSON mode for both the main `/generate` stream and the `/plans/:id/rebuild` endpoint.
+- Duplicate Place Prevention: The AI chunk prompts explicitly instruct the model to count appearances and strictly block any place (including free activities) from appearing more than once across the entire trip.
+- Netlify Caching: Added `_headers` to `frontend/public` with explicit cache-busting (`max-age=0, must-revalidate`) for the main app and immutable caching (`max-age=31536000`) for assets, to prevent stale deployments.
 - Geocode fallback UX: MapMessageCard on map with 10s countdown → auto-opens Google Maps, cancel button. Replaces invisible toast.
 - Map interactions: PlaceCard/Timeline click → focusPlace (existing places) or setMapMessage (geocoded/temporary)
 - LazySection: hideHeader prop for tabs that render their own header (e.g., flight tab)

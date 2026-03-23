@@ -62,7 +62,7 @@ const roadmapFeatures = {
       id: 'ship-8',
       emoji: '🧠',
       title: 'Smarter Itineraries',
-      description: 'Skeleton + chunked generation with better day flow, day trips, and evening plans that feel natural.',
+      description: 'Skeleton + chunked generation with better day flow, day trips, strict duplicate prevention, and robust JSON parsing.',
       shippedDate: 'Mar 2026',
     },
   ],

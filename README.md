@@ -153,7 +153,7 @@ rahify/
 
 ## Deployment
 
-- **Frontend:** Auto-deploys to Netlify on push to `master`.
+- **Frontend:** Auto-deploys to Netlify on push to `master` (with explicit cache-busting `_headers`).
 - **Backend:** Auto-deploys to Railway on push to `master` (Dockerized FastAPI app).
 - **Database:** Supabase cloud instance (managed PostgreSQL with RLS).
 - **Domain:** `rahify.com` via Porkbun DNS, pointing to Netlify + Railway.
