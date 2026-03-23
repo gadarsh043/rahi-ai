@@ -24,6 +24,7 @@ import useTourStore from './stores/tourStore';
 import TourOverlay from './components/onboarding/TourOverlay';
 import TourPrompt from './components/onboarding/TourPrompt';
 import TourMenu from './components/onboarding/TourMenu';
+import MobileGate from './components/layout/MobileGate';
 
 export default function App() {
   const initialize = useAuthStore((s) => s.initialize);
@@ -41,6 +42,9 @@ export default function App() {
       initToursFromProfile(profile);
     }
   }, [profile, initToursFromProfile]);
+
+  const isMobile = window.innerWidth < 768;
+  if (isMobile) return <MobileGate />;
 
   return (
     <BrowserRouter>

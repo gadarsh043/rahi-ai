@@ -9,10 +9,12 @@ class TripGenerateRequest(BaseModel):
     origin_country: str
     origin_lat: float
     origin_lng: float
+    origin_iata: Optional[str] = None
     destination_city: str
     destination_country: str
     destination_lat: float
     destination_lng: float
+    destination_iata: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     num_days: int = 7

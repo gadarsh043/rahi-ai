@@ -153,3 +153,39 @@ def detect_visa_status(instructions: str) -> str | None:
 
     return None
 
+
+def is_domestic_travel(origin_country: str, destination_country: str) -> bool:
+    """
+    Check if this is domestic travel between origin and destination.
+
+    Handles:
+    - Country codes (US/US)
+    - Full names (United States/United States)
+    - Common variations and aliases (US/USA/United States of America, UK/GB/England, etc.)
+    """
+    if not origin_country or not destination_country:
+        return False
+
+    # Normalize to uppercase strings
+    o = origin_country.strip().upper()
+    d = destination_country.strip().upper()
+
+    if o == d:
+        return True
+
+    # Handle code vs name mismatches via simple alias mapping
+    COUNTRY_ALIASES = {
+        "US": ["UNITED STATES", "USA", "AMERICA", "UNITED STATES OF AMERICA", "U.S.", "U.S.A."],
+        "UK": ["UNITED KINGDOM", "GREAT BRITAIN", "ENGLAND", "GB", "BRITAIN"],
+        "IN": ["INDIA", "IND"],
+        "AE": ["UAE", "UNITED ARAB EMIRATES"],
+    }
+
+    def get_canonical(code: str) -> str:
+        for key, aliases in COUNTRY_ALIASES.items():
+            if code == key or code in aliases:
+                return key
+        return code
+
+    return get_canonical(o) == get_canonical(d)
+

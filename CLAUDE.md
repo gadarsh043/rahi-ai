@@ -33,16 +33,20 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - Flying pill animation: selection flies from input to prompt box on Next click
   - Prompt preview only updates when pill "lands", not live while typing
   - IATA airport code support in city autocomplete (DFW → Dallas, LAX → Los Angeles)
-- AI itinerary generation (/generate SSE, Approach A: places first)
-  - Prompt enforces packed days: relaxed=5-6, moderate=6-7, active=8-9 activities (not counting food)
-  - Food = pit stops, not main activities. Max 1 lunch + 1 dinner per day
-  - Day trips mandatory for 4+ day trips (scaled: 4-5d=1, 6-7d=1-2, 8+d=2-3)
-  - Evenings go past 9pm. Nightlife/bars included for friend groups
-  - Self-check in prompt: LLM verifies each day before responding
-  - travel_group (Solo/Couple/Friends/Family/Work) shapes recommendations
+- AI itinerary generation V2 (/generate SSE, Approach A: places first → multi-phase pipeline)
+  - Phase 0: skeleton call designs trip structure only (arrival/departure, rest days, day trips, neighborhoods)
+  - Phase 1-N: detail chunks (4-5 days per chunk) with durations, realistic timing buffers, and enforced interest mixing
+  - Phase 3: enrichment after itinerary is complete (formula-based costs, transport, AI essentials with per-day dress code)
+  - Packed days rule: relaxed=5-6, moderate=6-7, active=8-9 activities per full day (food not counted). Pace is strictly single-select.
+  - Food = pit stops (45–60 minutes), max 1 lunch + 1 dinner per day
+  - Day trips scaled by trip length, placed mid-trip only
+  - Evenings go past 9pm for non-family trips; family trips end by 9pm and never include nightlife
+  - Self-check in prompts: LLM validates timing, density, variety, and duplication before responding
+  - travel_group (Solo/Couple/Friends/Family/Work) has hard rules that shape the entire itinerary
 - Plan View with tab-based navigation (7 tabs)
 - All tabs: Eat, Stay, Go, Trip (timeline), Flight, Costs, Next
 - Timeline hover tooltips: place photo, rating, category, price, address on hover (smart positioning)
+- Timeline rendering: dates parsed manually in local timezone to prevent UTC offsets shifting "Day 1" backwards
 - Timeline day alerts: ⓘ icon on day headers for holidays/events/seasonal warnings (LLM-generated day_alert field, hover tooltip)
 - Timeline click-to-locate: click activity → geocode via Photon → show on map or open Google Maps
 - Interactive map (Leaflet + OSM, color-coded markers, route polylines, MapMessageCard overlay)
@@ -57,6 +61,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - Right Now modal (geolocation → nearby places, 3 tabs)
 - Flight/Travel tab (SerpAPI + cache + IATA resolver + Skyscanner + Google Flights deep links)
   - Custom header with inline date pickers (pill-based DatePillPicker dropdown)
+  - FlightCard dynamically displays both per-person and total price when travelers > 1 (e.g. "$1,200/person · $2,400 total")
   - One-way / Round-trip toggle
   - Smart date defaults: depart = tripStart-1, return = tripEnd
   - Date bounds: Out = max(today, tripStart-5) to tripStart-1. Return = tripEnd to tripEnd+4
@@ -99,6 +104,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
   - "Replay Tour" in the profile dropdown always navigates to `/` and then starts the full flow for logged-in users
 - Light mode default (Tailwind + CSS variables, theme persisted to localStorage)
 - mWeb responsive (bottom nav, bottom sheets, touch targets, PWA manifest)
+  - Mobile experience is temporarily gated via `MobileGate` component (< 768px) prompting users to use desktop.
 - Profile dropdown (Replay Tour, Settings, Travel Quiz, Feedback, Privacy, Logout)
 - Credits: 5 free trips, email adarsh@rahify.com for more (no payment platform yet). Credits deducted after successful trip generation.
 - Public home page: new users see full trip form, login required before form filling (/new is ProtectedRoute)
@@ -120,6 +126,15 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - **Auto-deploy:** Push to master → both Netlify and Railway auto-build + deploy
 - **CORS:** Backend `FRONTEND_URL=https://rahify.com`, expose_headers includes Content-Disposition
 - **Global exception handler:** Includes CORS headers for allowed origins (fixes PDF download CORS on error)
+
+### Generation Pipeline V2 — High Level
+- Approach A is still **places first**, but now runs as a 3-phase pipeline:
+  - **Phase 0 — Skeleton:** one fast call that returns only the day-by-day trip shape (arrival, full, rest, day_trip, departure) with neighborhoods and notes.
+  - **Phase 1-N — Chunks:** 2–4 chunk calls (4–5 days each) that fill in activities using ONLY fetched Google Places. Each chunk sees a context handoff so restaurants and key places are never reused.
+  - **Phase 3 — Enrichment:** runs after all days are generated: formula-based cost estimation (no LLM), transport, and AI-powered essentials that read the completed itinerary.
+- `/generate` now streams SSE events progressively:
+  - `status`, `places_preview`, `skeleton`, `narrative_chunk`, `itinerary_day`/`itinerary_chunk`, `cost_estimate`, `transport`, `visa_info`, `travel_essentials`, `done`, `error`.
+  - Frontend shows day-by-day loading (“Generating days 6–10...”) instead of waiting for a single giant response.
 
 ### Not Yet Implemented
 - LemonSqueezy payment integration
@@ -554,7 +569,7 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Backend auth security: invalid tokens ALWAYS return 401 regardless of environment. Dev fallback only when NO auth header sent at all.
 - Currency conversion: frankfurter.app (free ECB rates), cached 24h in localStorage. CurrencySelector only in CostsTab (removed from PlanHeader).
 - Login page: terms/privacy open as modals on same page (no navigation away)
-- Itinerary prompt: friend tone, packed days, food as filler, day trips mandatory, self-check before responding
+- Itinerary prompt V2: friend tone, packed days, food as filler, day trips + rest days scaled by trip length, self-check before responding, multi-phase skeleton → chunks → essentials
 - Chat classifier: question/hypothetical guard routes "if I want to add...", "how does...", "can I..." to LLM instead of regex. Prevents misclassification of exploratory messages as commands.
 - Chat prompt: friend who's been there, 1-3 sentences, specific tips, multi-turn history
 - Rebuild as third button: ActionBar always shows Chat + Let's Pick. Rebuild appears as third button when pendingChanges > 0. User can do multiple Let's Pick + Chat actions, then rebuild once.
@@ -565,6 +580,8 @@ Floating ☰ opens overlay sidebar drawer (not inline)
 - Flight date defaults: depart = tripStart-1 (arrive day before trip), return = tripEnd. Bounds: depart max(today, tripStart-5)→tripStart-1, return tripEnd→tripEnd+4
 - Flight badges: Best (from SerpAPI tag), Cheapest (lowest price), Fastest (shortest duration) — orange/green/blue pills
 - Flight deep links: Skyscanner (/flights/dfw/sea/260310/260317/) + Google Flights (?q=Flights from Dallas to Seattle on 2026-03-10 return 2026-03-17)
+- System Prompts: Prompts containing literal JSON examples strictly use Python `f-strings` rather than `.format()` to prevent string interpolation crashes.
+- LLM JSON Parsing: `generate_stream` strictly asserts `skeleton` output isn't empty after `_safe_json_loads` silently captures errors, so the graceful `json_completion` fallback actually triggers on bad JSON.
 - Geocode fallback UX: MapMessageCard on map with 10s countdown → auto-opens Google Maps, cancel button. Replaces invisible toast.
 - Map interactions: PlaceCard/Timeline click → focusPlace (existing places) or setMapMessage (geocoded/temporary)
 - LazySection: hideHeader prop for tabs that render their own header (e.g., flight tab)
@@ -588,6 +605,8 @@ Floating ☰ opens overlay sidebar drawer (not inline)
  - Roadmap page: public at /roadmap, URL-only access (no nav entry). Ref-measured SVG zigzag path, four zones (Shipped/Building/Up Next/Exploring), heart votes per feature (localStorage → Supabase later). No dates on upcoming features. | Mar 9
  - Roadmap data: static `src/data/roadmapFeatures.js`, updated as part of Iteration Learning Protocol. No payment/pricing features shown. | Mar 9
  - Roadmap path: single SVG with `useRef` + `ResizeObserver` measuring real card positions. Individual SVG segments between cards look choppy — always use one continuous path. | Mar 9
+- Generation pipeline V2: skeleton + chunked itinerary generation + post-itinerary essentials, with formula-based cost estimation and domestic travel detection. | Mar 11
+- Dietary filtering: EatTab soft-filters obviously incompatible restaurants (e.g., BBQ for vegetarians) on the frontend, using simple keyword heuristics over Google Places text. | Mar 11
 
 ---
 

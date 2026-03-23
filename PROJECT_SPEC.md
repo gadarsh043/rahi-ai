@@ -56,7 +56,7 @@
 | 8 | **Tab: About Your Trip.** Day-by-day vertical timeline. Streamed narrative + structured activities with times, places, transport between stops. | P0 |
 | 9 | **Tab: Costs & Spending.** Estimated during planning, final on "My Trip." Breakdown: accommodation, food, activities, transport, daily avg, total, per-person. Currency selector (searchable dropdown, common currencies pinned top). | P0 |
 | 10 | **Tab: What's Next.** Visa info, passport validity, booking priority, document checklist (checkboxes). **Travel Essentials:** emergency numbers, tipping, power plugs, SIM advice, water safety, timezone, currency info. Credit card reference (hardcoded top 10, checkbox → static tips). | P0 |
-| 11 | **Tab: Flight/Travel Details.** AI decides transport mode. Flights via SerpAPI (cached, 10-min refresh cooldown). Custom header: "Flights" + [Round trip/One way] + pill-based date pickers + Search. Route + freshness + Refresh on subtitle row. Best/Cheapest/Fastest badges. Deep links: Skyscanner (round-trip URLs) + Google Flights (natural language query). Date defaults: depart=tripStart-1, return=tripEnd. Bounds: Out=max(today,tripStart-5)→tripStart-1, Return=tripEnd→tripEnd+4. Backend refresh-flights accepts custom dates. | P0 |
+| 11 | **Tab: Flight/Travel Details.** AI decides transport mode. Flights via SerpAPI (cached, 10-min refresh cooldown). FlightCard displays per-person and total price for groups > 1. Custom header: "Flights" + [Round trip/One way] + pill-based date pickers + Search. Route + freshness + Refresh on subtitle row. Best/Cheapest/Fastest badges. Deep links: Skyscanner (round-trip URLs) + Google Flights (natural language query). Date defaults: depart=tripStart-1, return=tripEnd. Bounds: Out=max(today,tripStart-5)→tripStart-1, Return=tripEnd→tripEnd+4. Backend refresh-flights accepts custom dates. | P0 |
 | 12 | **Interactive Map (Leaflet + OSM).** Right panel. Color-coded markers (🔴eat, 🔵stay, 🟢go, 🟡activity, 🟠cafe, 🩵outdoor). Click → popup. Route polylines on trip tab, flight arc on flight tab. MapMessageCard overlay for geocode fallback (10s countdown → auto-open Google Maps). Temporary markers via mapMessage state. Mobile: full-screen overlay toggled by floating map button. | P0 |
 | 13 | **AI Chatbot.** Text input + Send button only. Modify current itinerary. Context-aware to current plan. | P0 |
 | 14 | **"Let's Pick" Button.** Opens fullscreen popup: all fetched places by category. Pre-selected = in itinerary. Uncheck to remove, check to add. Google links. "Add Custom" → paste URL + label → AI adjusts. "Let's Pick" and chat are independent actions. | P0 |
@@ -65,7 +65,7 @@
 | 17 | **"My Trip" Page `/trip/:id`.** "Save as My Trip" freezes itinerary. Same PlanView in `saved` mode. PDF download, share code, affiliate links, checklist. Shareable via `?shared=CODE`. | P0 |
 | 18 | **Downloadable PDF** (on My Trip only). Itinerary, costs, visa, Travel Essentials (language, emergency, SIM, tips, plugs, timezone, water). | P0 |
 | 19 | **Dark/Light Mode.** Visible sun/moon icon in topbar. Persistent via localStorage. | P0 |
-| 20 | **Responsive Web + mWeb.** Built together with Tailwind responsive utilities. Native app = later. | P0 |
+| 20 | **Responsive Web + mWeb.** Built together with Tailwind responsive utilities. Native app = later. Currently feature-gated on mobile screens (< 768px) with a `MobileGate` showing "Coming Soon". | P0 |
 | 21 | **Onboarding Tutorial.** Custom tour system (TourOverlay, TourPrompt, TourMenu, tourRegistry, tourStore) with brand-styled tooltips. Persisted to localStorage + profile. Home-only tour works for logged-out users; full flow (home → form → plan) runs for logged-in users. Replay from profile dropdown "Replay Tour". | P0 |
 | 22 | **SEO Explore Pages.** Public `/explore` gallery and `/explore/:slug` destination landing pages (starting with Paris) backed by static content (`exploreDestinations.js`), optimized meta tags, and structured data for search. | P1 |
 | 23 | **Share Trip (Read-Only).** 6-char invite code. Same `/plan/:id?shared=CODE` in read-only mode. Viewer submits suggestions. Viewer can fork. Owner sees suggestion badges per trip (in sidebar + plan header). | P1 |
@@ -158,46 +158,69 @@
 
 ---
 
-## 5. Core Generation Flow (Approach A — Places First)
+## 5. Core Generation Flow (Approach A — Places First, V2 Pipeline)
 
 ```
 USER HITS "GENERATE"
          │
     ┌────▼─────────────────────────────┐
-    │ PHASE 1: DATA FETCH (3-5s)       │
+    │ PHASE 1: DATA FETCH (3–5s)       │
     │ PARALLEL requests:               │
     │ ├─ Geocode destination (Photon)  │
-    │ ├─ Google Places Nearby x5-6:    │
-    │ │   restaurants (20), hotels(20),│
-    │ │   attractions(20), nightlife   │
-    │ │   (10), cafes(10), outdoors(10)│
-    │ └─ Result: ~80-100 real places   │
+    │ ├─ Google Places Nearby x5–6:    │
+    │ │   restaurants, hotels,         │
+    │ │   attractions, nightlife,      │
+    │ │   cafes, outdoors              │
+    │ └─ Result: ~80–100 real places   │
     └────┬─────────────────────────────┘
          │ Route to /plan/:id
     ┌────▼─────────────────────────────┐
-    │ PHASE 2: LOADING UX (0-5s)      │
-    │ "Crafting your trip..."          │
-    │ Preview cards pop in:            │
-    │ "Found 23 restaurants ✓"         │
-    │ (real photos appearing)          │
+    │ PHASE 2: SKELETON (V2)          │
+    │ One fast LLM call:              │
+    │  - Day types (arrival/full/     │
+    │    rest/day_trip/departure)     │
+    │  - Neighborhood focus per day   │
+    │  - Rest days + day trips scaled │
+    │ Emits SSE: `skeleton`           │
     └────┬─────────────────────────────┘
          │
     ┌────▼─────────────────────────────┐
-    │ PHASE 3: AI GENERATION (5-8s)   │
-    │ Feed places + prefs to Groq     │
-    │ → Stream "About Your Trip"      │
-    │ → If Groq fails: "Retry" button │
+    │ PHASE 3: CHUNKED ITINERARY (V2) │
+    │ 2–4 LLM calls, 4–5 days each:   │
+    │  - Uses skeleton + places list  │
+    │  - Enforces packed days,        │
+    │    timing buffers, 3+ interests │
+    │    per full day                 │
+    │  - No duplicate place_ids       │
+    │  - First chunk returns a        │
+    │    narrative string             │
+    │ Emits SSE:                      │
+    │  - `narrative_chunk` (first)    │
+    │  - `itinerary_day` /           │
+    │    `itinerary_chunk` as days    │
+    │    are generated                │
     └────┬─────────────────────────────┘
          │
     ┌────▼─────────────────────────────┐
     │ PHASE 4: ENRICHMENT (parallel)  │
-    │ ├─ Transport: AI decided mode   │
-    │ │   flight→SerpAPI (cached)     │
-    │ │   drive→Maps+RentalCars       │
-    │ │   ferry→DirectFerries         │
-    │ ├─ Map markers appear live      │
-    │ ├─ Tabs: dot → ✓ ready          │
-    │ └─ Save to Supabase             │
+    │ AFTER itinerary is complete:    │
+    │  - Cost: formula-based estimate │
+    │    from itinerary + price_level │
+    │    (no AI call)                 │
+    │  - Transport: existing flight/  │
+    │    drive logic                  │
+    │  - Essentials: one LLM call     │
+    │    using the completed          │
+    │    itinerary (visa, weather,    │
+    │    per-day dress code,          │
+    │    seasonal alerts, checklist)  │
+    │  - Save full trip to Supabase   │
+    │ Emits SSE:                      │
+    │  - `cost_estimate`, `transport` │
+    │  - `visa_info`,                 │
+    │    `travel_essentials`          │
+    │  - `done` (after successful     │
+    │    save)                        │
     └──────────────────────────────────┘
          │
          ▼ ALL TABS READY — toast
@@ -414,18 +437,20 @@ Auth: Supabase JWT in `Authorization: Bearer <token>`
 }
 ```
 
-**SSE Events:**
+**SSE Events (V2 pipeline):**
 ```
-event: status          → { phase, message }
-event: places_preview  → { category, count, preview[] }
-event: narrative_chunk → { text }
-event: itinerary       → { trip_id, days[] }
-event: transport       → { mode, reasoning, flights[], cached, fetched_at, next_refresh }
-event: cost_estimate   → { accommodation, food, activities, transport, total, per_person, currency, label:"estimated" }
-event: visa_info       → { visa_required, type, validity, processing, checklist[], warnings[] }
-event: travel_essentials → { language, emergency_numbers, sim, tipping, plug, timezone, water, currency_info }
-event: done            → { trip_id, message }
-event: error           → { message, retry: true }
+event: status            → { phase, message }
+event: places_preview    → { category, count, preview[] }
+event: skeleton          → { skeleton: [...] }  // day types, neighborhoods, notes only
+event: narrative_chunk   → { text }
+event: itinerary_day     → { day }             // single day as soon as each chunk returns
+event: itinerary_chunk   → { days: [...] }     // optional, chunk-level payload
+event: transport         → { mode, reasoning, flights[], cached, fetched_at, next_refresh }
+event: cost_estimate     → { accommodation, food, activities, transport, total, per_person, daily_avg, label: "estimated" }
+event: visa_info         → { required, type, domestic_note?, details?, processing_time?, documents_needed?, warnings? }
+event: travel_essentials → { weather, dress_code[], practical, seasonal_alerts[], documents_checklist[] }
+event: done              → { trip_id, message }
+event: error             → { message, retry: true }
 ```
 
 ### `POST /chat` — SSE Stream
@@ -546,7 +571,7 @@ Handles `checkout.session.completed` → updates `trips_remaining`.
 | 2 | Where to? | City autocomplete (Photon) |
 | 3 | When? | Date range picker OR "I'm flexible" toggle |
 | 4 | How long? | Duration slider 1-30 days (if flexible) |
-| 5 | Pace? | 4 emoji cards: Relaxed 😎, Moderate 🌿, Active 🤸, Intense 🔥 |
+| 5 | Pace? | 4 emoji cards: Relaxed 😎, Moderate 🌿, Active 🤸, Intense 🔥 (single select) |
 | 6 | Budget vibe? | 4 cards: $ (Budget), $$ (Comfortable), $$$ (Premium), $$$$ (Luxury) |
 | 7 | What are you into? | 15 pill toggles (multi-select): Food & Drinks, Nature, History, Museums, Nightlife, Shopping, Hiking, Beaches, Art, Live Music, Parks, Sightseeing, Adventure, Photography, Local Markets |
 | 8 | Where to stay? | 3 cards: Hotel, Hostel, Apartment |
@@ -727,25 +752,56 @@ class LLMService:
     def __init__(self, provider: str = "groq"):
         self.provider = provider
 
-    async def generate_itinerary(self, places, params) -> AsyncGenerator:
-        if self.provider == "groq":
-            return self._stream_groq(places, params)
-        elif self.provider == "claude":
-            return self._stream_claude(places, params)
+    async def generate(self, system: str, user: str, max_tokens: int) -> str:
+        # Single-call helper used by skeleton/chunk/essentials prompts
+        ...
+
+    async def generate_itinerary_stream(self, places, params) -> AsyncGenerator:
+        """
+        High-level generator used by /generate:
+        - Phase 0: skeleton (1 call)
+        - Phase 1-N: chunks (2–4 calls)
+        - Phase 3: essentials (1 call)
+        Yields structured events that the route turns into SSE.
+        """
+        ...
 
     async def chat_response(self, context, message, history) -> AsyncGenerator:
         ...
 ```
 
-**All prompts are in a separate `PROMPTS.md` file** — copy-pasteable for direct testing in Groq Playground. See accompanying file.
+### Prompt Files (V2)
 
-Prompts include:
-1. **Itinerary Generation** — system prompt + test user message with full place data
-2. **Chat Modification** — modify existing itinerary
-3. **"Let's Pick" Regeneration** — rebuild from user's selections
-4. **Visa & Entry Rules** — standalone for What's Next tab
-5. **Travel Essentials** — language, emergency, SIM, etc.
-6. **Cost Re-estimation** — after itinerary changes
+Prompts now live in dedicated Python modules so they can be imported and tested directly:
+
+- `app/prompts/itinerary_v2.py`
+  - `SKELETON_SYSTEM`
+  - `build_skeleton_prompt(params)`
+  - `CHUNK_SYSTEM`
+  - `build_chunk_prompt(places_text, params, skeleton, chunk_days, context_handoff)`
+  - `build_context_handoff(generated_days, places_used)`
+  - `get_chunks(num_days, chunk_size=5)`
+- `app/prompts/essentials.py`
+  - `ESSENTIALS_SYSTEM`
+  - `build_essentials_prompt(params, itinerary_summary)`
+  - `build_itinerary_summary(itinerary)`
+- `app/prompts/chat.py`
+  - `CHAT_SYSTEM` (friend tone, hard group rules, modification JSON diff)
+  - `CHAT_USER_TEMPLATE`
+
+### Key V2 Prompt Behaviors
+
+1. **Skeleton**: decides day types (arrival/full/rest/day_trip/departure), neighborhoods, rest-day and day-trip placement based on trip length and travel group. No activities yet.
+2. **Chunks**: enforce:
+   - Packed days: relaxed=5–6, moderate=6–7, active=8–9 non-food activities per full day.
+   - Durations on every activity plus realistic 15–30 minute buffers.
+   - At least 3 interest categories per full day; no long runs of the same type.
+   - One-use `place_id` across the whole trip; chains deduped at fetch time.
+3. **Essentials**: runs after itinerary, using real days/activities to generate:
+   - Month- and destination-specific weather.
+   - Per-day dress code tied to specific activities.
+   - Domestic-travel-aware visa section (or simple “carry valid ID” note).
+4. **Chat**: updated to respect the same priority rules (instructions → group → pace → budget → interests) and never adds nightlife for family trips.
 
 ---
 

@@ -28,7 +28,13 @@ const FALLBACK_FACTS = {
   ],
 };
 
-export default function GeneratingScreen({ destinationCity, isGenerating }) {
+export default function GeneratingScreen({
+  destinationCity,
+  isGenerating,
+  statusMessage,
+  plannedDays = 0,
+  totalDays = 0,
+}) {
   const [facts, setFacts] = useState([]);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -121,6 +127,9 @@ export default function GeneratingScreen({ destinationCity, isGenerating }) {
 
   const currentFact = facts[currentFactIndex] || '';
   const displayProgress = Math.min(Math.round(progress), 100);
+  const effectiveStatus = statusMessage || PROGRESS_MESSAGES[messageIndex];
+  const showDayProgress =
+    totalDays > 0 && plannedDays > 0 && plannedDays <= totalDays;
 
   return (
     <div className="flex items-center justify-center min-h-[70vh] px-4">
@@ -164,14 +173,16 @@ export default function GeneratingScreen({ destinationCity, isGenerating }) {
         <div className="flex items-center justify-between">
           <AnimatePresence mode="wait">
             <motion.p
-              key={messageIndex}
+              key={statusMessage ? `status-${effectiveStatus}` : messageIndex}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
               className="text-xs text-[var(--text-muted)]"
             >
-              {displayProgress >= 100 ? '100+ places found!' : PROGRESS_MESSAGES[messageIndex]}
+              {displayProgress >= 100
+                ? '100+ places found!'
+                : effectiveStatus}
             </motion.p>
           </AnimatePresence>
           <span className="text-xs font-semibold text-brand-500">

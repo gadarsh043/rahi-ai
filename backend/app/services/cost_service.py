@@ -52,7 +52,7 @@ FLIGHT_ESTIMATES = {
 }
 
 
-def estimate_costs(
+def estimate_costs_v1(
     destination_country: str,
     num_days: int,
     budget_vibe: str,
@@ -122,5 +122,127 @@ def estimate_costs(
         "currency": currency,
         "label": "estimated",
         "num_travelers": travelers,
+    }
+
+
+def estimate_costs(
+    destination_country: str,
+    num_days: int,
+    budget_vibe: str,
+    accommodation_type: str,
+    num_travelers: int,
+    origin_country: str = None,
+    flight_data: dict = None,
+    currency: str = "USD",
+) -> dict:
+    """
+    Backwards-compatible wrapper around the original v1 estimator.
+    New V2 pipeline should prefer `estimate_trip_cost` instead.
+    """
+    return estimate_costs_v1(
+        destination_country=destination_country,
+        num_days=num_days,
+        budget_vibe=budget_vibe,
+        accommodation_type=accommodation_type,
+        num_travelers=num_travelers,
+        origin_country=origin_country,
+        flight_data=flight_data,
+        currency=currency,
+    )
+
+
+# ─────────────────────────────────────────────────────────────
+# V2 COST ESTIMATION — PRICE_LEVEL-BASED, NO AI CALL
+# ─────────────────────────────────────────────────────────────
+
+COST_PER_MEAL = {
+    0: (5, 10),  # No price level data — assume budget
+    1: (8, 15),  # $ — street food, budget eats
+    2: (15, 30),  # $$ — casual dining
+    3: (30, 60),  # $$$ — nice restaurants
+    4: (60, 150),  # $$$$ — fine dining
+}
+
+
+HOTEL_PER_NIGHT = {
+    0: (40, 80),
+    1: (30, 60),  # $ — hostel, budget hotel
+    2: (60, 120),  # $$ — mid-range
+    3: (120, 250),  # $$$ — nice hotel
+    4: (250, 500),  # $$$$ — luxury
+}
+
+
+ACTIVITY_COST = {
+    "free": 0,  # walks, viewpoints, parks
+    "attraction_free": 0,  # free museums, public spaces
+    "attraction_paid": (15, 35),  # museums, tours, temples with entry
+    "day_trip_transport": (20, 60),  # train/bus to nearby city
+}
+
+
+def estimate_trip_cost(
+    itinerary, places_lookup: dict, num_travelers: int, num_days: int
+) -> dict:
+    """
+    Estimate trip costs from the generated itinerary and real place data.
+
+    - Uses Google Places `price_level` for hotels and food.
+    - Activities are averaged per paid attraction.
+    - Transport includes daily local transport + day-trip transport.
+    """
+    total_food = 0.0
+    total_hotel = 0.0
+    total_activities = 0.0
+    total_transport = 0.0
+
+    hotel_counted = False
+    travelers = max(int(num_travelers or 1), 1)
+    days = max(int(num_days or 1), 1)
+
+    for day in itinerary or []:
+        for activity in day.get("activities", []):
+            pid = activity.get("place_id")
+            atype = activity.get("type", "free")
+            place = places_lookup.get(pid) if pid else None
+            price_level = place.get("price_level", 0) if place else 0
+
+            if atype == "food":
+                low, high = COST_PER_MEAL.get(price_level, (10, 20))
+                total_food += ((low + high) / 2.0) * travelers
+
+            elif atype == "hotel" and not hotel_counted:
+                low, high = HOTEL_PER_NIGHT.get(price_level, (60, 120))
+                # N-1 nights for a N-day trip
+                nights = max(days - 1, 1)
+                total_hotel += ((low + high) / 2.0) * nights
+                hotel_counted = True
+
+            elif atype == "attraction":
+                # Heuristic: assume paid attraction average when marked as attraction
+                low, high = ACTIVITY_COST.get("attraction_paid", (15, 35))
+                total_activities += ((low + high) / 2.0) * travelers
+
+            elif atype == "free":
+                title = (activity.get("title") or "").lower()
+                if "day trip" in title or "transit" in title:
+                    low, high = ACTIVITY_COST.get("day_trip_transport", (20, 60))
+                    total_transport += (low + high) / 2.0
+
+    # Local transport (daily estimate)
+    daily_transport = 15 * travelers  # taxi/metro/bus per day
+    total_transport += daily_transport * days
+
+    grand_total = total_food + total_hotel + total_activities + total_transport
+
+    return {
+        "accommodation": round(total_hotel),
+        "food": round(total_food),
+        "activities": round(total_activities),
+        "transport": round(total_transport),
+        "total": round(grand_total),
+        "per_person": round(grand_total / travelers),
+        "daily_avg": round(grand_total / days),
+        "label": "estimated",
     }
 

@@ -4,6 +4,26 @@ import PlaceCard from '../PlaceCard/PlaceCard';
 
 const FILTERS = ['all', 'hotel', 'hostel', 'apartment'];
 
+const BUDGET_ORDER = {
+  $: [1, 2, 0, 3, 4],
+  $$: [2, 1, 3, 0, 4],
+  $$$: [3, 2, 4, 1, 0],
+  $$$$: [4, 3, 2, 1, 0],
+};
+
+function sortByBudget(places, budgetVibe) {
+  const order = BUDGET_ORDER[budgetVibe] || BUDGET_ORDER.$$;
+  return [...places].sort((a, b) => {
+    const pa = a.priceLevel ?? 0;
+    const pb = b.priceLevel ?? 0;
+    const ia = order.indexOf(pa);
+    const ib = order.indexOf(pb);
+    const sa = ia === -1 ? 99 : ia;
+    const sb = ib === -1 ? 99 : ib;
+    return sa - sb;
+  });
+}
+
 export default function StayTab() {
   const trip = useTripStore((s) => s.trip);
   const [filter, setFilter] = useState('all');
@@ -25,12 +45,17 @@ export default function StayTab() {
     });
   }, [filter, places]);
 
+  const sortedPlaces = useMemo(
+    () => sortByBudget(filteredPlaces, trip.budgetVibe || '$$'),
+    [filteredPlaces, trip.budgetVibe],
+  );
+
   return (
     <div className="p-4 space-y-4">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-lg font-bold text-[var(--text-primary)]">Where to Stay</h2>
         <span className="text-sm text-[var(--text-muted)]">
-          {filteredPlaces.length} options
+          {sortedPlaces.length} options
         </span>
       </div>
 
@@ -52,7 +77,7 @@ export default function StayTab() {
       </div>
 
       <div className="space-y-3">
-        {filteredPlaces.map((place) => (
+        {sortedPlaces.map((place) => (
           <PlaceCard key={place.id} place={place} />
         ))}
       </div>

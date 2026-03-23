@@ -1,4 +1,5 @@
 import { useState, useMemo, memo } from 'react';
+import useTripStore from '../../../stores/tripStore';
 
 function formatTime(datetimeStr) {
   if (!datetimeStr) return '';
@@ -42,6 +43,8 @@ const BADGE_LABELS = {
 
 export default memo(function FlightCard({ flight, badges = [], originCode, destCode, date, returnDate }) {
   const [expanded, setExpanded] = useState(false);
+  const trip = useTripStore((s) => s.trip);
+  const numTravelers = trip?.num_travelers ?? trip?.numTravelers ?? 1;
 
   const toggle = () => setExpanded((v) => !v);
 
@@ -123,9 +126,11 @@ export default memo(function FlightCard({ flight, badges = [], originCode, destC
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <div className="flex flex-col items-end gap-1 flex-shrink-0 text-right">
           <span className="text-sm font-bold text-[var(--text-primary)]">
-            ${price.toLocaleString()}
+            {numTravelers > 1
+              ? `$${price.toLocaleString()}/person · $${(price * numTravelers).toLocaleString()} total`
+              : `$${price.toLocaleString()}`}
           </span>
           {badges.length > 0 && (
             <div className="flex gap-1">

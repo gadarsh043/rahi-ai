@@ -225,3 +225,82 @@ def format_places_lean(places: list, max_per_category: int = 10) -> str:
     return "\n".join(lines)
 
 
+def deduplicate_places(places: list[dict]) -> list[dict]:
+    """
+    Remove franchise/chain duplicates from Google Places results.
+    Keeps the highest-rated branch of each chain.
+
+    Logic:
+    - Normalize name: lowercase, strip location suffixes
+    - "Dishoom King's Cross" and "Dishoom Carnaby" → both normalize to "dishoom"
+    - Keep the branch with the highest rating
+    - Also catches: "Nando's - Covent Garden" vs "Nando's - Soho"
+    """
+    import re
+
+    def normalize_name(name: str) -> str:
+        # Remove common suffixes: location names, "- Branch", etc.
+        name = name.lower().strip()
+        # Remove everything after " - " or " – " (location suffix)
+        name = re.split(r"\s*[-–]\s*", name)[0]
+        # Remove trailing location words (heuristic)
+        return name.strip()
+
+    seen: dict[str, dict] = {}
+
+    for place in places:
+        base = normalize_name(place.get("name", ""))
+        if not base:
+            continue
+
+        existing = seen.get(base)
+        if existing is None:
+            # Check if this is a substring of an existing key or vice versa
+            matched = False
+            for key in list(seen.keys()):
+                # "dishoom" matches "dishoom king" and vice versa
+                shorter = min(base, key, key=len)
+                longer = max(base, key, key=len)
+                if longer.startswith(shorter) and len(shorter) >= 4:
+                    # It's a chain match — keep higher rated
+                    if (place.get("rating") or 0) > (seen[key].get("rating") or 0):
+                        del seen[key]
+                        seen[shorter] = place
+                    elif shorter != key:
+                        seen[shorter] = seen.pop(key)
+                    matched = True
+                    break
+
+            if not matched:
+                seen[base] = place
+        else:
+            # Exact match — keep higher rated
+            if (place.get("rating") or 0) > (existing.get("rating") or 0):
+                seen[base] = place
+
+    return list(seen.values())
+
+
+def sort_places_by_budget(places: list[dict], budget_vibe: str) -> list[dict]:
+    """
+    Sort places so the AI sees budget-appropriate options first.
+    $ budget → price_level 1-2 first. $$$$ budget → price_level 3-4 first.
+    """
+    target_levels = {
+        "$": [1, 2, 0, 3, 4],
+        "$$": [2, 1, 3, 0, 4],
+        "$$$": [3, 2, 4, 1, 0],
+        "$$$$": [4, 3, 2, 1, 0],
+    }
+    order = target_levels.get(budget_vibe, [2, 1, 3, 0, 4])
+
+    def sort_key(place: dict) -> int:
+        pl = place.get("price_level", 0) or 0
+        try:
+            return order.index(pl)
+        except ValueError:
+            return 99
+
+    return sorted(places, key=sort_key)
+
+

@@ -58,6 +58,13 @@ const roadmapFeatures = {
       description: '150+ currencies with live exchange rates for trip cost estimates.',
       shippedDate: 'Mar 2026',
     },
+    {
+      id: 'ship-8',
+      emoji: '🧠',
+      title: 'Smarter Itineraries',
+      description: 'Skeleton + chunked generation with better day flow, day trips, and evening plans that feel natural.',
+      shippedDate: 'Mar 2026',
+    },
   ],
 
   // ── BUILDING NOW ── Actively being developed
@@ -73,12 +80,6 @@ const roadmapFeatures = {
       emoji: '🌆',
       title: 'Destination Guides',
       description: 'Curated city guides with local tips, budgets, and best-time-to-visit info.',
-    },
-    {
-      id: 'build-3',
-      emoji: '🧠',
-      title: 'Smarter Itineraries',
-      description: 'Better day flow — packed schedules, day trips, and evening plans that feel natural.',
     },
   ],
 
