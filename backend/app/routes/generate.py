@@ -294,12 +294,19 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                         ),
                         max_tokens=3500,
                     )
+                    print(f"Chunk {chunk_index} attempt {attempt+1} raw length: {len(chunk_raw or '')}")
+                    print(f"Chunk {chunk_index} attempt {attempt+1} first 300 chars: {(chunk_raw or '')[:300]}")
+                    
                     chunk_result = parse_skeleton_json(chunk_raw)
                     if chunk_result.get("itinerary"):
+                        print(f"Chunk {chunk_index} SUCCESS: {len(chunk_result['itinerary'])} days")
                         break
+                    else:
+                        print(f"Chunk {chunk_index} attempt {attempt+1} parsed but no itinerary key. Keys: {list(chunk_result.keys())}")
                 except Exception as e:
                     last_error = e
-                    await asyncio.sleep(0.5)
+                    print(f"Chunk {chunk_index} attempt {attempt+1} FAILED: {type(e).__name__}: {e}")
+                    await asyncio.sleep(2)  # increase from 0.5 to 2 seconds on retry
 
             if not chunk_result.get("itinerary"):
                 # If a chunk still fails after retry, emit error with partial itinerary
