@@ -182,7 +182,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
         sorted_places_for_ai = sort_places_by_budget(deduped_places, budget_vibe)
 
         # Compact text for the LLM prompts
-        places_text_for_ai = format_places_lean(sorted_places_for_ai, max_per_category=10)
+        places_text_for_ai = format_places_lean(sorted_places_for_ai, max_per_category=7)
 
         yield sse_event(
             "status",
@@ -227,7 +227,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
                 if attempt > 0:
                     await asyncio.sleep(3)  # wait before retry
                 
-                raw = await llm.generate(
+                raw = await llm.generate_fast(
                     system=SKELETON_SYSTEM,
                     user=build_skeleton_prompt(params) + "\n\nRespond with ONLY the JSON object. No explanation, no preamble, no markdown fences. Start your response with {",
                     max_tokens=800,
@@ -518,7 +518,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
         try:
             itinerary_summary = build_itinerary_summary(all_days)
             await asyncio.sleep(2)
-            essentials_raw = await llm.generate(
+            essentials_raw = await llm.generate_fast(
                 system=ESSENTIALS_SYSTEM,
                 user=build_essentials_prompt(params, itinerary_summary),
                 max_tokens=2000,

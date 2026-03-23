@@ -5,13 +5,20 @@ from groq import AsyncGroq
 from app.config import get_settings
 
 
+# MODEL CONFIGURATION
+# Testing/budget mode: all calls use 8b-instant (~$0.001/trip)
+# Production mode: switch MAIN_MODEL back to llama-3.3-70b-versatile (~$0.01/trip)
+MAIN_MODEL = "llama-3.1-8b-instant"
+FAST_MODEL = "llama-3.1-8b-instant"
+
+
 class LLMService:
     def __init__(self):
         settings = get_settings()
         self.provider = settings.llm_provider
         if self.provider == "groq":
             self.client = AsyncGroq(api_key=settings.groq_api_key)
-            self.model = "llama-3.3-70b-versatile"
+            self.model = MAIN_MODEL
         else:
             self.client = None
             self.model = ""
@@ -61,6 +68,25 @@ class LLMService:
         Used for skeleton, chunked itinerary, and essentials calls.
         """
         return await self.completion(system, user, max_tokens=max_tokens)
+
+    async def generate_fast(
+        self, system: str, user: str, max_tokens: int = 4000
+    ) -> str:
+        """
+        Fast generate helper using a smaller/faster model.
+        """
+        if self.provider == "groq" and self.client:
+            resp = await self.client.chat.completions.create(
+                model=FAST_MODEL,
+                messages=[
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
+                temperature=0.7,
+                max_tokens=max_tokens,
+            )
+            return resp.choices[0].message.content
+        return ""
 
     async def chat_completion(
         self, system_prompt: str, messages: list[dict], user_prompt: str

@@ -1,7 +1,7 @@
 # Rahify — PROJECT SPEC
 ### AI-Powered Travel Planning Platform
-**Version:** 4.1 — Post-Deployment
-**Last Updated:** March 9, 2026
+**Version:** 4.2 — Post-Deployment
+**Last Updated:** March 23, 2026
 **Author:** Solo Developer (AI-assisted)
 **Domain:** rahify.com (live)
 
@@ -89,7 +89,7 @@
 | **Backend** | Python 3.12 + FastAPI | Async, auto docs, AI ecosystem |
 | **Database** | Supabase (PostgreSQL) | Free tier: auth, DB, storage |
 | **Auth** | Supabase Auth — **Google OAuth only** | No email/password |
-| **AI (Launch)** | Groq (Llama 3 70B) — free tier | $0. Retry on rate limit. |
+| **AI (Launch)** | Groq (Llama-3.1-8B testing, Llama-3.3-70B production) | $0. Retry on rate limit. |
 | **AI (Scale)** | Claude Haiku / Sonnet | Model-agnostic swap |
 | **Places** | Google Places API (New) | $200 free/mo |
 | **Autocomplete** | Photon (Komoot) | Free, worldwide |

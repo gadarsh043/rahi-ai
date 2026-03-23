@@ -7,7 +7,7 @@ AI-powered travel planner at **rahify.com**. Users enter trip details → get it
 - **Frontend:** React 18 + Vite + Tailwind CSS v4 + Zustand + React Router v6
 - **Backend:** Python 3.12 + FastAPI (separate repo/folder)
 - **DB/Auth:** Supabase (PostgreSQL + Google OAuth only)
-- **AI:** Groq (Llama 3 70B) → Claude (later, model-agnostic wrapper)
+- **AI:** Groq (Llama-3.1-8B testing / Llama-3.3-70B production) → Claude (later, model-agnostic wrapper)
 - **Analytics:** PostHog (posthog-js in frontend + PostHog MCP in Cursor)
 - **Map Rendering:** Leaflet + OpenStreetMap (free, no API key)
 - **Place Data:** Google Places API (New) for real place data, photos, ratings
@@ -605,8 +605,8 @@ Floating ☰ opens overlay sidebar drawer (not inline)
  - Roadmap page: public at /roadmap, URL-only access (no nav entry). Ref-measured SVG zigzag path, four zones (Shipped/Building/Up Next/Exploring), heart votes per feature (localStorage → Supabase later). No dates on upcoming features. | Mar 9
  - Roadmap data: static `src/data/roadmapFeatures.js`, updated as part of Iteration Learning Protocol. No payment/pricing features shown. | Mar 9
  - Roadmap path: single SVG with `useRef` + `ResizeObserver` measuring real card positions. Individual SVG segments between cards look choppy — always use one continuous path. | Mar 9
-- Generation pipeline V2: skeleton + chunked itinerary generation + post-itinerary essentials, with formula-based cost estimation and domestic travel detection. | Mar 11
-- Dietary filtering: EatTab soft-filters obviously incompatible restaurants (e.g., BBQ for vegetarians) on the frontend, using simple keyword heuristics over Google Places text. | Mar 11
+- Generation V2: skeleton + chunked itinerary + post-itinerary essentials, formula-based costs, domestic travel detection, dietary filtering. | Mar 2026
+- Model config: MAIN_MODEL and FAST_MODEL as constants in llm_service.py. Budget mode = both 8b-instant. Production = switch MAIN_MODEL to 70b. | Mar 2026
 
 ---
 

@@ -185,6 +185,9 @@ def build_chunk_prompt(
     context_handoff: str = "",
 ) -> str:
     """Build user prompt for a detail chunk."""
+    # note: trim the places text to only include categories relevant to the chunk's day types.
+    # For example, if a chunk has a rest day + 4 full days, it doesn't need 7 nightlife venues.
+    
     prefs = ", ".join(params.get("preferences", [])) or "general sightseeing"
     dietary = ", ".join(params.get("dietary", [])) or "none"
     dest = params.get("destination_city", "")
