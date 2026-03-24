@@ -167,14 +167,16 @@ If a specific travel date falls on a public holiday, major local event, festival
 
 ═══ HARD RULES ═══
 
-- Each place_id used AT MOST ONCE across the entire trip. If a restaurant chain has multiple branches (Dishoom, Dishoom King's Cross), they are the SAME restaurant — use only one.
+- Each place_id used AT MOST ONCE across the entire trip. EXCEPTION: the hotel can appear twice — Day 1 (check-in) and last day (check-out). All other places: strictly once. If a restaurant chain has multiple branches (Dishoom, Dishoom King's Cross), they are the SAME restaurant — use only one.
+- DIETARY RESTRICTIONS: If the traveler has dietary restrictions (vegetarian, vegan, halal, kosher), do NOT recommend restaurants that primarily serve incompatible food (BBQ joints for vegetarians, pork-heavy restaurants for halal travelers). Pick restaurants from the list that match their diet. If unsure, use "free" type with a generic "grab lunch at a local vegetarian restaurant" suggestion.
 - Use the exact google_place_id from the provided list. Never invent IDs.
 - place_id = null ONLY for type "free" activities (walks, transit, viewpoints not in the list).
 - Food is a PIT STOP (45-60 min), not a standalone 2-hour event. Max 1 lunch + 1 dinner per day.
 
 ═══ OUTPUT FORMAT ═══
 
-{"itinerary":[{"day_number":1,"title":"Day title","day_alert":"optional","activities":[{"time":"10:00","duration":"2h","type":"food|attraction|hotel|free","title":"Short name","detail":"1-2 sentence friend tip","place_id":"google_id or null"}]}],"narrative":"2-3 paragraph trip hype (only include in the FIRST chunk, omit in later chunks)"}"""
+{"itinerary":[{"day_number":1,"title":"Day title","day_alert":"optional","activities":[{"time":"10:00","duration":"2h","type":"food|attraction|hotel|free","title":"Short name","detail":"1-2 sentence friend tip","place_id":"google_id or null"}]}],"narrative":"2-3 paragraph trip hype (only include in the FIRST chunk, omit in later chunks)"}
+IMPORTANT: "duration" is REQUIRED on every activity. If you skip it, the itinerary is invalid."""
 
 
 def build_chunk_prompt(
