@@ -20,7 +20,7 @@ export function MiniTripPreview() {
           <span className="text-2xl">{'\u{1F1EF}\u{1F1F5}'}</span>
         </div>
         <div className="flex gap-1.5 mt-3">
-          {['Trip', 'Eat', 'Stay', 'Go', '\u2708\uFE0F'].map((tab, i) => (
+          {['Trip', 'Stay', 'Eat', 'Go', '\u2708\uFE0F'].map((tab, i) => (
             <span
               key={tab}
               className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${

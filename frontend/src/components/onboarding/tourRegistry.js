@@ -96,7 +96,7 @@ const TOUR_REGISTRY = {
         steps: [
           {
             element: '[data-tour="tab-bar"]',
-            text: 'Your whole trip, organized. Restaurants, hotels, places, flights — swipe through.',
+            text: 'Your whole trip, organized. Hotels, restaurants, places, flights — swipe through.',
             position: 'below',
           },
         ],

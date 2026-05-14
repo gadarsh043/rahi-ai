@@ -36,8 +36,8 @@ class MapErrorBoundary extends Component {
 }
 
 const sectionComponents = {
-  eat: EatTab,
   stay: StayTab,
+  eat: EatTab,
   go: PlacesTab,
   trip: TripTab,
   flight: FlightTab,

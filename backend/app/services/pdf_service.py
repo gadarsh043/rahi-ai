@@ -192,7 +192,7 @@ def build_styles():
     )
     s.add(
         ParagraphStyle(
-            "BodyText",
+            "TripBody",
             parent=s["Normal"],
             fontSize=9,
             textColor=TEXT,
@@ -371,7 +371,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     story.append(
         Paragraph(
             f"<b>Route:</b> {origin} <font color='#{BRAND_HEX}'>\u2708</font> {dest}",
-            styles["BodyText"],
+            styles["TripBody"],
         )
     )
 
@@ -471,7 +471,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     visa_is_ok = visa_info.get("visa_required") is False
     story.append(
         Table(
-            [[Paragraph(f"<b>Visa:</b> {visa_text}", styles["BodyText"])]],
+            [[Paragraph(f"<b>Visa:</b> {visa_text}", styles["TripBody"])]],
             colWidths=[PAGE_W],
             style=TableStyle(
                 [
@@ -766,25 +766,25 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         story.append(Paragraph("Visa & Documents", styles["Section"]))
 
         if visa_info.get("note"):
-            story.append(Paragraph(visa_info["note"], styles["BodyText"]))
+            story.append(Paragraph(visa_info["note"], styles["TripBody"]))
         elif visa_info.get("visa_required"):
             story.append(
                 Paragraph(
                     f"<b>Visa required:</b> {visa_info.get('type', 'Check embassy')}",
-                    styles["BodyText"],
+                    styles["TripBody"],
                 )
             )
             story.append(
                 Paragraph(
                     f"<b>Processing time:</b> {visa_info.get('processing', 'Varies')}",
-                    styles["BodyText"],
+                    styles["TripBody"],
                 )
             )
         else:
             story.append(
                 Paragraph(
                     f"<b>No visa required.</b> {visa_info.get('type', '')}",
-                    styles["BodyText"],
+                    styles["TripBody"],
                 )
             )
 

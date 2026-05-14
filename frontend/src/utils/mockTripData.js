@@ -470,8 +470,8 @@ export const MARKER_COLORS = {
 
 // ========== TAB CONFIG ==========
 export const PLAN_TABS = [
-  { id: 'eat', label: 'Where to Eat', icon: '🍽', shortLabel: 'Eat' },
   { id: 'stay', label: 'Where to Stay', icon: '🏠', shortLabel: 'Stay' },
+  { id: 'eat', label: 'Where to Eat', icon: '🍽', shortLabel: 'Eat' },
   { id: 'go', label: 'Places to Go', icon: '📍', shortLabel: 'Go' },
   { id: 'flight', label: 'Flight Details', icon: '✈️', shortLabel: 'Flight' },
   { id: 'costs', label: 'Costs & Spending', icon: '💰', shortLabel: 'Costs' },
@@ -480,8 +480,8 @@ export const PLAN_TABS = [
 ];
 
 export const PLAN_SECTIONS = [
-  { id: 'eat', label: 'Where to Eat', icon: '🍽', shortLabel: 'Eat' },
   { id: 'stay', label: 'Where to Stay', icon: '🏠', shortLabel: 'Stay' },
+  { id: 'eat', label: 'Where to Eat', icon: '🍽', shortLabel: 'Eat' },
   { id: 'go', label: 'Places to Go', icon: '📍', shortLabel: 'Go' },
   { id: 'trip', label: 'Your Itinerary', icon: '📋', shortLabel: 'Trip' },
   { id: 'flight', label: 'Flights', icon: '✈️', shortLabel: 'Flight' },

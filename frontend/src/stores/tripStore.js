@@ -4,7 +4,7 @@ import { MOCK_TRIP } from '../utils/mockTripData';
 const useTripStore = create((set, get) => ({
   // Trip data
   trip: null,
-  activeSectionId: 'eat',
+  activeSectionId: 'stay',
   mode: 'editing', // 'editing' | 'shared' | 'saved'
   isDemo: false,
 
@@ -148,7 +148,7 @@ const useTripStore = create((set, get) => ({
       mapCenter: { lat: MOCK_TRIP.destinationLat, lng: MOCK_TRIP.destinationLng },
       chatMessages: MOCK_TRIP.chatMessages,
       mode: 'editing',
-      activeSectionId: 'eat',
+      activeSectionId: 'stay',
       isDemo: false,
     });
   },

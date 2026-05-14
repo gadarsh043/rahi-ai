@@ -487,10 +487,10 @@ export default function MapPanel({ trip: tripProp, places: placesProp, activeTab
   const places = useMemo(() => {
     if (!Array.isArray(trip.places)) return [];
     switch (activeSectionId) {
-      case 'eat':
-        return trip.places.filter((p) => p.category === 'restaurant');
       case 'stay':
         return trip.places.filter((p) => p.category === 'hotel');
+      case 'eat':
+        return trip.places.filter((p) => p.category === 'restaurant');
       case 'go':
         return trip.places.filter((p) => p.category === 'attraction');
       default:
