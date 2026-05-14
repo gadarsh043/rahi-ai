@@ -13,6 +13,7 @@ from reportlab.platypus import (
     PageBreak,
     KeepTogether,
 )
+from reportlab.platypus.flowables import Flowable
 from io import BytesIO
 import traceback
 import urllib.parse
@@ -280,6 +281,40 @@ def _as_dict(val) -> dict:
     return val if isinstance(val, dict) else {}
 
 
+def _table_cell(val) -> str:
+    """
+    ReportLab Table cells must be str/number/Flowable — never dict/list.
+    Coerce structured JSON fields to a readable string.
+    """
+    if val is None:
+        return ""
+    if isinstance(val, bool):
+        return "Yes" if val else "No"
+    if isinstance(val, (int, float)):
+        return str(val)
+    if isinstance(val, str):
+        return val
+    if isinstance(val, (dict, list)):
+        import json
+
+        try:
+            s = json.dumps(val, ensure_ascii=False, separators=(",", ": "))
+        except (TypeError, ValueError):
+            s = str(val)
+        if len(s) > 900:
+            return s[:897] + "..."
+        return s
+    return str(val)
+
+
+def _normalize_table_rows(rows):
+    """Ensure every Table cell is a Flowable or plain string — never dict/list."""
+    out = []
+    for row in rows:
+        out.append([c if isinstance(c, Flowable) else _table_cell(c) for c in row])
+    return out
+
+
 def _safe_int(val, default=0, *, min_v=None, max_v=None) -> int:
     try:
         n = int(round(float(val)))
@@ -480,49 +515,65 @@ def _generate_trip_pdf_impl(trip: dict, places: list, visa_info: dict, essential
     em_nums = essentials.get("emergency_numbers") or essentials.get("emergencyNumbers")
     if em_nums and isinstance(em_nums, dict):
         emergency = " | ".join(
-            f"{str(k).title()}: {v}" for k, v in em_nums.items() if k != "note"
+            f"{str(k).title()}: {_table_cell(v)}" for k, v in em_nums.items() if k != "note"
         )
         if emergency:
             ref_data.append(["Emergency", emergency])
 
-    ref_data.append(["Language", str(essentials.get("language", "Check before travel"))])
+    ref_data.append(
+        ["Language", _table_cell(essentials.get("language", "Check before travel"))]
+    )
     ref_data.append(
         [
             "Currency",
-            essentials.get("currency_info") or essentials.get("currencyInfo")
-            or "Check exchange rates",
+            _table_cell(
+                essentials.get("currency_info")
+                or essentials.get("currencyInfo")
+                or "Check exchange rates"
+            ),
         ]
     )
-    ref_data.append(["Tipping", essentials.get("tipping", "Varies")])
+    ref_data.append(["Tipping", _table_cell(essentials.get("tipping", "Varies"))])
     ref_data.append(
         [
             "Power",
-            essentials.get("power_plug") or essentials.get("powerPlug")
-            or "Bring universal adapter",
+            _table_cell(
+                essentials.get("power_plug")
+                or essentials.get("powerPlug")
+                or "Bring universal adapter"
+            ),
         ]
     )
     ref_data.append(
         [
             "Water",
-            essentials.get("water_safety") or essentials.get("waterSafety")
-            or "When in doubt, bottled",
+            _table_cell(
+                essentials.get("water_safety")
+                or essentials.get("waterSafety")
+                or "When in doubt, bottled"
+            ),
         ]
     )
     ref_data.append(
         [
             "SIM/Data",
-            essentials.get("sim_advice") or essentials.get("simAdvice")
-            or "Buy local SIM at airport",
+            _table_cell(
+                essentials.get("sim_advice")
+                or essentials.get("simAdvice")
+                or "Buy local SIM at airport"
+            ),
         ]
     )
-    ref_data.append(["Timezone", essentials.get("timezone", "Check before travel")])
+    ref_data.append(
+        ["Timezone", _table_cell(essentials.get("timezone", "Check before travel"))]
+    )
 
     dress = essentials.get("dress_code") or essentials.get("dressCode")
     if dress:
-        ref_data.append(["Dress Code", dress])
+        ref_data.append(["Dress Code", _table_cell(dress)])
 
     if ref_data:
-        t = Table(ref_data, colWidths=[30 * mm, 140 * mm])
+        t = Table(_normalize_table_rows(ref_data), colWidths=[30 * mm, 140 * mm])
         t.setStyle(
             TableStyle(
                 [
@@ -773,7 +824,7 @@ def _generate_trip_pdf_impl(trip: dict, places: list, visa_info: dict, essential
             f"${per_person:,}/person",
         ]
 
-        t = Table(cost_rows + [total_row], colWidths=[65 * mm, 45 * mm, 60 * mm])
+        t = Table(_normalize_table_rows(cost_rows + [total_row]), colWidths=[65 * mm, 45 * mm, 60 * mm])
         t.setStyle(
             TableStyle(
                 [
@@ -1168,7 +1219,7 @@ def _generate_trip_pdf_impl(trip: dict, places: list, visa_info: dict, essential
         )
 
         phrase_data = [["English", lang_name]] + lang_phrases
-        pt = Table(phrase_data, colWidths=[55 * mm, 115 * mm])
+        pt = Table(_normalize_table_rows(phrase_data), colWidths=[55 * mm, 115 * mm])
         pt.setStyle(
             TableStyle(
                 [
@@ -1197,7 +1248,7 @@ def _generate_trip_pdf_impl(trip: dict, places: list, visa_info: dict, essential
     if em_nums and isinstance(em_nums, dict):
         for k, v in em_nums.items():
             if k != "note":
-                em_data.append([str(k).title(), str(v)])
+                em_data.append([str(k).title(), _table_cell(v)])
 
     # Always include general emergency entries
     em_data.append(["Your Embassy", f"Look up {dest_country or dest} embassy before traveling"])
@@ -1205,7 +1256,7 @@ def _generate_trip_pdf_impl(trip: dict, places: list, visa_info: dict, essential
     em_data.append(["Emergency Contact", "Share this PDF with someone at home"])
 
     if em_data:
-        et = Table(em_data, colWidths=[45 * mm, 125 * mm])
+        et = Table(_normalize_table_rows(em_data), colWidths=[45 * mm, 125 * mm])
         et.setStyle(
             TableStyle(
                 [
