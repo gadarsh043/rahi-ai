@@ -14,7 +14,9 @@ from reportlab.platypus import (
     KeepTogether,
 )
 from io import BytesIO
+import traceback
 import urllib.parse
+from html import escape as html_escape
 
 # Colors
 BRAND = colors.HexColor("#F97316")
@@ -242,6 +244,7 @@ def build_styles():
 
 def maps_link(name, lat=None, lng=None, place_id=None):
     """Generate a tappable Google Maps URL."""
+    name = "" if name is None else str(name)
     if place_id:
         return (
             "https://www.google.com/maps/search/?api=1&query="
@@ -255,27 +258,108 @@ def maps_link(name, lat=None, lng=None, place_id=None):
     )
 
 
-def _safe_cost(costs, section, key, default=0):
-    """Safe int from cost_estimate nested dict."""
+def _esc(s) -> str:
+    """Escape plain text for ReportLab Paragraph markup (&, <, >)."""
+    if s is None:
+        return ""
+    if not isinstance(s, str):
+        s = str(s)
+    return html_escape(s, quote=False)
+
+
+def _esc_attr(s) -> str:
+    """Escape for double-quoted XML/HTML attributes (e.g. href)."""
+    if s is None:
+        return ""
+    if not isinstance(s, str):
+        s = str(s)
+    return html_escape(s, quote=True)
+
+
+def _as_dict(val) -> dict:
+    return val if isinstance(val, dict) else {}
+
+
+def _safe_int(val, default=0, *, min_v=None, max_v=None) -> int:
     try:
+        n = int(round(float(val)))
+        if min_v is not None:
+            n = max(n, min_v)
+        if max_v is not None:
+            n = min(n, max_v)
+        return n
+    except (TypeError, ValueError):
+        return default
+
+
+def _safe_cost(costs, section, key, default=0, *, num_days=1, num_travelers=1):
+    """
+    Safe int from trip cost_estimate.
+
+    V1 (formula helper): each category is a dict with total / per_night / per_day / etc.
+    V2 (estimate_trip_cost): each category is often a plain int total; transport uses key
+    ``transport`` instead of ``local_transport``.
+    """
+    try:
+        nd = max(int(num_days or 1), 1)
+        nt = max(int(num_travelers or 1), 1)
+        nights = max(nd - 1, 1)
+
         if section == "root":
             val = costs.get(key, default)
-        else:
-            val = (costs.get(section) or {}).get(key, default)
-        return int(val) if val is not None else default
-    except (TypeError, ValueError):
+            if val is None:
+                return default
+            if isinstance(val, dict):
+                return default
+            try:
+                return int(round(float(val)))
+            except (TypeError, ValueError):
+                return default
+
+        raw = costs.get(section)
+        if section == "local_transport" and raw is None and "transport" in costs:
+            raw = costs.get("transport")
+
+        if isinstance(raw, str) and str(raw).strip():
+            try:
+                raw = float(str(raw).strip())
+            except ValueError:
+                raw = None
+
+        # V2: category stored as a single number (total only)
+        if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+            total = int(round(raw))
+            if key == "total":
+                return total
+            if section == "accommodation" and key == "per_night":
+                return int(round(total / nights)) if nights else default
+            if section in ("food", "activities", "local_transport") and key == "per_day":
+                return int(round(total / nd)) if nd else default
+            if section == "flights" and key == "per_person":
+                return int(round(total / nt)) if nt else default
+            return default
+
+        subsection = raw if isinstance(raw, dict) else {}
+        val = subsection.get(key, default)
+        if val is None:
+            return default
+        try:
+            return int(round(float(val)))
+        except (TypeError, ValueError):
+            return default
+    except (TypeError, ValueError, ZeroDivisionError):
         return default
 
 
 def _build_stat_cell(value, label, styles):
     """Build a stat cell for the header stats row."""
     return [
-        Paragraph(str(value), styles["StatValue"]),
-        Paragraph(label, styles["StatLabel"]),
+        Paragraph(_esc(str(value)), styles["StatValue"]),
+        Paragraph(_esc(str(label)), styles["StatLabel"]),
     ]
 
 
-def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dict) -> bytes:
+def _generate_trip_pdf_impl(trip: dict, places: list, visa_info: dict, essentials: dict) -> bytes:
     """Generate Rahify trip PDF with header stats, day-by-day itinerary, costs, places, visa, packing, phrases."""
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -289,20 +373,23 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     styles = build_styles()
     story = []
 
-    origin = trip.get("origin_city", "?")
-    dest = trip.get("destination_city", "?")
-    dest_country = trip.get("destination_country", "")
+    places = places if isinstance(places, list) else []
+    trip = trip if isinstance(trip, dict) else {}
+
+    origin = str(trip.get("origin_city") or "?")
+    dest = str(trip.get("destination_city") or "?")
+    dest_country = str(trip.get("destination_country") or "")
     days = trip.get("num_days", "?")
     travelers = trip.get("num_travelers", 1)
-    pace = trip.get("pace", "moderate")
-    budget = trip.get("budget_vibe", "$$")
+    pace = trip.get("pace") or "moderate"
+    budget = trip.get("budget_vibe") or "$$"
     dates_str = ""
     if trip.get("start_date") and trip.get("end_date"):
         dates_str = f"{trip['start_date']} to {trip['end_date']}"
 
-    essentials = essentials or {}
-    visa_info = visa_info or {}
-    costs = trip.get("cost_estimate") or {}
+    essentials = _as_dict(essentials)
+    visa_info = _as_dict(visa_info)
+    costs = _as_dict(trip.get("cost_estimate"))
 
     PAGE_W = 170 * mm  # usable width
 
@@ -322,18 +409,18 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     story.append(
         HRFlowable(width="30%", thickness=2, color=BRAND, spaceAfter=8)
     )
-    story.append(Paragraph(f"{origin} to {dest}", styles["TripTitle"]))
+    story.append(Paragraph(f"{_esc(origin)} to {_esc(dest)}", styles["TripTitle"]))
     if dest_country:
-        story.append(Paragraph(dest_country, styles["Subtitle"]))
+        story.append(Paragraph(_esc(dest_country), styles["Subtitle"]))
     if dates_str:
-        story.append(Paragraph(dates_str, styles["Subtitle"]))
+        story.append(Paragraph(_esc(dates_str), styles["Subtitle"]))
     story.append(Spacer(1, 4))
 
     # Trip stats row (like reference PDF header)
     stat_cells = []
     stat_cells.append(_build_stat_cell(travelers, f"Traveler{'s' if travelers != 1 else ''}", styles))
     stat_cells.append(_build_stat_cell(days, "Days", styles))
-    stat_cells.append(_build_stat_cell(pace.title(), "Pace", styles))
+    stat_cells.append(_build_stat_cell(str(pace).replace("_", " ").title(), "Pace", styles))
     stat_cells.append(_build_stat_cell(budget, "Budget", styles))
 
     total_cost = _safe_cost(costs, "root", "total", costs.get("total", 0))
@@ -370,7 +457,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     # Route overview
     story.append(
         Paragraph(
-            f"<b>Route:</b> {origin} <font color='#{BRAND_HEX}'>\u2708</font> {dest}",
+            f"<b>Route:</b> {_esc(origin)} <font color='#{BRAND_HEX}'>\u2708</font> {_esc(dest)}",
             styles["TripBody"],
         )
     )
@@ -393,12 +480,12 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     em_nums = essentials.get("emergency_numbers") or essentials.get("emergencyNumbers")
     if em_nums and isinstance(em_nums, dict):
         emergency = " | ".join(
-            f"{k.title()}: {v}" for k, v in em_nums.items() if k != "note"
+            f"{str(k).title()}: {v}" for k, v in em_nums.items() if k != "note"
         )
         if emergency:
             ref_data.append(["Emergency", emergency])
 
-    ref_data.append(["Language", essentials.get("language", "Check before travel")])
+    ref_data.append(["Language", str(essentials.get("language", "Check before travel"))])
     ref_data.append(
         [
             "Currency",
@@ -471,7 +558,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     visa_is_ok = visa_info.get("visa_required") is False
     story.append(
         Table(
-            [[Paragraph(f"<b>Visa:</b> {visa_text}", styles["TripBody"])]],
+            [[Paragraph(f"<b>Visa:</b> {_esc(visa_text)}", styles["TripBody"])]],
             colWidths=[PAGE_W],
             style=TableStyle(
                 [
@@ -499,13 +586,17 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         )
     )
 
-    itinerary = trip.get("itinerary", {})
-    itinerary_days = (
-        itinerary.get("itinerary", []) if isinstance(itinerary, dict) else []
-    )
+    itinerary = trip.get("itinerary") or {}
+    itinerary_days = []
+    if isinstance(itinerary, dict):
+        raw_days = itinerary.get("itinerary")
+        if isinstance(raw_days, list):
+            itinerary_days = raw_days
 
     place_lookup = {}
     for p in places or []:
+        if not isinstance(p, dict):
+            continue
         pid = p.get("google_place_id") or p.get("googlePlaceId") or ""
         if pid:
             place_lookup[pid] = p
@@ -514,6 +605,8 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             place_lookup[name_key] = p
 
     for day in itinerary_days:
+        if not isinstance(day, dict):
+            continue
         day_num = day.get("day_number", "?")
         title = day.get("title", "")
 
@@ -522,7 +615,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             [
                 [
                     Paragraph(
-                        f"Day {day_num} \u2014 {title}",
+                        f"Day {_esc(str(day_num))} \u2014 {_esc(str(title))}",
                         styles["DayTitle"],
                     )
                 ]
@@ -541,6 +634,8 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         story.append(Spacer(1, 6))
 
         for act in day.get("activities") or []:
+            if not isinstance(act, dict):
+                continue
             time = act.get("time", "")
             act_title = act.get("title", "Activity")
             detail = act.get("detail", "")
@@ -576,23 +671,25 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             activity_parts = []
 
             # Time + type badge
-            time_line = f"<b>{time}</b>"
+            time_line = f"<b>{_esc(str(time))}</b>"
             if type_label:
                 time_line += f"  <font color='#{type_color}'>[{type_label}]</font>"
             activity_parts.append(Paragraph(time_line, styles["Time"]))
 
             # Place name (linked if possible)
+            title_safe = _esc(str(act_title))
             if gmap_url:
-                name_text = f"<b><a href='{gmap_url}' color='#{BLUE_HEX}'>{act_title}</a></b>"
+                name_text = f'<b><a href="{_esc_attr(gmap_url)}" color="#{BLUE_HEX}">{title_safe}</a></b>'
             else:
-                name_text = f"<b>{act_title}</b>"
+                name_text = f"<b>{title_safe}</b>"
 
             # Rating + price level
             meta_parts = []
             if rating is not None:
-                meta_parts.append(f"\u2605 {rating}")
-            if price_level is not None:
-                meta_parts.append("$" * int(price_level))
+                meta_parts.append(f"\u2605 {_esc(str(rating))}")
+            pw = _safe_int(price_level, 0, min_v=0, max_v=4)
+            if price_level is not None and pw > 0:
+                meta_parts.append("$" * pw)
             if meta_parts:
                 name_text += f"  <font color='#{MUTED_HEX}'>({' | '.join(meta_parts)})</font>"
             activity_parts.append(Paragraph(name_text, styles["PlaceName"]))
@@ -601,14 +698,14 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             if address:
                 activity_parts.append(
                     Paragraph(
-                        f"<font color='#{MUTED_HEX}'>{address}</font>",
+                        f"<font color='#{MUTED_HEX}'>{_esc(str(address))}</font>",
                         styles["PlaceInfo"],
                     )
                 )
 
             # Detail / description
             if detail:
-                activity_parts.append(Paragraph(detail, styles["PlaceDetail"]))
+                activity_parts.append(Paragraph(_esc(str(detail)), styles["PlaceDetail"]))
 
             activity_parts.append(Spacer(1, 6))
             story.append(KeepTogether(activity_parts))
@@ -622,6 +719,15 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     # ═══════════════════════════════════════
 
     if costs:
+        try:
+            _pdf_cost_days = max(int(trip.get("num_days") or 1), 1)
+        except (TypeError, ValueError):
+            _pdf_cost_days = 1
+        try:
+            _pdf_cost_travelers = max(int(trip.get("num_travelers") or 1), 1)
+        except (TypeError, ValueError):
+            _pdf_cost_travelers = 1
+
         story.append(Paragraph("Cost Estimate", styles["Section"]))
         story.append(
             Paragraph(
@@ -634,28 +740,28 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
             ["Category", "Total", "Rate"],
             [
                 "Accommodation",
-                f"${_safe_cost(costs, 'accommodation', 'total'):,}",
-                f"${_safe_cost(costs, 'accommodation', 'per_night')}/night",
+                f"${_safe_cost(costs, 'accommodation', 'total', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers):,}",
+                f"${_safe_cost(costs, 'accommodation', 'per_night', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers)}/night",
             ],
             [
                 "Food & Drinks",
-                f"${_safe_cost(costs, 'food', 'total'):,}",
-                f"${_safe_cost(costs, 'food', 'per_day')}/day",
+                f"${_safe_cost(costs, 'food', 'total', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers):,}",
+                f"${_safe_cost(costs, 'food', 'per_day', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers)}/day",
             ],
             [
                 "Activities & Tickets",
-                f"${_safe_cost(costs, 'activities', 'total'):,}",
-                f"${_safe_cost(costs, 'activities', 'per_day')}/day",
+                f"${_safe_cost(costs, 'activities', 'total', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers):,}",
+                f"${_safe_cost(costs, 'activities', 'per_day', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers)}/day",
             ],
             [
                 "Local Transport",
-                f"${_safe_cost(costs, 'local_transport', 'total'):,}",
-                f"${_safe_cost(costs, 'local_transport', 'per_day')}/day",
+                f"${_safe_cost(costs, 'local_transport', 'total', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers):,}",
+                f"${_safe_cost(costs, 'local_transport', 'per_day', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers)}/day",
             ],
             [
                 "Flights",
-                f"${_safe_cost(costs, 'flights', 'total'):,}",
-                f"${_safe_cost(costs, 'flights', 'per_person')}/person",
+                f"${_safe_cost(costs, 'flights', 'total', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers):,}",
+                f"${_safe_cost(costs, 'flights', 'per_person', 0, num_days=_pdf_cost_days, num_travelers=_pdf_cost_travelers)}/person",
             ],
         ]
 
@@ -715,6 +821,8 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
 
     categories = {}
     for p in places or []:
+        if not isinstance(p, dict):
+            continue
         in_itinerary = p.get("is_in_itinerary") or p.get("isInItinerary")
         if in_itinerary:
             cat = p.get("category", "other")
@@ -735,24 +843,27 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     }
 
     for cat, cat_places in categories.items():
-        label = cat_labels.get(cat, cat.replace("_", " ").title())
-        story.append(Paragraph(f"<b>{label}</b>", styles["RefKey"]))
+        label = cat_labels.get(cat, str(cat).replace("_", " ").title())
+        story.append(Paragraph(f"<b>{_esc(str(label))}</b>", styles["RefKey"]))
         story.append(Spacer(1, 3))
 
         for p in cat_places:
+            if not isinstance(p, dict):
+                continue
             gurl = maps_link(
                 p.get("name", ""),
                 p.get("lat"),
                 p.get("lng"),
                 p.get("google_place_id") or p.get("googlePlaceId"),
             )
-            line = f"<a href='{gurl}' color='#{BLUE_HEX}'>{p.get('name', '')}</a>"
+            nm = _esc(str(p.get("name", "")))
+            line = f'<a href="{_esc_attr(gurl)}" color="#{BLUE_HEX}">{nm}</a>'
             r = p.get("rating")
             if r is not None:
-                line += f" (\u2605 {r})"
+                line += f" (\u2605 {_esc(str(r))})"
             addr = p.get("address") or ""
             if addr:
-                line += f" \u2014 <font color='#{MUTED_HEX}'>{addr}</font>"
+                line += f" \u2014 <font color='#{MUTED_HEX}'>{_esc(str(addr))}</font>"
             story.append(Paragraph(line, styles["PlaceInfo"]))
             story.append(Spacer(1, 2))
 
@@ -766,42 +877,42 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         story.append(Paragraph("Visa & Documents", styles["Section"]))
 
         if visa_info.get("note"):
-            story.append(Paragraph(visa_info["note"], styles["TripBody"]))
+            story.append(Paragraph(_esc(str(visa_info["note"])), styles["TripBody"]))
         elif visa_info.get("visa_required"):
             story.append(
                 Paragraph(
-                    f"<b>Visa required:</b> {visa_info.get('type', 'Check embassy')}",
+                    f"<b>Visa required:</b> {_esc(str(visa_info.get('type', 'Check embassy')))}",
                     styles["TripBody"],
                 )
             )
             story.append(
                 Paragraph(
-                    f"<b>Processing time:</b> {visa_info.get('processing', 'Varies')}",
+                    f"<b>Processing time:</b> {_esc(str(visa_info.get('processing', 'Varies')))}",
                     styles["TripBody"],
                 )
             )
         else:
             story.append(
                 Paragraph(
-                    f"<b>No visa required.</b> {visa_info.get('type', '')}",
+                    f"<b>No visa required.</b> {_esc(str(visa_info.get('type', '')))}",
                     styles["TripBody"],
                 )
             )
 
         checklist = visa_info.get("checklist", [])
-        if checklist:
+        if checklist and isinstance(checklist, list):
             story.append(Spacer(1, 4))
             for item in checklist:
                 text = item.get("text", item) if isinstance(item, dict) else item
-                story.append(Paragraph(f"\u25a1  {text}", styles["CheckItem"]))
+                story.append(Paragraph(f"\u25a1  {_esc(str(text))}", styles["CheckItem"]))
 
         warnings = visa_info.get("warnings", [])
-        if warnings:
+        if warnings and isinstance(warnings, list):
             story.append(Spacer(1, 6))
             for w in warnings:
                 story.append(
                     Paragraph(
-                        f"<font color='#{RED_HEX}'>\u26a0 {w}</font>",
+                        f"<font color='#{RED_HEX}'>\u26a0 {_esc(str(w))}</font>",
                         styles["PlaceInfo"],
                     )
                 )
@@ -858,7 +969,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         "Portable battery pack",
     ]
 
-    plug = essentials.get("power_plug") or essentials.get("powerPlug") or ""
+    plug = str(essentials.get("power_plug") or essentials.get("powerPlug") or "")
     if plug and "Type G" in plug:
         electronics.append("UK power adapter (Type G)")
     elif plug and "Type C" in plug:
@@ -884,7 +995,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
         "Hand sanitizer",
     ]
 
-    water = essentials.get("water_safety") or essentials.get("waterSafety") or ""
+    water = str(essentials.get("water_safety") or essentials.get("waterSafety") or "")
     if water and ("NOT" in water.upper() or "bottled" in water.lower()):
         health_items.append("Reusable water bottle (for bottled water)")
     else:
@@ -898,15 +1009,16 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     # ═══════════════════════════════════════
 
     language = essentials.get("language", "")
-    if language and "English" not in (language.split("(")[0].strip() or ""):
+    lang_str = str(language).strip() if language not in (None, "") else ""
+    if lang_str and "English" not in (lang_str.split("(")[0].strip() or ""):
         lang_name = (
-            language.split("(")[0].strip().split(",")[0].strip() or "Local"
+            lang_str.split("(")[0].strip().split(",")[0].strip() or "Local"
         )
 
-        story.append(Paragraph(f"Useful {lang_name} Phrases", styles["Section"]))
+        story.append(Paragraph(f"Useful {_esc(lang_name)} Phrases", styles["Section"]))
         story.append(
             Paragraph(
-                f"The primary language is {language}. Here are essential phrases:",
+                f"The primary language is {_esc(lang_str)}. Here are essential phrases:",
                 styles["SectionSub"],
             )
         )
@@ -1085,7 +1197,7 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     if em_nums and isinstance(em_nums, dict):
         for k, v in em_nums.items():
             if k != "note":
-                em_data.append([k.title(), str(v)])
+                em_data.append([str(k).title(), str(v)])
 
     # Always include general emergency entries
     em_data.append(["Your Embassy", f"Look up {dest_country or dest} embassy before traveling"])
@@ -1135,3 +1247,46 @@ def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dic
     result = buffer.getvalue()
     buffer.close()
     return result
+
+
+def _minimal_fallback_pdf(trip: dict) -> bytes:
+    """Single-page PDF if the full renderer fails — user still gets a download."""
+    buf = BytesIO()
+    doc = SimpleDocTemplate(
+        buf,
+        pagesize=A4,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+    )
+    styles = getSampleStyleSheet()
+    tid = str(trip.get("id") or trip.get("trip_id") or "")
+    dest = str(
+        trip.get("destination_city") or trip.get("destinationCity") or "your trip"
+    )
+    body = (
+        "We could not render the full PDF for this trip (unexpected data or layout). "
+        "Your itinerary is still available in the app at rahify.com."
+    )
+    if tid:
+        body = f"{body} Reference: {tid}."
+    story = [
+        Paragraph("<b>Rahify</b> — trip PDF", styles["Title"]),
+        Spacer(1, 16),
+        Paragraph(_esc(dest), styles["Heading2"]),
+        Spacer(1, 12),
+        Paragraph(_esc(body), styles["Normal"]),
+    ]
+    doc.build(story)
+    data = buf.getvalue()
+    buf.close()
+    return data
+
+
+def generate_trip_pdf(trip: dict, places: list, visa_info: dict, essentials: dict) -> bytes:
+    try:
+        return _generate_trip_pdf_impl(trip, places, visa_info, essentials)
+    except Exception:
+        traceback.print_exc()
+        return _minimal_fallback_pdf(trip if isinstance(trip, dict) else {})
