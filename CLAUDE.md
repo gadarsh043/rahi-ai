@@ -608,7 +608,7 @@ Floating ☰ opens overlay sidebar drawer (not inline)
  - Roadmap data: static `src/data/roadmapFeatures.js`, updated as part of Iteration Learning Protocol. No payment/pricing features shown. | Mar 9
  - Roadmap path: single SVG with `useRef` + `ResizeObserver` measuring real card positions. Individual SVG segments between cards look choppy — always use one continuous path. | Mar 9
 - Generation V2: skeleton + chunked itinerary + post-itinerary essentials, formula-based costs, domestic travel detection, dietary filtering. | Mar 2026
-- Model config: MAIN_MODEL and FAST_MODEL as constants in llm_service.py. Budget mode = both 8b-instant. Production = switch MAIN_MODEL to 70b. | Mar 2026
+- Model config: MAIN_MODEL and FAST_MODEL configured in llm_service.py (defaults to qwen/qwen3.8-27b; overridable via GROQ_MAIN_MODEL/GROQ_FAST_MODEL). | Mar 2026
 
 ---
 

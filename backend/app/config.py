@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     supabase_service_key: str
     google_places_api_key: str = ""
     groq_api_key: str = ""
+    groq_main_model: str = "qwen/qwen3.8-27b"
+    groq_fast_model: str = "qwen/qwen3.8-27b"
     serpapi_key: str = ""
     llm_provider: str = "groq"
     dev_user_id: str = "test-user-uuid-123"

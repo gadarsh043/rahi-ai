@@ -6,19 +6,21 @@ from app.config import get_settings
 
 
 # MODEL CONFIGURATION
-# Testing/budget mode: all calls use 8b-instant (~$0.001/trip)
-# Production mode: switch MAIN_MODEL back to llama-3.3-70b-versatile (~$0.01/trip)
-MAIN_MODEL = "llama-3.1-8b-instant"
-FAST_MODEL = "llama-3.1-8b-instant"
+# Default model: qwen/qwen3.8-27b on Groq (fast, stable JSON support, 128k context)
+# Can be overridden via GROQ_MAIN_MODEL / GROQ_FAST_MODEL in environment/config
+MAIN_MODEL = "qwen/qwen3.8-27b"
+FAST_MODEL = "qwen/qwen3.8-27b"
 
 
 class LLMService:
     def __init__(self):
         settings = get_settings()
         self.provider = settings.llm_provider
+        self.main_model = getattr(settings, "groq_main_model", "") or MAIN_MODEL
+        self.fast_model = getattr(settings, "groq_fast_model", "") or FAST_MODEL
         if self.provider == "groq":
             self.client = AsyncGroq(api_key=settings.groq_api_key)
-            self.model = MAIN_MODEL
+            self.model = self.main_model
         else:
             self.client = None
             self.model = ""
@@ -57,7 +59,7 @@ class LLMService:
                 temperature=0.7,
                 max_tokens=max_tokens,
             )
-            return resp.choices[0].message.content
+            return resp.choices[0].message.content or ""
         return ""
 
     async def generate(
@@ -77,7 +79,7 @@ class LLMService:
         """
         if self.provider == "groq" and self.client:
             resp = await self.client.chat.completions.create(
-                model=FAST_MODEL,
+                model=self.fast_model,
                 messages=[
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
@@ -85,7 +87,7 @@ class LLMService:
                 temperature=0.7,
                 max_tokens=max_tokens,
             )
-            return resp.choices[0].message.content
+            return resp.choices[0].message.content or ""
         return ""
 
     async def chat_completion(
@@ -104,7 +106,7 @@ class LLMService:
                 temperature=0.75,
                 max_tokens=1000,
             )
-            return resp.choices[0].message.content
+            return resp.choices[0].message.content or ""
         return ""
 
     async def json_completion(self, system_prompt: str, user_prompt: str) -> str:
@@ -120,7 +122,7 @@ class LLMService:
                 max_tokens=4000,
                 response_format={"type": "json_object"},
             )
-            return resp.choices[0].message.content
+            return resp.choices[0].message.content or ""
         return ""
 
 
