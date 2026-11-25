@@ -4,6 +4,7 @@ const ACCOMMODATION_OPTIONS = [
   { id: 'Hotel', emoji: '🏨', label: 'Hotel', desc: 'Comfort & room service' },
   { id: 'Hostel', emoji: '🛏', label: 'Hostel', desc: 'Social & budget-friendly' },
   { id: 'Apartment', emoji: '🏠', label: 'Apartment', desc: 'Home away from home' },
+  { id: 'Own Place', emoji: '🏡', label: 'Own Place', desc: 'Friends, family, or own stay' },
 ];
 
 export default function AccommodationSelector({ value, onChange }) {
@@ -18,7 +19,7 @@ export default function AccommodationSelector({ value, onChange }) {
   };
 
   return (
-    <div className="mt-6 grid grid-cols-3 gap-3 max-w-lg mx-auto">
+    <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
       {ACCOMMODATION_OPTIONS.map((option) => {
         const isSelected = selected.includes(option.id);
         return (

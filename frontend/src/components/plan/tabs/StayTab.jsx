@@ -59,6 +59,16 @@ export default function StayTab() {
         </span>
       </div>
 
+      {trip.accommodationType?.toLowerCase().includes('own') && (
+        <div className="bg-brand-500/10 border border-brand-500/30 rounded-xl p-4 flex items-center gap-3 mb-3">
+          <span className="text-2xl">🏡</span>
+          <div>
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Staying at your own place</h3>
+            <p className="text-xs text-[var(--text-muted)]">You've arranged your own accommodation for this trip ($0 lodging cost).</p>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2 mb-2">
         {FILTERS.map((f) => (
           <button

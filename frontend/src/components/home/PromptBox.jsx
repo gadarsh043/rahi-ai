@@ -11,7 +11,7 @@ function getHighlightSegments(text, formData) {
     formData?.pace,
     formData?.budgetVibe,
     formData?.numDays && `${formData.numDays} days`,
-    formData?.accommodationType && `${formData.accommodationType}s`,
+    formData?.accommodationType && (String(formData.accommodationType).toLowerCase().includes('own') ? 'own place' : `${formData.accommodationType}s`),
   ].filter(Boolean);
 
   const segments = [];

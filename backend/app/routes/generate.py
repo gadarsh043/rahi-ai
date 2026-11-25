@@ -376,6 +376,7 @@ async def generate_stream(req: TripGenerateRequest, user: dict):
             places_lookup=places_lookup,
             num_travelers=req.num_travelers or 1,
             num_days=num_days,
+            accommodation_type=req.accommodation_type or "",
         )
         yield sse_event("cost_estimate", cost_data)
 

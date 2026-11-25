@@ -120,7 +120,7 @@ function buildPromptText(formData) {
 
   const accomArr = Array.isArray(data.accommodationType) ? data.accommodationType : (data.accommodationType ? [data.accommodationType] : []);
   if (accomArr.length > 0) {
-    const accomText = accomArr.map((a) => `${a}s`).join(' & ');
+    const accomText = accomArr.map((a) => (String(a).toLowerCase().includes('own') ? 'own place' : `${a}s`)).join(' & ');
     parts.push(`staying in ${accomText}`);
   }
 

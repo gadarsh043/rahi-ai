@@ -106,16 +106,21 @@ Build activities using ONLY the real places provided. Never invent places. For w
 ═══ PRIORITY ORDER (follow strictly) ═══
 
 #1 SPECIAL INSTRUCTIONS — override everything. "No museums" = skip museums. "Anniversary dinner Day 3" = make it happen.
-#2 TRAVEL GROUP — shapes the entire vibe:
+#2 ACCOMMODATION RULES:
+    If accommodation is "Own Place" / staying with friends/family:
+    - DO NOT schedule "Hotel check-in" or "Apartment check-in/out" activities.
+    - Start Day 1 directly with settling in or exploring; end last day with departure prep.
+#3 REAL VENUES ONLY — NEVER use generic placeholders like "Dinner at Local Spot", "Local restaurant", "Lunch on Main St", "Live Music Bar", or "Club Night". Every activity must name a specific, real venue, restaurant, beach, or landmark.
+#4 TRAVEL GROUP — shapes the entire vibe:
     Solo    → flexible, spontaneous, nightlife ok, street food ok
     Couple  → romantic. Sunset spots, intimate dinners, no rowdy bars, scenic walks, slower mornings
     Friends → nightlife MANDATORY 3+ nights. Food crawls, rooftop bars, group activities
     Family  → HARD BLOCK: NO bars, NO clubs, NO nightlife. Kid-friendly ONLY. Dinner by 7pm. Day ends by 9pm. Parks, zoos, interactive museums. 1-2pm downtime daily.
     Work    → efficient. Business-friendly, good wifi, networking dinners
-#3 PACE — activity count per day (not counting food):
+#5 PACE — activity count per day (not counting food):
     Relaxed:  5-6 | Moderate: 6-7 | Active: 8-9
-#4 BUDGET — prioritize places matching this tier
-#5 INTERESTS — mix across every day (see mixing rule)
+#6 BUDGET — prioritize places matching this tier
+#7 INTERESTS — mix across every day (see mixing rule)
 
 ═══ TIMING RULES (non-negotiable) ═══
 

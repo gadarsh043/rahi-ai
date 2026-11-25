@@ -64,19 +64,28 @@ def estimate_costs_v1(
 ) -> dict:
     multiplier = COUNTRY_MULTIPLIER.get((destination_country or "").upper(), 0.8)
     vibe = budget_vibe if budget_vibe in ("$", "$$", "$$$", "$$$$") else "$$"
-    accom_type = (
-        accommodation_type if accommodation_type in ACCOMMODATION_COSTS else "hotel"
-    )
     nights = max((num_days or 1) - 1, 1)
+    travelers = max(int(num_travelers or 1), 1)
 
-    accom_per_night = ACCOMMODATION_COSTS[accom_type][vibe] * multiplier
+    is_own_place = (
+        "own" in (accommodation_type or "").lower()
+        or "friend" in (accommodation_type or "").lower()
+    )
+    if is_own_place:
+        accom_per_night = 0
+        rooms_needed = 0
+        accom_total = 0
+    else:
+        accom_type = (
+            accommodation_type if accommodation_type in ACCOMMODATION_COSTS else "hotel"
+        )
+        accom_per_night = ACCOMMODATION_COSTS[accom_type][vibe] * multiplier
+        rooms_needed = max(1, (travelers + 1) // 2)
+        accom_total = accom_per_night * nights * rooms_needed
+
     food_per_day = FOOD_PER_DAY[vibe] * multiplier
     activities_per_day = ACTIVITIES_PER_DAY[vibe] * multiplier
     transport_per_day = LOCAL_TRANSPORT_PER_DAY[vibe] * multiplier
-
-    travelers = max(int(num_travelers or 1), 1)
-    rooms_needed = max(1, (travelers + 1) // 2)
-    accom_total = accom_per_night * nights * rooms_needed
 
     food_total = food_per_day * (num_days or 1) * travelers
     activities_total = activities_per_day * (num_days or 1) * travelers
@@ -182,7 +191,11 @@ ACTIVITY_COST = {
 
 
 def estimate_trip_cost(
-    itinerary, places_lookup: dict, num_travelers: int, num_days: int
+    itinerary,
+    places_lookup: dict,
+    num_travelers: int,
+    num_days: int,
+    accommodation_type: str = "",
 ) -> dict:
     """
     Estimate trip costs from the generated itinerary and real place data.
@@ -199,6 +212,10 @@ def estimate_trip_cost(
     hotel_counted = False
     travelers = max(int(num_travelers or 1), 1)
     days = max(int(num_days or 1), 1)
+    is_own_place = (
+        "own" in (accommodation_type or "").lower()
+        or "friend" in (accommodation_type or "").lower()
+    )
 
     for day in itinerary or []:
         for activity in day.get("activities", []):
@@ -212,10 +229,11 @@ def estimate_trip_cost(
                 total_food += ((low + high) / 2.0) * travelers
 
             elif atype == "hotel" and not hotel_counted:
-                low, high = HOTEL_PER_NIGHT.get(price_level, (60, 120))
-                # N-1 nights for a N-day trip
-                nights = max(days - 1, 1)
-                total_hotel += ((low + high) / 2.0) * nights
+                if not is_own_place:
+                    low, high = HOTEL_PER_NIGHT.get(price_level, (60, 120))
+                    # N-1 nights for a N-day trip
+                    nights = max(days - 1, 1)
+                    total_hotel += ((low + high) / 2.0) * nights
                 hotel_counted = True
 
             elif atype == "attraction":
